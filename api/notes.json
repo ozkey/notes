@@ -1,0 +1,15 @@
+{
+  "hashtags": ["#important", "#todo", "#bible-study"],
+  "notes": [
+    {
+      "id": 1,
+      "title": "First Note",
+      "book-links": [
+        ["Genesis", 1, 1, "Genesis", 1, 5],
+        ["Exodus", 2, 1, "Exodus", 2, 5]
+      ],
+      "hashtags": ["#important", "#todo"],
+      "content": "This is the content of the first note."
+    }
+  ]
+}
