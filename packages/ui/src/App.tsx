@@ -1,24 +1,24 @@
-import React from 'react';
-import { Container, Box, Card, CardContent, Typography } from '@mui/material';
+import React from "react";
+import { Container, Box, Card, CardContent, Typography } from "@mui/material";
 
 const App: React.FC = () => {
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        backgroundColor: "#f5f5f5",
       }}
     >
       {/* Header */}
       <Box
         component="header"
         sx={{
-          backgroundColor: '#1976d2',
-          color: 'white',
-          padding: '20px',
-          textAlign: 'center',
+          backgroundColor: "#1976d2",
+          color: "white",
+          padding: "20px",
+          textAlign: "center",
         }}
       >
         <Typography variant="h4" component="h1">
@@ -27,35 +27,48 @@ const App: React.FC = () => {
       </Box>
 
       {/* Main Content */}
-      <Box component="main" sx={{ flex: 1, padding: '40px 0' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
-            {['Col 1', 'Col 2', 'Col 3'].map((title, index) => (
-              <Box key={index}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    boxShadow: 3,
-                    '&:hover': {
-                      boxShadow: 6,
-                      transform: 'translateY(-4px)',
-                      transition: 'all 0.3s ease',
-                    },
-                  }}
-                >
-                  <CardContent>
-                    <Typography gutterBottom variant="h5" component="div">
-                      {title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      This is a simple card component in {title.toLowerCase()}.
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
-            ))}
+      <Box component="main" sx={{ flex: 1, padding: "40px 0" }}>
+        <Container maxWidth="xl">
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "1fr 1fr",
+                md: "1fr 1fr 1fr",
+              },
+              gap: 3,
+            }}
+          >
+            {["Col 1", "Col 2", "Col 3", "Col 1", "Col 2", "Col 3"].map(
+              (title, index) => (
+                <Box key={index}>
+                  <Card
+                    sx={{
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      boxShadow: 3,
+                      "&:hover": {
+                        boxShadow: 6,
+                        transform: "translateY(-4px)",
+                        transition: "all 0.3s ease",
+                      },
+                    }}
+                  >
+                    <CardContent>
+                      <Typography gutterBottom variant="h5" component="div">
+                        {title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        This is a simple card component in {title.toLowerCase()}
+                        .
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Box>
+              ),
+            )}
           </Box>
         </Container>
       </Box>
@@ -64,11 +77,11 @@ const App: React.FC = () => {
       <Box
         component="footer"
         sx={{
-          backgroundColor: '#1976d2',
-          color: 'white',
-          padding: '20px',
-          textAlign: 'center',
-          marginTop: 'auto',
+          backgroundColor: "#1976d2",
+          color: "white",
+          padding: "20px",
+          textAlign: "center",
+          marginTop: "auto",
         }}
       >
         <Typography variant="body2">
@@ -80,4 +93,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
