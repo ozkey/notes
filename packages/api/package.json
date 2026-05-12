@@ -1,0 +1,5 @@
+{
+  "name": "notes-api",
+  "version": "1.0.0",
+  "description": "API for managing notes with book links and hashtags"
+}
