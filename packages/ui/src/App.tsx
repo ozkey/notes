@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Box, Card, CardContent, Typography, Grid } from '@mui/material';
+import { Container, Box, Card, CardContent, Typography } from '@mui/material';
 
 const App: React.FC = () => {
   return (
@@ -29,9 +29,9 @@ const App: React.FC = () => {
       {/* Main Content */}
       <Box component="main" sx={{ flex: 1, padding: '40px 0' }}>
         <Container maxWidth="lg">
-          <Grid container spacing={3}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
             {['Col 1', 'Col 2', 'Col 3'].map((title, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Box key={index}>
                 <Card
                   sx={{
                     height: '100%',
@@ -54,9 +54,9 @@ const App: React.FC = () => {
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         </Container>
       </Box>
 
