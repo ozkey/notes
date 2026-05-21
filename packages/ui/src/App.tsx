@@ -1,6 +1,8 @@
 import React from "react";
-import { Container, Box, Card, CardContent, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { MainPanel } from "./components/main";
+import { ToolbarPanel } from "./components/Toolbar";
+import { BibleProvider } from "./contexts/BibleContext";
 
 const App: React.FC = () => {
   return (
@@ -27,8 +29,11 @@ const App: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Main Content */}
-      <MainPanel />
+      {/* Toolbar (select bible book) + Main Content */}
+      <BibleProvider>
+        <ToolbarPanel />
+        <MainPanel />
+      </BibleProvider>
 
       {/* Footer */}
       <Box
