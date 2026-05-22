@@ -2,25 +2,14 @@ import { useEffect, useRef } from "react";
 import suneditor, { plugins } from "suneditor";
 import "suneditor/css/editor";
 import "suneditor/css/contents";
-import CodeMirror from "codemirror";
-import "codemirror/lib/codemirror.css";
-import "codemirror/mode/htmlmixed/htmlmixed";
 
 export default function Editor() {
-    // use a typed ref so ref.current can be null or an HTMLDivElement
-    const ref = useRef<HTMLDivElement | null>(null);
+    const ref = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
-        // guard against null to satisfy the typed signature required by suneditor.create
-        if (!ref.current) return;
-
-        const instance = suneditor.create(ref.current, {
+        const instance = suneditor.create(ref.current!, {
             plugins,
-            externalLibs: {
-                codeMirror: { src: CodeMirror },
-            },
-            toolbar_sticky: 93,
-            value: "<p>Hello <strong>SunEditor</strong>!</p><p>Try editing this content.</p>",
+            value: "<p>Hello SunEditor</p>",
             buttonList: [
                 ["undo", "redo"],
                 "|",
@@ -88,15 +77,8 @@ export default function Editor() {
             ],
         });
 
-        // cleanup on unmount
-        return () => {
-            try {
-                instance.destroy();
-            } catch (e) {
-                // ignore destroy errors
-            }
-        };
+        return () => instance.destroy();
     }, []);
 
-    return <div ref={ref} />;
+    return <textarea ref={ref} />;
 }
