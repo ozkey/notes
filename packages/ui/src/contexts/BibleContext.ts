@@ -71,8 +71,10 @@ export const BIBLE_BOOKS: string[] = [
 
 export interface BibleContextType {
   selectedBook: string | null;
-  setSelectedBook: (b: string | null) => void;
+  setSelectedBook: (b: string ) => void;
   books: string[];
+  chapterNumber: number;
+  setChapterNumber: (n: number) => void;
 }
 
 export const BibleContext = createContext<BibleContextType>({
@@ -80,14 +82,17 @@ export const BibleContext = createContext<BibleContextType>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setSelectedBook: () => {},
   books: BIBLE_BOOKS,
+  chapterNumber: 1,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  setChapterNumber: () => {},
 });
 
 export const BibleProvider: React.FC<{ children: any }> = ({ children }) => {
-  const [selectedBook, setSelectedBook] = useState<string | null>(null);
+  const [selectedBook, setSelectedBook] = useState<string>("Matthew");
+  const [chapterNumber, setChapterNumber] = useState<number>(1);
 
   // Return without JSX so this file can remain .ts
-  return React.createElement(BibleContext.Provider, { value: { selectedBook, setSelectedBook, books: BIBLE_BOOKS } }, children);
+  return React.createElement(BibleContext.Provider, { value: { selectedBook, setSelectedBook, books: BIBLE_BOOKS, chapterNumber, setChapterNumber } }, children);
 };
 
 export default BibleContext;
-

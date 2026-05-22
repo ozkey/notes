@@ -1,11 +1,24 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Box, Container, Autocomplete, TextField } from "@mui/material";
 import BibleContext from "../contexts/BibleContext";
 
 export const ToolbarPanel: React.FC = () => {
-  const { selectedBook, setSelectedBook, books } = useContext(
+  const { selectedBook, setSelectedBook, books, chapterNumber, setChapterNumber } = useContext(
     BibleContext as React.Context<any>,
   );
+
+  const [chapterInput, setChapterInput] = useState<string>(String(chapterNumber ?? 1));
+
+  const commitChapter = () => {
+    const parsed = parseInt(chapterInput, 10);
+    if (!Number.isNaN(parsed) && parsed >= 1) {
+      setChapterNumber(parsed);
+      setChapterInput(String(parsed));
+    } else {
+      // revert to last valid
+      setChapterInput(String(chapterNumber ?? 1));
+    }
+  };
 
   return (
     <Box
@@ -31,6 +44,22 @@ export const ToolbarPanel: React.FC = () => {
             />
           )}
           sx={{ width: 320 }}
+        />
+
+        <TextField
+          label="Chapter"
+          variant="outlined"
+          size="small"
+          type="number"
+          value={chapterInput}
+          onChange={(e) => setChapterInput(e.target.value)}
+          onBlur={commitChapter}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              commitChapter();
+            }
+          }}
+          sx={{ width: 120, marginLeft: 2 }}
         />
       </Container>
     </Box>
