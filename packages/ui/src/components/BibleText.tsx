@@ -1,7 +1,10 @@
 import {Box, Card, CardContent, Typography} from "@mui/material";
-import React from "react";
+import React, { useContext } from "react";
+import BibleContext from "../contexts/BibleContext";
 
 export const BibleText: React.FC = () => {
+    const { selectedBook, chapterNumber } = useContext(BibleContext as React.Context<any>);
+
     return(
     <Box key={1}>
         <Card
@@ -19,7 +22,7 @@ export const BibleText: React.FC = () => {
         >
             <CardContent>
                 <Typography gutterBottom variant="h5" component="div">
-                    1
+                    {selectedBook ? `${selectedBook} — Chapter ${chapterNumber ?? 1}` : "No book selected"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                     This is a simple card component
