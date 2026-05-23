@@ -1,6 +1,6 @@
 import React from "react";
 import { Container, Box } from "@mui/material";
-import {BibleText} from "./BibleText";
+import {BiblePanel} from "./BiblePanel/BiblePanel";
 import {StudyPanel} from "./StudyPanel";
 
 export const MainPanel = () => {
@@ -18,7 +18,7 @@ export const MainPanel = () => {
             gap: 3,
           }}
         >
-            <BibleText />
+            <BiblePanel />
             <StudyPanel />
 
         </Box>

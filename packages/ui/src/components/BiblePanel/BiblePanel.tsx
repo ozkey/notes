@@ -1,8 +1,8 @@
 import {Box, Card, CardContent, Typography} from "@mui/material";
 import React, { useContext } from "react";
-import BibleContext from "../contexts/BibleContext";
+import BibleContext from "../../contexts/BibleContext";
 
-export const BibleText: React.FC = () => {
+export const BiblePanel: React.FC = () => {
     const { selectedBook, chapterNumber } = useContext(BibleContext as React.Context<any>);
 
     return(
