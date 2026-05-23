@@ -20,12 +20,12 @@ const App: React.FC = () => {
         sx={{
           backgroundColor: "#1976d2",
           color: "white",
-          padding: "20px",
+          padding: "7px",
           textAlign: "center",
         }}
       >
         <Typography variant="h4" component="h1">
-          Notes App
+          Bible Notes App
         </Typography>
       </Box>
 
