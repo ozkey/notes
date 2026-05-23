@@ -22,9 +22,6 @@ export const BiblePanel: React.FC = () => {
             }}
         >
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                    {selectedBook ? `${selectedBook} — Chapter ${chapterNumber ?? 1}` : "No book selected"}
-                </Typography>
                 <BibleText />
             </CardContent>
         </Card>
