@@ -2,6 +2,7 @@ import { Box, Card, CardContent, Tabs, Tab } from "@mui/material";
 import React, { useContext } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import { BibleText } from "./BibleText";
+import { ToolbarPanel } from "../Toolbar";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -50,11 +51,7 @@ export const BiblePanel: React.FC = () => {
           display: "flex",
           flexDirection: "column",
           boxShadow: 3,
-          "&:hover": {
-            boxShadow: 6,
-            transform: "translateY(-4px)",
-            transition: "all 0.3s ease",
-          },
+          minHeight: "500px",
         }}
       >
         <CardContent>
@@ -74,13 +71,14 @@ export const BiblePanel: React.FC = () => {
             <Tab label="Item Two" {...a11yProps(1)} />
           </Tabs>
           <CustomTabPanel value={value} index={0}>
+            <ToolbarPanel />
             <BibleText
               selectedBook={selectedBook}
               chapterNumber={chapterNumber}
             />
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
-            Item Two
+            <BibleText selectedBook={"Genesis"} chapterNumber={2} />
           </CustomTabPanel>
         </CardContent>
       </Card>

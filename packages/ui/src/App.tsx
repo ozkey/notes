@@ -31,7 +31,6 @@ const App: React.FC = () => {
 
       {/* Toolbar (select bible book) + Main Content */}
       <BibleProvider>
-        <ToolbarPanel />
         <MainPanel />
       </BibleProvider>
 
