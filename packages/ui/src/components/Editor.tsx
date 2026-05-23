@@ -30,10 +30,6 @@ export default function Editor() {
                 ["fontColor", "backgroundColor"],
                 "|",
                 ["removeFormat"],
-                "/",
-                ["blockquote", "anchor", "link"],
-
-
             ],
         });
         return () => instance.destroy();
