@@ -14,11 +14,7 @@ export const StudyPanel: React.FC = () => {
                     display: "flex",
                     flexDirection: "column",
                     boxShadow: 3,
-                    "&:hover": {
-                        boxShadow: 6,
-                        transform: "translateY(-4px)",
-                        transition: "all 0.3s ease",
-                    },
+
                 }}
             >
                 <CardContent>
