@@ -16,6 +16,13 @@ export default function Editor() {
           console.log("Saved content:", params?.data);
           return true;
         },
+        onChange: (params: {
+          $: unknown;
+          frameContext: unknown;
+          data: string;
+        }) => {
+          console.log("Content changed:", params.data);
+        },
       },
       buttonList: [
         //  "newDocument"
