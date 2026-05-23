@@ -16,3 +16,12 @@ body {
   margin: 0;
 }
 
+.sun-editor-editable div.helloWorld{
+    font-size: 24px;
+    color: #609;
+    border: 1px solid red;
+    background: aqua;
+    padding: 5px;
+    margin: 5px;
+    display: block;
+}
