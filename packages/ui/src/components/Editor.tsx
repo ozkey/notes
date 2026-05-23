@@ -5,35 +5,42 @@ import "suneditor/css/contents";
 import HelloWorld from "./EditorPlugin";
 
 export default function Editor() {
-    const ref = useRef<HTMLTextAreaElement>(null);
+  const ref = useRef<HTMLTextAreaElement>(null);
 
-    useEffect(() => {
-        const instance = suneditor.create(ref.current!, {
-            plugins:{...plugins, HelloWorld},
-            value: "<p>Hello SunEditor</p>",
-            buttonList: [
-//  "newDocument"
-                ["save", "|"],
-                [  "copy" ,"selectAll" , "|", "outdent", "indent", "align", "list"],
-                ["|","table", "image", "video"],
-                ["|","blockquote", "anchor", "link","helloWorld"],
+  useEffect(() => {
+    const instance = suneditor.create(ref.current!, {
+      plugins: { ...plugins, HelloWorld },
+      value: "<p>Hello SunEditor</p>",
+      events: {
+        onSave: async (params) => {
+          console.log("Saved content:", params?.data);
+          return true;
+        },
+      },
+      buttonList: [
+        //  "newDocument"
+        ["save", "|"],
+        ["copy", "selectAll", "|", "outdent", "indent", "align", "list"],
+        ["|", "table", "image", "video"],
+        ["|", "blockquote", "anchor", "link", "helloWorld"],
 
-                ["-right", "codeView", "showBlocks","fullScreen", "preview", "print"],
-                "/",
-                ["undo", "redo"],
-                "|",
-                ["blockStyle", "font", "fontSize"],
-                "|",
-                [":Format-default.more_paragraph", "blockStyle", "font", "fontSize"],
-                ["bold", "italic", "underline", "strike"],
-                "|",
-                ["fontColor", "backgroundColor"],
-                "|",
-                ["removeFormat"],
-            ],
-        });
-        return () => instance.destroy();
-    }, []);
+        ["-right", "codeView", "showBlocks", "fullScreen", "preview", "print"],
+        "/",
+        ["undo", "redo"],
+        "|",
+        ["blockStyle", "font", "fontSize"],
+        "|",
+        [":Format-default.more_paragraph", "blockStyle", "font", "fontSize"],
+        ["bold", "italic", "underline", "strike"],
+        "|",
+        ["fontColor", "backgroundColor"],
+        "|",
+        ["removeFormat"],
+      ],
+    });
 
-    return <textarea ref={ref} />;
+    return () => instance.destroy();
+  }, []);
+
+  return <textarea ref={ref} />;
 }
