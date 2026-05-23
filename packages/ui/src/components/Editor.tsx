@@ -11,6 +11,14 @@ export default function Editor() {
             plugins,
             value: "<p>Hello SunEditor</p>",
             buttonList: [
+//  "newDocument"
+                ["save", "|"],
+                [  "copy" ,"selectAll" , "|", "outdent", "indent", "align", "list"],
+                ["|","table", "image", "video"],
+                ["|","blockquote", "anchor", "link"],
+
+                ["-right", "codeView", "showBlocks","fullScreen", "preview", "print"],
+                "/",
                 ["undo", "redo"],
                 "|",
                 ["blockStyle", "font", "fontSize"],
@@ -22,16 +30,11 @@ export default function Editor() {
                 "|",
                 ["removeFormat"],
                 "/",
-                ["outdent", "indent", "align", "list"],
-                "|",
-                ["table", "link", "image", "video"],
-                "|",
-                ["-right", "fullScreen", "codeView"],
+                ["blockquote", "anchor", "link"],
 
 
             ],
         });
-
         return () => instance.destroy();
     }, []);
 
