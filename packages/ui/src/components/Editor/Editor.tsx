@@ -15,9 +15,18 @@ export default function Editor({
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
+    console.log("Initializing editor with value", value);
     const instance = suneditor.create(ref.current!, {
       plugins: { ...plugins, HelloWorld },
       value: value || "",
+      strictMode: {
+        tagFilter: true,
+        formatFilter: true,
+        classFilter: false,
+        textStyleTagFilter: true,
+        attrFilter: false,
+        styleFilter: false,
+      },
       events: {
         // widen type to any to avoid incorrect Event typing from lib
         onSave: async (params: any) => {
@@ -77,7 +86,8 @@ export default function Editor({
   useEffect(() => {
     if (editorRef.current) {
       try {
-        editorRef.current.setContents(value || "");
+        console.log("Updating editor contents", value);
+        editorRef.current.setContents(value + <span>x</span> || "");
       } catch (e) {
         // ignore
       }
