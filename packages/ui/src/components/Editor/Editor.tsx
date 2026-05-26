@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import suneditor, { plugins } from "suneditor";
 import "suneditor/css/editor";
 import "suneditor/css/contents";
-import HelloWorld from "./CalloutBlock";
+import CalloutBlock from "./CalloutBlock";
+import HelloWorld from "./EditorPlugin";
 
 export default function Editor({
   value = "",
@@ -17,10 +18,10 @@ export default function Editor({
   useEffect(() => {
     console.log("Initializing editor with value", value);
     const instance = suneditor.create(ref.current!, {
-      plugins: { ...plugins, HelloWorld },
+      plugins: { ...plugins, HelloWorld, CalloutBlock },
       value: value || "",
       strictMode: {
-        tagFilter: true,
+        tagFilter: false,
         formatFilter: true,
         classFilter: false,
         textStyleTagFilter: true,
@@ -59,7 +60,7 @@ export default function Editor({
         ["save", "|"],
         ["copy", "selectAll", "|", "outdent", "indent", "align", "list"],
         ["|", "table", "image", "video"],
-        ["|", "blockquote", "anchor", "link", "calloutBlock"],
+        ["|", "blockquote", "anchor", "link", "calloutBlock", "helloWorld"],
 
         ["-right", "codeView", "showBlocks", "fullScreen", "preview", "print"],
         "/",
