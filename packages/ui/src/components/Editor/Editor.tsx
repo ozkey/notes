@@ -84,16 +84,16 @@ export default function Editor({
   }, []);
 
   // update editor contents when value changes from parent
-  useEffect(() => {
-    if (editorRef.current) {
-      try {
-        console.log("Updating editor contents", value);
-        editorRef.current.setContents(value + <span>x</span> || "");
-      } catch (e) {
-        // ignore
-      }
-    }
-  }, [value]);
+  // useEffect(() => {
+  //   if (editorRef.current) {
+  //     try {
+  //       console.log("Updating editor contents", value);
+  //       editorRef.current.setContents(value + <span>x</span> || "");
+  //     } catch (e) {
+  //       // ignore
+  //     }
+  //   }
+  // }, [value]);
 
   return <textarea ref={ref} />;
 }
