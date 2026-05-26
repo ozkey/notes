@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Typography } from "@mui/material";
 import React, { useContext } from "react";
 import BibleContext from "../contexts/BibleContext";
 import Editor from "./Editor/Editor";
@@ -17,6 +17,23 @@ export const StudyPanel: React.FC = () => {
   return (
     <Card>
       <CardContent>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            alert("loading notes from file is not implemented yet");
+          }}
+        >
+          Load
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            alert("saving notes to file is not implemented yet");
+          }}
+        >
+          Save
+        </Button>
+
         <Editor
           value={current.notes}
           onChange={(html) => updateTab(currentTab, { notes: html })}
