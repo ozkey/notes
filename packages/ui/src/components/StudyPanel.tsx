@@ -17,14 +17,13 @@ export const StudyPanel: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        {/*<Typography gutterBottom variant="h5" component="div">*/}
-        {/*  {current.selectedBook*/}
-        {/*    ? `${current.selectedBook} — Chapter ${current.chapterNumber ?? 1}`*/}
-        {/*    : "No book selected"}*/}
-        {/*</Typography>*/}
         <Editor
           value={current.notes}
           onChange={(html) => updateTab(currentTab, { notes: html })}
+          onSave={(html) => {
+            console.log("Saving notes to file", html);
+            updateTab(currentTab, { notes: html });
+          }}
         />
       </CardContent>
     </Card>

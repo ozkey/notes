@@ -8,9 +8,11 @@ import HelloWorld from "./EditorPlugin";
 export default function Editor({
   value = "",
   onChange,
+  onSave,
 }: {
   value?: string;
   onChange?: (html: string) => void;
+  onSave?: (html: string) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const editorRef = useRef<any>(null);
@@ -43,6 +45,7 @@ export default function Editor({
             contents = editorRef.current.getContents();
           }
           onChange?.(contents || "");
+          onSave?.(contents || "");
           console.log(contents);
           return true;
         },
