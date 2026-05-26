@@ -1,22 +1,34 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Box, Container, Autocomplete, TextField } from "@mui/material";
 import BibleContext from "../contexts/BibleContext";
 
 export const ToolbarPanel: React.FC = () => {
-  const { selectedBook, setSelectedBook, books, chapterNumber, setChapterNumber } = useContext(
+  const { tabs, currentTab, updateTab, books } = useContext(
     BibleContext as React.Context<any>,
   );
 
-  const [chapterInput, setChapterInput] = useState<string>(String(chapterNumber ?? 1));
+  const current = tabs[currentTab] ?? {
+    selectedBook: null,
+    chapterNumber: 1,
+    notes: "",
+  };
+
+  const [chapterInput, setChapterInput] = useState<string>(
+    String(current.chapterNumber ?? 1),
+  );
+
+  useEffect(() => {
+    setChapterInput(String(current.chapterNumber ?? 1));
+  }, [currentTab, current.chapterNumber]);
 
   const commitChapter = () => {
     const parsed = parseInt(chapterInput, 10);
     if (!Number.isNaN(parsed) && parsed >= 1) {
-      setChapterNumber(parsed);
+      updateTab(currentTab, { chapterNumber: parsed });
       setChapterInput(String(parsed));
     } else {
       // revert to last valid
-      setChapterInput(String(chapterNumber ?? 1));
+      setChapterInput(String(current.chapterNumber ?? 1));
     }
   };
 
@@ -33,8 +45,10 @@ export const ToolbarPanel: React.FC = () => {
         <Autocomplete
           freeSolo={false}
           options={books}
-          value={selectedBook}
-          onChange={(_, value) => setSelectedBook(value)}
+          value={current.selectedBook}
+          onChange={(_, value) =>
+            updateTab(currentTab, { selectedBook: value })
+          }
           renderInput={(params) => (
             <TextField
               {...params}

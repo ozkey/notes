@@ -4,16 +4,35 @@ import "suneditor/css/editor";
 import "suneditor/css/contents";
 import HelloWorld from "./EditorPlugin";
 
-export default function Editor() {
+export default function Editor({
+  value = "",
+  onChange,
+}: {
+  value?: string;
+  onChange?: (html: string) => void;
+}) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<any>(null);
 
   useEffect(() => {
     const instance = suneditor.create(ref.current!, {
       plugins: { ...plugins, HelloWorld },
-      value: "<p>Hello SunEditor</p>",
+      value: value || "",
       events: {
-        onSave: async (params) => {
-          console.log("Saved content:", params?.data);
+        // widen type to any to avoid incorrect Event typing from lib
+        onSave: async (params: any) => {
+          let contents = "";
+          if (typeof params === "string") {
+            contents = params;
+          } else if (params && typeof params.data === "string") {
+            contents = params.data;
+          } else if (
+            editorRef.current &&
+            typeof editorRef.current.getContents === "function"
+          ) {
+            contents = editorRef.current.getContents();
+          }
+          onChange?.(contents || "");
           return true;
         },
         onChange: (params: {
@@ -21,7 +40,7 @@ export default function Editor() {
           frameContext: unknown;
           data: string;
         }) => {
-          console.log("Content changed:", params.data);
+          onChange?.(params.data);
         },
       },
       buttonList: [
@@ -46,8 +65,22 @@ export default function Editor() {
       ],
     });
 
+    editorRef.current = instance;
+
     return () => instance.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // update editor contents when value changes from parent
+  useEffect(() => {
+    if (editorRef.current) {
+      try {
+        editorRef.current.setContents(value || "");
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [value]);
 
   return <textarea ref={ref} />;
 }

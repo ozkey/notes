@@ -1,5 +1,6 @@
 import React, { createContext, useState } from "react";
 
+// List of common 66 books of the Protestant Bible
 export const BIBLE_BOOKS: string[] = [
   "Genesis",
   "Exodus",
@@ -69,30 +70,97 @@ export const BIBLE_BOOKS: string[] = [
   "Revelation",
 ];
 
-export interface BibleContextType {
+export interface TabState {
   selectedBook: string | null;
-  setSelectedBook: (b: string ) => void;
-  books: string[];
   chapterNumber: number;
-  setChapterNumber: (n: number) => void;
+  notes: string;
+}
+
+export interface BibleContextType {
+  tabs: TabState[];
+  currentTab: number;
+  setCurrentTab: (i: number) => void;
+  addTab: () => void;
+  closeTab: (i: number) => void;
+  updateTab: (i: number, patch: Partial<TabState>) => void;
+  books: string[];
 }
 
 export const BibleContext = createContext<BibleContextType>({
-  selectedBook: null,
+  tabs: [
+    {
+      selectedBook: "Matthew",
+      chapterNumber: 1,
+      notes: "",
+    },
+  ],
+  currentTab: 0,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  setSelectedBook: () => {},
+  setCurrentTab: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  addTab: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  closeTab: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  updateTab: () => {},
   books: BIBLE_BOOKS,
-  chapterNumber: 1,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  setChapterNumber: () => {},
 });
 
-export const BibleProvider: React.FC<{ children: any }> = ({ children }) => {
-  const [selectedBook, setSelectedBook] = useState<string>("Matthew");
-  const [chapterNumber, setChapterNumber] = useState<number>(1);
+export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [tabs, setTabs] = useState<TabState[]>([
+    { selectedBook: "Matthew", chapterNumber: 1, notes: "" },
+  ]);
+  const [currentTab, setCurrentTab] = useState<number>(0);
 
-  // Return without JSX so this file can remain .ts
-  return React.createElement(BibleContext.Provider, { value: { selectedBook, setSelectedBook, books: BIBLE_BOOKS, chapterNumber, setChapterNumber } }, children);
+  const addTab = () => {
+    setTabs((prev) => {
+      if (prev.length >= 4) return prev;
+      const next = [
+        ...prev,
+        { selectedBook: null, chapterNumber: 1, notes: "" },
+      ];
+      setCurrentTab(next.length - 1);
+      return next;
+    });
+  };
+
+  const closeTab = (i: number) => {
+    setTabs((prev) => {
+      if (prev.length <= 1) return prev; // keep at least one
+      const next = prev.filter((_, idx) => idx !== i);
+      setCurrentTab((cur) => {
+        if (i < cur) return cur - 1;
+        if (i === cur) return Math.max(0, cur - 1);
+        return cur;
+      });
+      return next;
+    });
+  };
+
+  const updateTab = (i: number, patch: Partial<TabState>) => {
+    setTabs((prev) =>
+      prev.map((t, idx) => (idx === i ? { ...t, ...patch } : t)),
+    );
+  };
+
+  // Return without JSX to keep file .ts
+  return React.createElement(
+    BibleContext.Provider,
+    {
+      value: {
+        tabs,
+        currentTab,
+        setCurrentTab,
+        addTab,
+        closeTab,
+        updateTab,
+        books: BIBLE_BOOKS,
+      },
+    },
+    children,
+  );
 };
 
 export default BibleContext;

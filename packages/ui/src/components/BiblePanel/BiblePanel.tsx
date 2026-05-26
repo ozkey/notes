@@ -1,4 +1,5 @@
-import { Box, Card, CardContent, Tabs, Tab } from "@mui/material";
+import { Box, Card, CardContent, Tabs, Tab, IconButton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import React, { useContext } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import { BibleText } from "./BibleText";
@@ -33,14 +34,17 @@ function a11yProps(index: number) {
   };
 }
 export const BiblePanel: React.FC = () => {
-  const { selectedBook, chapterNumber } = useContext(
+  const { tabs, currentTab, setCurrentTab, addTab, closeTab } = useContext(
     BibleContext as React.Context<any>,
   );
 
-  const [value, setValue] = React.useState(0);
-
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
+    // if user clicked the + tab (index === tabs.length) then add
+    if (newValue === tabs.length) {
+      addTab();
+      return;
+    }
+    setCurrentTab(newValue);
   };
 
   return (
@@ -56,30 +60,47 @@ export const BiblePanel: React.FC = () => {
       >
         <CardContent>
           <Tabs
-            value={value}
+            value={currentTab}
             onChange={handleChange}
-            aria-label="basic tabs example"
+            aria-label="bible tabs"
           >
-            <Tab
-              label={
-                selectedBook
-                  ? `${selectedBook} ${chapterNumber}`
-                  : "Select a book"
-              }
-              {...a11yProps(0)}
-            />
-            <Tab label="Item Two" {...a11yProps(1)} />
+            {tabs.map((t: any, i: number) => (
+              <Tab
+                key={i}
+                label={
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span style={{ marginRight: 8 }}>
+                      {t.selectedBook
+                        ? `${t.selectedBook} ${t.chapterNumber}`
+                        : "Select a book"}
+                    </span>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        closeTab(i);
+                      }}
+                      aria-label={`close-tab-${i}`}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </div>
+                }
+                {...a11yProps(i)}
+              />
+            ))}
+            {tabs.length < 4 && <Tab label="+" {...a11yProps(tabs.length)} />}
           </Tabs>
-          <CustomTabPanel value={value} index={0}>
-            <ToolbarPanel />
-            <BibleText
-              selectedBook={selectedBook}
-              chapterNumber={chapterNumber}
-            />
-          </CustomTabPanel>
-          <CustomTabPanel value={value} index={1}>
-            <BibleText selectedBook={"Genesis"} chapterNumber={2} />
-          </CustomTabPanel>
+
+          {tabs.map((t: any, i: number) => (
+            <CustomTabPanel key={i} value={currentTab} index={i}>
+              <ToolbarPanel />
+              <BibleText
+                selectedBook={t.selectedBook}
+                chapterNumber={t.chapterNumber}
+              />
+            </CustomTabPanel>
+          ))}
         </CardContent>
       </Card>
     </Box>
