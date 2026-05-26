@@ -33,6 +33,7 @@ export default function Editor({
             contents = editorRef.current.getContents();
           }
           onChange?.(contents || "");
+          console.log(contents);
           return true;
         },
         onChange: (params: {
@@ -40,6 +41,7 @@ export default function Editor({
           frameContext: unknown;
           data: string;
         }) => {
+          console.log(params.data);
           onChange?.(params.data);
         },
       },
