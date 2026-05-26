@@ -36,9 +36,10 @@ export const ToolbarPanel: React.FC = () => {
     <Box
       component="div"
       sx={{
-        backgroundColor: "#fff",
-        padding: "12px 0",
-        borderBottom: "1px solid rgba(0,0,0,0.08)",
+        // backgroundColor: "#fff",
+        padding: "0px",
+        margin: "0 0 20px 0",
+        // borderBottom: "1px solid rgba(0,0,0,0.08)",
       }}
     >
       <Container maxWidth="xl" sx={{ display: "flex", alignItems: "center" }}>

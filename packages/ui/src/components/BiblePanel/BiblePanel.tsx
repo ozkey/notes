@@ -1,9 +1,18 @@
-import { Box, Card, CardContent, Tabs, Tab, IconButton } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Tabs,
+  Tab,
+  IconButton,
+  Container,
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import React, { useContext } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import { BibleText } from "./BibleText";
 import { ToolbarPanel } from "../Toolbar";
+import { StudyPanel } from "../StudyPanel";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -48,61 +57,69 @@ export const BiblePanel: React.FC = () => {
   };
 
   return (
-    <Box key={1}>
-      <Card
-        sx={{
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          boxShadow: 3,
-          minHeight: "500px",
-        }}
-      >
-        <CardContent>
-          <Tabs
-            value={currentTab}
-            onChange={handleChange}
-            aria-label="bible tabs"
-          >
-            {tabs.map((t: any, i: number) => (
-              <Tab
-                key={i}
-                label={
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <span style={{ marginRight: 8 }}>
-                      {t.selectedBook
-                        ? `${t.selectedBook} ${t.chapterNumber}`
-                        : "Select a book"}
-                    </span>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        closeTab(i);
-                      }}
-                      aria-label={`close-tab-${i}`}
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  </div>
-                }
-                {...a11yProps(i)}
-              />
-            ))}
-            {tabs.length < 4 && <Tab label="+" {...a11yProps(tabs.length)} />}
-          </Tabs>
+    <Container maxWidth="xl">
+      <Box component="main" sx={{ flex: 1, padding: "40px 0 0 0" }}>
+        <Card sx={{ bgcolor: "grey.50" }}>
+          <CardContent>
+            <Tabs
+              value={currentTab}
+              onChange={handleChange}
+              aria-label="bible tabs"
+            >
+              {tabs.map((t: any, i: number) => (
+                <Tab
+                  key={i}
+                  label={
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <span style={{ marginRight: 8 }}>
+                        {t.selectedBook
+                          ? `${t.selectedBook} ${t.chapterNumber}`
+                          : "Select a book"}
+                      </span>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          closeTab(i);
+                        }}
+                        aria-label={`close-tab-${i}`}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </div>
+                  }
+                  {...a11yProps(i)}
+                />
+              ))}
+              {tabs.length < 4 && <Tab label="+" {...a11yProps(tabs.length)} />}
+            </Tabs>
 
-          {tabs.map((t: any, i: number) => (
-            <CustomTabPanel key={i} value={currentTab} index={i}>
-              <ToolbarPanel />
-              <BibleText
-                selectedBook={t.selectedBook}
-                chapterNumber={t.chapterNumber}
-              />
-            </CustomTabPanel>
-          ))}
-        </CardContent>
-      </Card>
-    </Box>
+            {tabs.map((t: any, i: number) => (
+              <CustomTabPanel key={i} value={currentTab} index={i}>
+                <ToolbarPanel />
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "1fr 1fr",
+                      md: "1fr 1fr",
+                    },
+                    gap: 3,
+                  }}
+                >
+                  <BibleText
+                    selectedBook={t.selectedBook}
+                    chapterNumber={t.chapterNumber}
+                  />
+                  <StudyPanel />
+                </Box>
+              </CustomTabPanel>
+            ))}
+          </CardContent>
+        </Card>
+      </Box>
+    </Container>
   );
 };

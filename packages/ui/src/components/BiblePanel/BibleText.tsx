@@ -43,7 +43,7 @@ export const BibleText: React.FC<{
   }
 
   return (
-    <Card variant="outlined">
+    <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
           {chapter.name}

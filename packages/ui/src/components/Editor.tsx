@@ -69,7 +69,7 @@ export default function Editor({
 
     return () => instance.destroy();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, []);
 
   // update editor contents when value changes from parent
   useEffect(() => {
