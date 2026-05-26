@@ -1,7 +1,7 @@
 import { Box, Card, CardContent, Typography } from "@mui/material";
 import React, { useContext } from "react";
 import BibleContext from "../contexts/BibleContext";
-import Editor from "./Editor";
+import Editor from "./Editor/Editor";
 
 export const StudyPanel: React.FC = () => {
   const { tabs, currentTab, updateTab } = useContext(
