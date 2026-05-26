@@ -60,7 +60,7 @@ export default function Editor({
         ["save", "|"],
         ["copy", "selectAll", "|", "outdent", "indent", "align", "list"],
         ["|", "table", "image", "video"],
-        ["|", "blockquote", "anchor", "link", "calloutBlock", "helloWorld"],
+        ["|", "anchor", "link", "blockquote", "calloutBlock", "helloWorld"],
 
         ["-right", "codeView", "showBlocks", "fullScreen", "preview", "print"],
         "/",
