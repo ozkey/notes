@@ -3,6 +3,14 @@ import React, { useContext } from "react";
 import BibleContext from "../contexts/BibleContext";
 import Editor from "./Editor/Editor";
 
+const saveNotesToFile = (notes: string) => {
+  alert("saving notes to file is not implemented yet");
+};
+
+const loadNotesFromFile = () => {
+  alert("loading notes from file is not implemented yet");
+};
+
 export const StudyPanel: React.FC = () => {
   const { tabs, currentTab, updateTab } = useContext(
     BibleContext as React.Context<any>,
@@ -17,20 +25,10 @@ export const StudyPanel: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <Button
-          variant="outlined"
-          onClick={() => {
-            alert("loading notes from file is not implemented yet");
-          }}
-        >
+        <Button variant="outlined" onClick={() => saveNotesToFile("")}>
           Load
         </Button>
-        <Button
-          variant="outlined"
-          onClick={() => {
-            alert("saving notes to file is not implemented yet");
-          }}
-        >
+        <Button variant="outlined" onClick={() => loadNotesFromFile()}>
           Save
         </Button>
 
