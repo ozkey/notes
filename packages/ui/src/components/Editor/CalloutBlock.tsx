@@ -15,7 +15,7 @@ const STYLES = [
  * Pattern: align, font, blockStyle, lineHeight
  */
 class CalloutBlock extends interfaces.PluginDropdown {
-  static key = "helloWorld";
+  static key = "calloutBlock";
 
   constructor(kernel: SunEditor.Kernel) {
     super(kernel);

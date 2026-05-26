@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import suneditor, { plugins } from "suneditor";
 import "suneditor/css/editor";
 import "suneditor/css/contents";
-import HelloWorld from "./EditorPlugin";
+import HelloWorld from "./CalloutBlock";
 
 export default function Editor({
   value = "",
@@ -59,7 +59,7 @@ export default function Editor({
         ["save", "|"],
         ["copy", "selectAll", "|", "outdent", "indent", "align", "list"],
         ["|", "table", "image", "video"],
-        ["|", "blockquote", "anchor", "link", "helloWorld"],
+        ["|", "blockquote", "anchor", "link", "calloutBlock"],
 
         ["-right", "codeView", "showBlocks", "fullScreen", "preview", "print"],
         "/",
