@@ -5,15 +5,23 @@ import Editor from "./Editor/Editor";
 import { SaveOpen } from "./SaveOpen";
 
 export const StudyPanel: React.FC = () => {
-  const { tabs, currentTab, updateTab } = useContext(
+  const { tabs, currentTab, notes, setNoteForBookChapter } = useContext(
     BibleContext as React.Context<any>,
   );
 
-  const current = tabs[currentTab] ?? {
+  const currentTabState = tabs[currentTab] ?? {
     selectedBook: null,
     chapterNumber: 1,
-    notes: "",
   };
+
+  console.log("notes", notes);
+  if (!notes) return <></>;
+  const currentNoteText =
+    notes.find(
+      (entry: any) =>
+        entry.book === currentTabState.selectedBook &&
+        entry.chapterNumber === currentTabState.chapterNumber,
+    )?.text ?? "";
 
   return (
     <Card>
@@ -21,11 +29,21 @@ export const StudyPanel: React.FC = () => {
         <SaveOpen />
 
         <Editor
-          value={current.notes}
-          onChange={(html) => updateTab(currentTab, { notes: html })}
+          value={currentNoteText}
+          onChange={(html) =>
+            setNoteForBookChapter(
+              currentTabState.selectedBook,
+              currentTabState.chapterNumber,
+              html,
+            )
+          }
           onSave={(html) => {
             console.log("Saving notes to file", html);
-            updateTab(currentTab, { notes: html });
+            setNoteForBookChapter(
+              currentTabState.selectedBook,
+              currentTabState.chapterNumber,
+              html,
+            );
           }}
         />
       </CardContent>

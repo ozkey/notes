@@ -10,7 +10,6 @@ export const ToolbarPanel: React.FC = () => {
   const current = tabs[currentTab] ?? {
     selectedBook: null,
     chapterNumber: 1,
-    notes: "",
   };
 
   const [chapterInput, setChapterInput] = useState<string>(

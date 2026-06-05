@@ -3,15 +3,9 @@ import React, { useContext, useRef } from "react";
 import BibleContext from "../contexts/BibleContext";
 
 export const SaveOpen: React.FC = () => {
-  const { tabs, currentTab, updateTab } = useContext(
+  const { notes, replaceAllNotes } = useContext(
     BibleContext as React.Context<any>,
   );
-
-  const current = tabs[currentTab] ?? {
-    selectedBook: null,
-    chapterNumber: 1,
-    notes: "",
-  };
 
   // Keep the file handle so subsequent saves write to the same location/name.
   const fileHandleRef = useRef<any>(null);
@@ -20,9 +14,7 @@ export const SaveOpen: React.FC = () => {
   // otherwise falls back to creating a downloadable blob.
   const saveNotesToFile = async () => {
     const payload = {
-      selectedBook: current.selectedBook,
-      chapterNumber: current.chapterNumber,
-      notes: current.notes,
+      notes: notes,
       savedAt: new Date().toISOString(),
     };
 
@@ -123,15 +115,24 @@ export const SaveOpen: React.FC = () => {
       console.log("text", text);
       const parsed = JSON.parse(text);
 
-      // Allow files that are either a raw string, an object with 'notes', or full payload.
-      const notes =
-        typeof parsed === "string"
-          ? parsed
-          : parsed && parsed.notes
-            ? parsed.notes
-            : "";
+      // Normalized parsed -> entries array. Accept legacy formats:
+      // - { notes: [...] }
+      // - array of entries
+      // - raw string (apply to current book/chapter would be ambiguous) -> wrap as a single note
+      let loadedNotes: any[] = [];
+      if (Array.isArray(parsed)) {
+        loadedNotes = parsed;
+      } else if (parsed && parsed.notes && Array.isArray(parsed.notes)) {
+        loadedNotes = parsed.notes;
+      } else if (typeof parsed === "string") {
+        // wrap legacy single-string payload as a single-entry with no book/chapter
+        loadedNotes = [{ book: null, chapterNumber: 1, text: parsed }];
+      } else if (parsed && parsed.text) {
+        // single note object
+        loadedNotes = [parsed];
+      }
 
-      updateTab(currentTab, { notes });
+      replaceAllNotes(loadedNotes as any[]);
     } catch (err) {
       console.error("Failed to load notes:", err);
       alert("Loading notes was cancelled or failed.");

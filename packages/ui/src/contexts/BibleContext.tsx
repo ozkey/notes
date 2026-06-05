@@ -73,17 +73,29 @@ export const BIBLE_BOOKS: string[] = [
 export interface TabState {
   selectedBook: string | null;
   chapterNumber: number;
-  notes: string;
+}
+
+export interface NoteEntry {
+  book: string | null;
+  chapterNumber: number;
+  text: string;
 }
 
 export interface BibleContextType {
   tabs: TabState[];
   currentTab: number;
-  setCurrentTab: (i: number) => void;
+  setCurrentTab: (index: number) => void;
   addTab: () => void;
-  closeTab: (i: number) => void;
-  updateTab: (i: number, patch: Partial<TabState>) => void;
+  closeTab: (index: number) => void;
+  updateTab: (index: number, patch: Partial<TabState>) => void;
   books: string[];
+  notes: NoteEntry[];
+  setNoteForBookChapter: (
+    book: string | null,
+    chapterNumber: number,
+    text: string,
+  ) => void;
+  replaceAllNotes: (entries: NoteEntry[]) => void;
 }
 
 export const BibleContext = createContext<BibleContextType>({
@@ -91,7 +103,6 @@ export const BibleContext = createContext<BibleContextType>({
     {
       selectedBook: "Matthew",
       chapterNumber: 1,
-      notes: "",
     },
   ],
   currentTab: 0,
@@ -104,13 +115,21 @@ export const BibleContext = createContext<BibleContextType>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   updateTab: () => {},
   books: BIBLE_BOOKS,
+  notes: [{ book: "Matthew", chapterNumber: 1, text: "" }],
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  setNoteForBookChapter: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  replaceAllNotes: () => {},
 });
 
 export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [tabs, setTabs] = useState<TabState[]>([
-    { selectedBook: "Matthew", chapterNumber: 1, notes: "" },
+    { selectedBook: "Matthew", chapterNumber: 1 },
+  ]);
+  const [notes, setNotes] = useState<NoteEntry[]>([
+    { book: "Matthew", chapterNumber: 1, text: "" },
   ]);
   const [currentTab, setCurrentTab] = useState<number>(0);
 
@@ -145,6 +164,31 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
+  const setNoteForBookChapter = (
+    book: string | null,
+    chapterNumber: number,
+    text: string,
+  ) => {
+    setNotes((previousEntries) => {
+      // find existing note for same book and chapter
+      const existingIndex = previousEntries.findIndex(
+        (entry) => entry.book === book && entry.chapterNumber === chapterNumber,
+      );
+      if (existingIndex >= 0) {
+        const next = previousEntries.map((entry, idx) =>
+          idx === existingIndex ? { ...entry, text } : entry,
+        );
+        return next;
+      }
+      // otherwise append
+      return [...previousEntries, { book, chapterNumber, text }];
+    });
+  };
+
+  const replaceAllNotes = (entries: NoteEntry[]) => {
+    setNotes(entries ?? []);
+  };
+
   return (
     <BibleContext.Provider
       value={{
@@ -155,6 +199,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         closeTab,
         updateTab,
         books: BIBLE_BOOKS,
+        notes,
+        setNoteForBookChapter,
+        replaceAllNotes,
       }}
     >
       {children}
