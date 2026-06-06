@@ -11,8 +11,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import React, { useContext } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import { BibleText } from "./BibleText";
-import { ToolbarPanel } from "../Toolbar";
+import { BookActions } from "../ActionBar/BookActions";
 import { StudyPanel } from "../StudyPanel";
+import { ContainedButtons } from "../ActionBar/ActionBar";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -58,7 +59,8 @@ export const BiblePanel: React.FC = () => {
 
   return (
     <Container maxWidth="xl">
-      <Box component="main" sx={{ flex: 1, padding: "40px 0 0 0" }}>
+      <ContainedButtons />
+      <Box component="main" sx={{ flex: 1, padding: "10px 0 0 0" }}>
         <Card sx={{ bgcolor: "grey.50" }}>
           <CardContent>
             <Tabs
@@ -76,16 +78,16 @@ export const BiblePanel: React.FC = () => {
                           ? `${t.selectedBook} ${t.chapterNumber}`
                           : "Select a book"}
                       </span>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          closeTab(i);
-                        }}
-                        aria-label={`close-tab-${i}`}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
+                      {/*<IconButton*/}
+                      {/*  size="small"*/}
+                      {/*  onClick={(e) => {*/}
+                      {/*    e.stopPropagation();*/}
+                      {/*    closeTab(i);*/}
+                      {/*  }}*/}
+                      {/*  aria-label={`close-tab-${i}`}*/}
+                      {/*>*/}
+                      {/*  <CloseIcon fontSize="small" />*/}
+                      {/*</IconButton>*/}
                     </div>
                   }
                   {...a11yProps(i)}
@@ -96,8 +98,6 @@ export const BiblePanel: React.FC = () => {
 
             {tabs.map((t: any, i: number) => (
               <CustomTabPanel key={i} value={currentTab} index={i}>
-                <ToolbarPanel />
-
                 <Box
                   sx={{
                     display: "grid",

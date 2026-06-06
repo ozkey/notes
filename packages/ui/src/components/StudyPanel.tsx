@@ -2,7 +2,6 @@ import { Card, CardContent } from "@mui/material";
 import React, { useContext } from "react";
 import BibleContext from "../contexts/BibleContext";
 import Editor from "./Editor/Editor";
-import { SaveOpen } from "./SaveOpen";
 
 export const StudyPanel: React.FC = () => {
   const { tabs, currentTab, notes, setNoteForBookChapter } = useContext(
@@ -26,8 +25,6 @@ export const StudyPanel: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <SaveOpen />
-
         <Editor
           value={currentNoteText}
           onChange={(html) =>

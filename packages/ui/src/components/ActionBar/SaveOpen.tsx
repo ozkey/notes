@@ -1,6 +1,6 @@
 import { Button } from "@mui/material";
 import React, { useContext, useRef } from "react";
-import BibleContext from "../contexts/BibleContext";
+import BibleContext from "../../contexts/BibleContext";
 
 export const SaveOpen: React.FC = () => {
   const { notes, replaceAllNotes } = useContext(
