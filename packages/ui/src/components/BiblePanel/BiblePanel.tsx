@@ -61,41 +61,40 @@ export const BiblePanel: React.FC = () => {
     <Container maxWidth="xl">
       <ContainedButtons />
       <Box component="main" sx={{ flex: 1, padding: "10px 0 0 0" }}>
+        <Tabs
+          value={currentTab}
+          onChange={handleChange}
+          aria-label="bible tabs"
+        >
+          {tabs.map((t: any, i: number) => (
+            <Tab
+              key={i}
+              label={
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <span style={{ marginRight: 8 }}>
+                    {t.selectedBook
+                      ? `${t.selectedBook} ${t.chapterNumber}`
+                      : "Select a book"}
+                  </span>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeTab(i);
+                    }}
+                    aria-label={`close-tab-${i}`}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </div>
+              }
+              {...a11yProps(i)}
+            />
+          ))}
+          {tabs.length < 4 && <Tab label="+" {...a11yProps(tabs.length)} />}
+        </Tabs>
         <Card sx={{ bgcolor: "grey.50" }}>
           <CardContent>
-            <Tabs
-              value={currentTab}
-              onChange={handleChange}
-              aria-label="bible tabs"
-            >
-              {tabs.map((t: any, i: number) => (
-                <Tab
-                  key={i}
-                  label={
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <span style={{ marginRight: 8 }}>
-                        {t.selectedBook
-                          ? `${t.selectedBook} ${t.chapterNumber}`
-                          : "Select a book"}
-                      </span>
-                      {/*<IconButton*/}
-                      {/*  size="small"*/}
-                      {/*  onClick={(e) => {*/}
-                      {/*    e.stopPropagation();*/}
-                      {/*    closeTab(i);*/}
-                      {/*  }}*/}
-                      {/*  aria-label={`close-tab-${i}`}*/}
-                      {/*>*/}
-                      {/*  <CloseIcon fontSize="small" />*/}
-                      {/*</IconButton>*/}
-                    </div>
-                  }
-                  {...a11yProps(i)}
-                />
-              ))}
-              {tabs.length < 4 && <Tab label="+" {...a11yProps(tabs.length)} />}
-            </Tabs>
-
             {tabs.map((t: any, i: number) => (
               <CustomTabPanel key={i} value={currentTab} index={i}>
                 <Box
@@ -106,7 +105,7 @@ export const BiblePanel: React.FC = () => {
                       sm: "1fr 1fr",
                       md: "1fr 1fr",
                     },
-                    gap: 3,
+                    gap: 1,
                   }}
                 >
                   <BibleText
