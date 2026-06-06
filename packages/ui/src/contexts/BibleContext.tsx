@@ -90,6 +90,8 @@ export interface BibleContextType {
   updateTab: (index: number, patch: Partial<TabState>) => void;
   books: string[];
   notes: NoteEntry[];
+  refreshNotesDate: Date;
+  setRefreshNotesDate: (date: Date) => void;
   setNoteForBookChapter: (
     book: string | null,
     chapterNumber: number,
@@ -116,6 +118,9 @@ export const BibleContext = createContext<BibleContextType>({
   updateTab: () => {},
   books: BIBLE_BOOKS,
   notes: [{ book: "Matthew", chapterNumber: 1, text: "" }],
+  // if file loads refresh the date
+  refreshNotesDate: new Date(),
+  setRefreshNotesDate: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setNoteForBookChapter: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -131,6 +136,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const [notes, setNotes] = useState<NoteEntry[]>([
     { book: "Matthew", chapterNumber: 1, text: "" },
   ]);
+  const [refreshNotesDate, setRefreshNotesDate] = useState<Date>(new Date());
   const [currentTab, setCurrentTab] = useState<number>(0);
 
   const addTab = () => {
@@ -158,10 +164,11 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  const updateTab = (i: number, patch: Partial<TabState>) => {
+  const updateTab = (tabId: number, patch: Partial<TabState>) => {
     setTabs((prev) =>
-      prev.map((t, idx) => (idx === i ? { ...t, ...patch } : t)),
+      prev.map((t, idx) => (idx === tabId ? { ...t, ...patch } : t)),
     );
+    setRefreshNotesDate(new Date());
   };
 
   const setNoteForBookChapter = (
@@ -183,10 +190,12 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       // otherwise append
       return [...previousEntries, { book, chapterNumber, text }];
     });
+    setRefreshNotesDate(new Date());
   };
 
   const replaceAllNotes = (entries: NoteEntry[]) => {
     setNotes(entries ?? []);
+    setRefreshNotesDate(new Date());
   };
 
   return (
@@ -200,6 +209,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         updateTab,
         books: BIBLE_BOOKS,
         notes,
+        refreshNotesDate,
+        setRefreshNotesDate,
         setNoteForBookChapter,
         replaceAllNotes,
       }}

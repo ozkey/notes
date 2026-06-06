@@ -7,11 +7,11 @@ import HelloWorld from "./EditorPlugin";
 
 export default function Editor({
   value = "",
-  onChange,
+  refreshNotesDate,
   onSave,
 }: {
   value?: string;
-  onChange?: (html: string) => void;
+  refreshNotesDate?: Date;
   onSave?: (html: string) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -32,30 +32,30 @@ export default function Editor({
       },
       events: {
         // widen type to any to avoid incorrect Event typing from lib
-        onSave: async (params: any) => {
-          let contents = "";
-          if (typeof params === "string") {
-            contents = params;
-          } else if (params && typeof params.data === "string") {
-            contents = params.data;
-          } else if (
-            editorRef.current &&
-            typeof editorRef.current.getContents === "function"
-          ) {
-            contents = editorRef.current.getContents();
-          }
-          onChange?.(contents || "");
-          onSave?.(contents || "");
-          console.log(contents);
-          return true;
-        },
+        // onSave: async (params: any) => {
+        //   let contents = "";
+        //   if (typeof params === "string") {
+        //     contents = params;
+        //   } else if (params && typeof params.data === "string") {
+        //     contents = params.data;
+        //   } else if (
+        //     editorRef.current &&
+        //     typeof editorRef.current.getContents === "function"
+        //   ) {
+        //     contents = editorRef.current.getContents();
+        //   }
+        //
+        //   onSave?.(contents || "");
+        //   console.log(contents);
+        //   return true;
+        // },
         onChange: (params: {
           $: unknown;
           frameContext: unknown;
           data: string;
         }) => {
           console.log(params.data);
-          onChange?.(params.data);
+          onSave?.(params.data);
         },
       },
       buttonList: [
@@ -84,7 +84,7 @@ export default function Editor({
 
     return () => instance.destroy();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refreshNotesDate]);
 
   // update editor contents when value changes from parent
   // useEffect(() => {

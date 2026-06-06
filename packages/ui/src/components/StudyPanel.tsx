@@ -4,9 +4,8 @@ import BibleContext from "../contexts/BibleContext";
 import Editor from "./Editor/Editor";
 
 export const StudyPanel: React.FC = () => {
-  const { tabs, currentTab, notes, setNoteForBookChapter } = useContext(
-    BibleContext as React.Context<any>,
-  );
+  const { tabs, currentTab, notes, setNoteForBookChapter, refreshNotesDate } =
+    useContext(BibleContext as React.Context<any>);
 
   const currentTabState = tabs[currentTab] ?? {
     selectedBook: null,
@@ -27,13 +26,6 @@ export const StudyPanel: React.FC = () => {
       <CardContent>
         <Editor
           value={currentNoteText}
-          onChange={(html) =>
-            setNoteForBookChapter(
-              currentTabState.selectedBook,
-              currentTabState.chapterNumber,
-              html,
-            )
-          }
           onSave={(html) => {
             console.log("Saving notes to file", html);
             setNoteForBookChapter(
@@ -42,6 +34,7 @@ export const StudyPanel: React.FC = () => {
               html,
             );
           }}
+          refreshNotesDate={refreshNotesDate}
         />
       </CardContent>
     </Card>
