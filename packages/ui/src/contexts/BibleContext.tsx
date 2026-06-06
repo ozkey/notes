@@ -190,7 +190,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       // otherwise append
       return [...previousEntries, { book, chapterNumber, text }];
     });
-    setRefreshNotesDate(new Date());
+    // makes the editor reset as you type
+    // setRefreshNotesDate(new Date());
   };
 
   const replaceAllNotes = (entries: NoteEntry[]) => {

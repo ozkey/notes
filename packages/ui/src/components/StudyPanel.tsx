@@ -26,7 +26,7 @@ export const StudyPanel: React.FC = () => {
       <CardContent>
         <Editor
           value={currentNoteText}
-          onSave={(html) => {
+          onChange={(html) => {
             console.log("Saving notes to file", html);
             setNoteForBookChapter(
               currentTabState.selectedBook,

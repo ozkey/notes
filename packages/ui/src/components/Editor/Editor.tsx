@@ -8,11 +8,11 @@ import HelloWorld from "./EditorPlugin";
 export default function Editor({
   value = "",
   refreshNotesDate,
-  onSave,
+  onChange,
 }: {
   value?: string;
   refreshNotesDate?: Date;
-  onSave?: (html: string) => void;
+  onChange?: (html: string) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const editorRef = useRef<any>(null);
@@ -55,12 +55,12 @@ export default function Editor({
           data: string;
         }) => {
           console.log(params.data);
-          onSave?.(params.data);
+          onChange?.(params.data);
         },
       },
       buttonList: [
         //  "newDocument"
-        ["save", "|"],
+        // ["save", "|"],
         ["copy", "selectAll", "|", "outdent", "indent", "align", "list"],
         ["|", "table", "image", "video"],
         ["|", "anchor", "link", "blockquote", "calloutBlock", "helloWorld"],
