@@ -1,87 +1,101 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Notes</title>
-</head>
-<body>
-<script>
-    const data =
+
+    <style>
+      article {
+        border: 1px solid #ccc;
+        padding: 1em;
+        margin: 1em;
+      }
+    </style>
+    <script>
+      const data =
         // ========= DATA START =========
         {
-            "notes": [
-                {
-                    "book": "Matthew",
-                    "chapterNumber": 1,
-                    "text": "<h3>Matthew 1d</h3><p>This is a test&nbsp;</p><p>​d<br></p><p>sa<br></p><p>dsad<br></p><p>ASas <a href=\"#qwe\">aSaqs</a>​</p><p><br></p><blockquote data-style=\"Warning\" style=\"background: rgb(255, 243, 224); color: rgb(230, 81, 0); border-left: 3px solid rgb(255, 204, 128);\"><p>​sdasdsad<br></p></blockquote><p><br></p><p><br></p>"
-                },
-                {
-                    "book": "Leviticus",
-                    "chapterNumber": 1,
-                    "text": "<p>lev</p>"
-                },
-                {
-                    "book": "Daniel",
-                    "chapterNumber": 1,
-                    "text": "<p>Daniels 1</p><p><br></p><blockquote data-style=\"Warning\" style=\"background: rgb(255, 243, 224); color: rgb(230, 81, 0); border-left: 3px solid rgb(255, 204, 128);\"><p>this is my note<br></p></blockquote><p><br></p><p><br></p><p><br></p>"
-                }
-            ],
-            "savedAt": "2026-06-07T02:49:30.184Z"
-        }
-        // ========= DATA END =========
+          notes: [
+            {
+              book: "Matthew",
+              chapterNumber: 1,
+              text: '<h3>Matthew 1d</h3><p>This is a test&nbsp;</p><p>​d<br></p><p>sa<br></p><p>dsad<br></p><p>ASas <a href="#qwe">aSaqs</a>​</p><p><br></p><blockquote data-style="Warning" style="background: rgb(255, 243, 224); color: rgb(230, 81, 0); border-left: 3px solid rgb(255, 204, 128);"><p>​sdasdsad<br></p></blockquote><p><br></p><p><br></p>',
+            },
+            {
+              book: "Leviticus",
+              chapterNumber: 1,
+              text: "<p>lev</p>",
+            },
+            {
+              book: "Daniel",
+              chapterNumber: 1,
+              text: '<p>Daniels 1</p><p><br></p><blockquote data-style="Warning" style="background: rgb(255, 243, 224); color: rgb(230, 81, 0); border-left: 3px solid rgb(255, 204, 128);"><p>this is my note<br></p></blockquote><p><br></p><p><br></p><p><br></p>',
+            },
+          ],
+          savedAt: "2026-06-07T02:49:30.184Z",
+        };
+      // ========= DATA END =========
 
-    // Script to append each note into the #displayNotes container as an <article>
-    function addNotesToDisplay() {
-        const container = document.getElementById('displayNotes');
+      // Script to append each note into the #displayNotes container as an <article>
+      function addNotesToDisplay() {
+        const container = document.getElementById("displayNotes");
         if (!container) {
-            console.warn('No element with id "displayNotes" found.');
-            return;
+          console.warn('No element with id "displayNotes" found.');
+          return;
         }
 
         // Clear any existing content
-        container.innerHTML = '';
+        container.innerHTML = "";
 
         if (!data || !Array.isArray(data.notes)) {
-            console.warn('No notes found in data.');
-            return;
+          console.warn("No notes found in data.");
+          return;
         }
 
         data.notes.forEach((note, index) => {
-            try {
-                const article = document.createElement('article');
-                article.className = 'note';
-                article.dataset.index = index;
+          try {
+            const article = document.createElement("article");
+            article.className = "note";
+            article.dataset.index = index;
 
-                const book = note.book || 'Unknown Book';
-                const chapter = (note.chapterNumber !== undefined && note.chapterNumber !== null) ? note.chapterNumber : 'Unknown Chapter';
+            const book = note.book || "Unknown Book";
+            const chapter =
+              note.chapterNumber !== undefined && note.chapterNumber !== null
+                ? note.chapterNumber
+                : "Unknown Chapter";
 
-                const heading = document.createElement('h2');
-                heading.textContent = `${book} ${chapter}`;
-                article.appendChild(heading);
+            const heading = document.createElement("h2");
+            heading.id = `${book}-${chapter}`;
+            heading.textContent = `${book} ${chapter}`;
+            article.appendChild(heading);
 
-                const content = document.createElement('div');
-                content.className = 'note-content';
+            const content = document.createElement("div");
+            content.className = "note-content";
 
-                // note.text is HTML string in the data; insert as HTML
-                content.innerHTML = note.text || '';
-                article.appendChild(content);
+            // note.text is HTML string in the data; insert as HTML
+            content.innerHTML = note.text || "";
+            article.appendChild(content);
 
-                container.appendChild(article);
-            } catch (err) {
-                console.error('Failed to render note at index', index, err);
-            }
+            container.appendChild(article);
+          } catch (err) {
+            console.error("Failed to render note at index", index, err);
+          }
         });
-    }
+      }
 
-    // Populate when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addNotesToDisplay);
-    } else {
+      // Populate when DOM is ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", addNotesToDisplay);
+      } else {
         addNotesToDisplay();
-    }
-</script>
-</body>
-<div id="displayNotes">
+      }
+    </script>
+  </head>
 
-</div>
+  <body>
+    <div>
+      <div id="index"></div>
+      <div id="displayNotes"></div>
+    </div>
+  </body>
 </html>
