@@ -32,7 +32,7 @@ export const BookActions: React.FC = () => {
   };
 
   return (
-    <>
+    <div style={{ display: "flex", gap: "1em", padding: "0.5em" }}>
       <Autocomplete
         freeSolo={false}
         options={books}
@@ -64,6 +64,6 @@ export const BookActions: React.FC = () => {
         }}
         sx={{ width: 120, marginLeft: 2 }}
       />
-    </>
+    </div>
   );
 };

@@ -11,7 +11,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import React, { useContext } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import { BibleText } from "./BibleText";
-import { BookActions } from "../ActionBar/BookActions";
 import { StudyPanel } from "../StudyPanel";
 import { ContainedButtons } from "../ActionBar/ActionBar";
 

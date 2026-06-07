@@ -9,7 +9,7 @@ import {
 import React from "react";
 
 import textData from "./text.json";
-import { BookActions } from "../ActionBar/BookActions";
+import { BookActions } from "../Editor/BookActions";
 
 export const BibleText: React.FC<{
   selectedBook: string | null;

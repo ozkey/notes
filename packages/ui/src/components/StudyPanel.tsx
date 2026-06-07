@@ -1,7 +1,8 @@
-import { Button, Card, CardContent } from "@mui/material";
+import { Button, Card, CardActions, CardContent } from "@mui/material";
 import React, { useContext, useState } from "react";
 import BibleContext, { TabState } from "../contexts/BibleContext";
 import Editor from "./Editor/Editor";
+import { SaveOpen } from "./ActionBar/SaveOpen";
 
 export const StudyPanel: React.FC = () => {
   const { tabs, currentTab, notes, setNoteForBookChapter, refreshNotesDate } =
@@ -25,30 +26,60 @@ export const StudyPanel: React.FC = () => {
 
   return (
     <Card>
-      <CardContent>
-        {!editorOpen && (
+      <CardActions>
+        {!refreshNotesDate && (
+          <div>
+            <SaveOpen />
+          </div>
+        )}
+        {refreshNotesDate && !editorOpen && (
           <Button variant="outlined" onClick={() => setEditorOpen(true)}>
             Open Editor
           </Button>
         )}
-        {editorOpen && (
+        {refreshNotesDate && editorOpen && (
           <Button variant="outlined" onClick={() => setEditorOpen(false)}>
             Close Editor
           </Button>
         )}
-        {editorOpen && (
-          <Editor
-            value={currentNoteText}
-            onChange={(html) => {
-              console.log("Saving notes to file", html);
-              setNoteForBookChapter(
-                currentTabState.selectedBook,
-                currentTabState.chapterNumber,
-                html,
-              );
-            }}
-            refreshNotesDate={refreshNotesDate}
-          />
+      </CardActions>
+      <hr />
+      <CardContent>
+        {!refreshNotesDate && (
+          <div>
+            <h2>Notes</h2>
+            <br />
+            <p>
+              Notes are saved to a file on your computer as a html file. So your
+              notes are private and available to you even without internet
+              connection.
+            </p>
+            <p>
+              To get started, click the "New File" button to create a new notes
+              file.
+            </p>
+            <img
+              src={"/editor.png"}
+              alt="Instructions"
+              style={{ width: "100%" }}
+            />
+          </div>
+        )}
+        {refreshNotesDate && editorOpen && (
+          <>
+            <Editor
+              value={currentNoteText}
+              onChange={(html) => {
+                console.log("Saving notes to file", html);
+                setNoteForBookChapter(
+                  currentTabState.selectedBook,
+                  currentTabState.chapterNumber,
+                  html,
+                );
+              }}
+              refreshNotesDate={refreshNotesDate}
+            />
+          </>
         )}
         {!editorOpen && (
           <div

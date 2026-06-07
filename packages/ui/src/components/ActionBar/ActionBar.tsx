@@ -1,5 +1,4 @@
 import Stack from "@mui/material/Stack";
-import { BookActions } from "./BookActions";
 import { SaveOpen } from "./SaveOpen";
 import { Box, Card, CardContent } from "@mui/material";
 
@@ -9,7 +8,6 @@ export const ContainedButtons = () => {
       <Card sx={{ bgcolor: "grey.50" }}>
         <CardContent>
           <Stack direction="row" spacing={2}>
-            <BookActions />
             <SaveOpen />
           </Stack>
         </CardContent>

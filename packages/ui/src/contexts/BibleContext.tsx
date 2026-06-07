@@ -94,7 +94,7 @@ export interface BibleContextType {
   updateTab: (index: number, patch: Partial<TabState>) => void;
   books: string[];
   notes: NoteEntry[];
-  refreshNotesDate: Date;
+  refreshNotesDate: Date | undefined;
   setRefreshNotesDate: (date: Date) => void;
   setNoteForBookChapter: (
     book: string | null,
@@ -125,7 +125,7 @@ export const BibleContext = createContext<BibleContextType>({
   books: BIBLE_BOOKS,
   notes: [{ book: "Matthew", chapterNumber: 1, text: "" }],
   // if file loads refresh the date
-  refreshNotesDate: new Date(),
+  refreshNotesDate: undefined,
   setRefreshNotesDate: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setNoteForBookChapter: () => {},
@@ -146,7 +146,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const [notes, setNotes] = useState<NoteEntry[]>([
     { book: "Matthew", chapterNumber: 1, text: "" },
   ]);
-  const [refreshNotesDate, setRefreshNotesDate] = useState<Date>(new Date());
+  const [refreshNotesDate, setRefreshNotesDate] = useState<Date | undefined>(
+    undefined,
+  );
   const [currentTab, setCurrentTab] = useState<number>(0);
   // Keep a file handle so save/load can reuse the same file when supported by the
   // File System Access API.
@@ -236,9 +238,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         refreshNotesDate,
         setRefreshNotesDate,
         setNoteForBookChapter,
-          replaceAllNotes,
-          saveNotesToFile,
-          loadNotesFromFile,
+        replaceAllNotes,
+        saveNotesToFile,
+        loadNotesFromFile,
       }}
     >
       {children}
