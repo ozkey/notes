@@ -30,6 +30,55 @@
         }
         // ========= DATA END =========
 
+    // Script to append each note into the #displayNotes container as an <article>
+    function addNotesToDisplay() {
+        const container = document.getElementById('displayNotes');
+        if (!container) {
+            console.warn('No element with id "displayNotes" found.');
+            return;
+        }
+
+        // Clear any existing content
+        container.innerHTML = '';
+
+        if (!data || !Array.isArray(data.notes)) {
+            console.warn('No notes found in data.');
+            return;
+        }
+
+        data.notes.forEach((note, index) => {
+            try {
+                const article = document.createElement('article');
+                article.className = 'note';
+                article.dataset.index = index;
+
+                const book = note.book || 'Unknown Book';
+                const chapter = (note.chapterNumber !== undefined && note.chapterNumber !== null) ? note.chapterNumber : 'Unknown Chapter';
+
+                const heading = document.createElement('h2');
+                heading.textContent = `${book} ${chapter}`;
+                article.appendChild(heading);
+
+                const content = document.createElement('div');
+                content.className = 'note-content';
+
+                // note.text is HTML string in the data; insert as HTML
+                content.innerHTML = note.text || '';
+                article.appendChild(content);
+
+                container.appendChild(article);
+            } catch (err) {
+                console.error('Failed to render note at index', index, err);
+            }
+        });
+    }
+
+    // Populate when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', addNotesToDisplay);
+    } else {
+        addNotesToDisplay();
+    }
 </script>
 </body>
 <div id="displayNotes">
