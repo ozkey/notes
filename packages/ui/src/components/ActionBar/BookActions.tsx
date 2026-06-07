@@ -32,50 +32,38 @@ export const BookActions: React.FC = () => {
   };
 
   return (
-    <Box
-      component="div"
-      sx={{
-        // backgroundColor: "#fff",
-        padding: "0px",
-        margin: "0 0 20px 0",
-        // borderBottom: "1px solid rgba(0,0,0,0.08)",
-      }}
-    >
-      <Container maxWidth="xl" sx={{ display: "flex", alignItems: "center" }}>
-        <Autocomplete
-          freeSolo={false}
-          options={books}
-          value={current.selectedBook}
-          onChange={(_, value) =>
-            updateTab(currentTab, { selectedBook: value })
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Select Bible Book"
-              variant="outlined"
-              size="small"
-            />
-          )}
-          sx={{ width: 320 }}
-        />
+    <>
+      <Autocomplete
+        freeSolo={false}
+        options={books}
+        value={current.selectedBook}
+        onChange={(_, value) => updateTab(currentTab, { selectedBook: value })}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Select Bible Book"
+            variant="outlined"
+            size="small"
+          />
+        )}
+        sx={{ width: 320 }}
+      />
 
-        <TextField
-          label="Chapter"
-          variant="outlined"
-          size="small"
-          type="number"
-          value={chapterInput}
-          onChange={(e) => setChapterInput(e.target.value)}
-          onBlur={commitChapter}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              commitChapter();
-            }
-          }}
-          sx={{ width: 120, marginLeft: 2 }}
-        />
-      </Container>
-    </Box>
+      <TextField
+        label="Chapter"
+        variant="outlined"
+        size="small"
+        type="number"
+        value={chapterInput}
+        onChange={(e) => setChapterInput(e.target.value)}
+        onBlur={commitChapter}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            commitChapter();
+          }
+        }}
+        sx={{ width: 120, marginLeft: 2 }}
+      />
+    </>
   );
 };
