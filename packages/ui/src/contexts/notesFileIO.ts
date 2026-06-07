@@ -3,9 +3,123 @@ import React from "react";
 // Small helper file to handle saving/loading notes via File System Access API
 // or fallback download/input elements.
 
-// Save notes to a .json file. Mirrors the implementation previously in
-// BibleContext but accepts the notes and fileHandleRef as parameters so it
-// can be moved out of the large context file.
+// HTML template with DATA START and DATA END markers
+const TEMPLATE_HTML = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Notes</title>
+    <style>
+      article {
+        border: 1px solid #ccc;
+        padding: 1em;
+        margin: 1em;
+      }
+      #indexList {
+        border: 1px solid #ccc;
+        padding: 1em;
+        margin: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      const data =
+        // ========= DATA START =========
+        {
+          notes: [],
+          savedAt: "",
+        };
+      // ========= DATA END =========
+
+      // Script to append each note into the #displayNotes container as an <article>
+      function addNotesToDisplay() {
+        const container = document.getElementById("displayNotes");
+        const indexContainer = document.getElementById("indexList");
+        if (!container) {
+          console.warn('No element with id "displayNotes" found.');
+          return;
+        }
+
+        // Clear any existing content
+        container.innerHTML = "";
+
+        // Prepare index if available
+        let indexListEl = null;
+        if (indexContainer) {
+          indexContainer.innerHTML = "";
+          indexListEl = document.createElement("ul");
+          indexListEl.className = "index-list";
+        }
+
+        if (!data || !Array.isArray(data.notes)) {
+          console.warn("No notes found in data.");
+          return;
+        }
+
+        data.notes.forEach((note, index) => {
+          try {
+            const article = document.createElement("article");
+            article.className = "note";
+            article.dataset.index = index;
+            article.id = \`note-\${index}\`; // add id so links can target it
+
+            const book = note.book || "Unknown Book";
+            const chapter =
+              note.chapterNumber !== undefined && note.chapterNumber !== null
+                ? note.chapterNumber
+                : "Unknown Chapter";
+
+            const heading = document.createElement("h2");
+            heading.textContent = \`\${book} \${chapter}\`;
+            article.appendChild(heading);
+
+            const content = document.createElement("div");
+            content.className = "note-content";
+
+            // note.text is HTML string in the data; insert as HTML
+            content.innerHTML = note.text || "";
+            article.appendChild(content);
+
+            container.appendChild(article);
+
+            // Add to index list if present
+            if (indexListEl) {
+              const li = document.createElement("li");
+              const a = document.createElement("a");
+              a.href = \`#\${article.id}\`;
+              a.textContent = \`\${book} \${chapter}\`;
+              a.setAttribute("aria-label", \`Go to \${book} \${chapter}\`);
+              li.appendChild(a);
+              indexListEl.appendChild(li);
+            }
+          } catch (err) {
+            console.error("Failed to render note at index", index, err);
+          }
+        });
+
+        if (indexListEl && indexContainer) {
+          indexContainer.appendChild(indexListEl);
+        }
+      }
+
+      // Populate when DOM is ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", addNotesToDisplay);
+      } else {
+        addNotesToDisplay();
+      }
+    </script>
+
+    <h1>Your Notes</h1>
+    <div id="indexList"></div>
+
+    <div id="displayNotes"></div>
+  </body>
+</html>`;
+
+// Save notes to an HTML file with data embedded between DATA START and DATA END comments.
+// The notes and metadata are embedded as a JavaScript object in the HTML template.
 export async function saveNotesToFile(
   notes: any[],
   fileHandleRef: React.MutableRefObject<any | null>,
@@ -17,6 +131,23 @@ export async function saveNotesToFile(
 
   const json = JSON.stringify(payload, null, 2);
 
+  // Replace the placeholder data between DATA START and DATA END with the actual payload
+  const dataMarkerStart = "// ========= DATA START =========";
+  const dataMarkerEnd = "// ========= DATA END =========";
+  const startIndex = TEMPLATE_HTML.indexOf(dataMarkerStart);
+  const endIndex = TEMPLATE_HTML.indexOf(dataMarkerEnd);
+
+  if (startIndex === -1 || endIndex === -1) {
+    console.error("Could not find DATA START or DATA END markers in template");
+    alert("Failed to save notes: template markers not found.");
+    return;
+  }
+
+  const beforeData = TEMPLATE_HTML.substring(0, startIndex + dataMarkerStart.length);
+  const afterData = TEMPLATE_HTML.substring(endIndex);
+
+  const htmlContent = beforeData + "\n        " + json + "\n      " + afterData;
+
   try {
     // @ts-ignore - feature-detect the newer File System Access API
     if ((window as any).showSaveFilePicker) {
@@ -25,11 +156,11 @@ export async function saveNotesToFile(
       if (!handle) {
         // @ts-ignore
         handle = await (window as any).showSaveFilePicker({
-          suggestedName: "notes.json",
+          suggestedName: "notes.html",
           types: [
             {
               description: "Notes",
-              accept: { "application/json": [".json"] },
+              accept: { "text/html": [".html"] },
             },
           ],
         });
@@ -53,14 +184,14 @@ export async function saveNotesToFile(
       }
 
       const writable = await handle.createWritable();
-      await writable.write(json);
+      await writable.write(htmlContent);
       await writable.close();
     } else {
-      const blob = new Blob([json], { type: "application/json" });
+      const blob = new Blob([htmlContent], { type: "text/html" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "notes.json";
+      a.download = "notes.html";
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -72,9 +203,8 @@ export async function saveNotesToFile(
   }
 }
 
-// Load notes from a .json file and return normalized entries via the
-// replaceAllNotes callback. Accepts fileHandleRef so the remembered handle can
-// be saved for later writes.
+// Load notes from an HTML file by extracting data between DATA START and DATA END comments.
+// Accepts fileHandleRef so the remembered handle can be saved for later writes.
 export async function loadNotesFromFile(
   fileHandleRef: React.MutableRefObject<any | null>,
   replaceAllNotes: (entries: any[]) => void,
@@ -90,7 +220,7 @@ export async function loadNotesFromFile(
         types: [
           {
             description: "Notes",
-            accept: { "application/json": [".json"] },
+            accept: { "text/html": [".html"], "application/json": [".json"] },
           },
         ],
       });
@@ -100,7 +230,7 @@ export async function loadNotesFromFile(
     } else {
       const input = document.createElement("input");
       input.type = "file";
-      input.accept = ".json,application/json";
+      input.accept = ".html,.json,text/html,application/json";
       input.click();
 
       file = await new Promise<File | null>((resolve) => {
@@ -112,9 +242,32 @@ export async function loadNotesFromFile(
 
     const text = await file.text();
 
-    const parsed = JSON.parse(text);
+    // Try to extract data from HTML file first (between DATA START and DATA END)
+    const dataMarkerStart = "// ========= DATA START =========";
+    const dataMarkerEnd = "// ========= DATA END =========";
+    const startIndex = text.indexOf(dataMarkerStart);
+    const endIndex = text.indexOf(dataMarkerEnd);
 
-    // Normalized parsed -> entries array. Accept legacy formats:
+    let parsed: any;
+
+    if (startIndex !== -1 && endIndex !== -1) {
+      // Extract data between markers
+      const dataStr = text.substring(
+        startIndex + dataMarkerStart.length,
+        endIndex,
+      );
+      // Parse the JSON object
+      const jsonMatch = dataStr.match(/{[\s\S]*}/);
+      if (!jsonMatch) {
+        throw new Error("Could not find JSON data in HTML file");
+      }
+      parsed = JSON.parse(jsonMatch[0]);
+    } else {
+      // Fallback: try to parse as plain JSON (for backward compatibility)
+      parsed = JSON.parse(text);
+    }
+
+    // Normalized parsed -> entries array. Accept multiple formats:
     // - { notes: [...] }
     // - array of entries
     // - raw string -> wrap as a single note
