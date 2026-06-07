@@ -3,6 +3,7 @@ import React, { useContext, useState } from "react";
 import BibleContext, { TabState } from "../contexts/BibleContext";
 import Editor from "./Editor/Editor";
 import { SaveOpen } from "./ActionBar/SaveOpen";
+import editorImage from "./Editor/editor.jpg";
 
 export const StudyPanel: React.FC = () => {
   const { tabs, currentTab, notes, setNoteForBookChapter, refreshNotesDate } =
@@ -59,7 +60,7 @@ export const StudyPanel: React.FC = () => {
               file.
             </p>
             <img
-              src={"/editor.png"}
+              src={editorImage}
               alt="Instructions"
               style={{ width: "100%" }}
             />
