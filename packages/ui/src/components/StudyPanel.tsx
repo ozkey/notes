@@ -1,5 +1,5 @@
 import { Button, Card, CardActions, CardContent } from "@mui/material";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import BibleContext, { TabState } from "../contexts/BibleContext";
 import Editor from "./Editor/Editor";
 import { SaveOpen } from "./ActionBar/SaveOpen";
@@ -9,14 +9,11 @@ export const StudyPanel: React.FC = () => {
   const { tabs, currentTab, notes, setNoteForBookChapter, refreshNotesDate } =
     useContext(BibleContext as React.Context<any>);
 
-  const [editorOpen, setEditorOpen] = useState(false);
-
   const currentTabState = tabs[currentTab] ?? {
     selectedBook: null,
     chapterNumber: 1,
   };
 
-  console.log("notes", notes);
   if (!notes) return <></>;
   const currentNoteText =
     notes.find(
@@ -24,6 +21,17 @@ export const StudyPanel: React.FC = () => {
         entry.book === currentTabState.selectedBook &&
         entry.chapterNumber === currentTabState.chapterNumber,
     )?.text ?? "";
+
+  const [editorOpen, setEditorOpen] = useState(
+    currentNoteText.length || 0 === 0,
+  );
+
+  useEffect(() => {
+    console.log(
+      "Current note text changed, opening editor if there are no notes",
+    );
+    setEditorOpen((currentNoteText.length || 0) === 0);
+  }, [refreshNotesDate]);
 
   return (
     <Card>
