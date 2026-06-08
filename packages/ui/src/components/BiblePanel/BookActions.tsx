@@ -32,7 +32,7 @@ export const BookActions: React.FC = () => {
   };
 
   return (
-    <div style={{ display: "flex", gap: "1em", padding: "0.5em" }}>
+    <div style={{ display: "flex", gap: "0.3em", padding: "0.3em" }}>
       <Autocomplete
         freeSolo={false}
         options={books}
@@ -46,7 +46,7 @@ export const BookActions: React.FC = () => {
             size="small"
           />
         )}
-        sx={{ width: 320 }}
+        sx={{ width: 150 }}
       />
 
       <TextField
@@ -62,7 +62,7 @@ export const BookActions: React.FC = () => {
             commitChapter();
           }
         }}
-        sx={{ width: 120, marginLeft: 2 }}
+        sx={{ width: 80, marginLeft: 0 }}
       />
     </div>
   );

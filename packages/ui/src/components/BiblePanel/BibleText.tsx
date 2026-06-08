@@ -1,12 +1,6 @@
-import {
-  Box,
-  Card,
-  CardActions,
-  CardContent,
-  Typography,
-} from "@mui/material";
+import { Box, Card, CardActions, CardContent, Typography } from "@mui/material";
 import React, { useContext } from "react";
-import { BookActions } from "../Editor/BookActions";
+import { BookActions } from "./BookActions";
 import BibleContext from "../../contexts/BibleContext";
 
 export const BibleText: React.FC<{
@@ -96,7 +90,7 @@ export const BibleText: React.FC<{
   }
 
   return (
-    <Card>
+    <Card sx={{ padding: "0px", margin: "0px" }}>
       <CardActions>
         <BookActions />
       </CardActions>

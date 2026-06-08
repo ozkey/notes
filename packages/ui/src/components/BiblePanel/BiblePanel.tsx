@@ -57,9 +57,18 @@ export const BiblePanel: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="xl">
+    <Container
+      maxWidth="xl"
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "0px",
+        margin: "0px",
+      }}
+    >
       <ContainedButtons />
-      <Box component="main" sx={{ flex: 1, padding: "10px 0 0 0" }}>
+      <Box>
         <Tabs
           value={currentTab}
           onChange={handleChange}
@@ -92,8 +101,8 @@ export const BiblePanel: React.FC = () => {
           ))}
           {tabs.length < 4 && <Tab label="+" {...a11yProps(tabs.length)} />}
         </Tabs>
-        <Card sx={{ bgcolor: "grey.50" }}>
-          <CardContent>
+        <Card sx={{ bgcolor: "grey.50", padding: "0px", margin: "0px" }}>
+          <CardContent sx={{ padding: "0px", margin: "0px" }}>
             {tabs.map((t: any, i: number) => (
               <CustomTabPanel key={i} value={currentTab} index={i}>
                 <Box
@@ -104,7 +113,9 @@ export const BiblePanel: React.FC = () => {
                       sm: "1fr 1fr",
                       md: "1fr 1fr",
                     },
-                    gap: 1,
+                    gap: 0.5,
+                    padding: "0px",
+                    margin: "0px",
                   }}
                 >
                   <BibleText
