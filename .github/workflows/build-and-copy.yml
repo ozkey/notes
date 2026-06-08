@@ -1,5 +1,10 @@
 name: Build UI and copy dist to www
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 on:
   push:
     branches: [ main ]
@@ -15,7 +20,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: true
+          # do not persist the token to the checked-out repository; the deploy action
+          # will receive the token via its `github_token` input
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
