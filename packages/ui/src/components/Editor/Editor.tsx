@@ -18,6 +18,10 @@ export default function Editor({
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
+    const smallScreen = window.innerWidth < 900;
+    if (smallScreen)
+      console.log("small screen detected, editor will be disabled");
+
     console.log("Initializing editor with value", value);
     const instance = suneditor.create(ref.current!, {
       plugins: { ...plugins, HelloWorld, CalloutBlock },
@@ -58,26 +62,44 @@ export default function Editor({
           onChange?.(params.data);
         },
       },
-      buttonList: [
-        //  "newDocument"
-        // ["save", "|"],
-        ["copy", "selectAll", "|", "outdent", "indent", "align", "list"],
-        ["|", "table", "image", "video"],
-        ["|", "anchor", "link", "blockquote", "calloutBlock", "helloWorld"],
+      buttonList: smallScreen
+        ? [
+            ["bold", "italic", "underline", "strike"],
+            "/",
+            ["blockStyle", "font", "fontSize"],
+          ]
+        : [
+            //  "newDocument"
+            // ["save", "|"],
+            ["copy", "selectAll", "|", "outdent", "indent", "align", "list"],
+            ["|", "table", "image", "video"],
+            ["|", "anchor", "link", "blockquote", "calloutBlock", "helloWorld"],
 
-        ["-right", "codeView", "showBlocks", "fullScreen", "preview", "print"],
-        "/",
-        ["undo", "redo"],
-        "|",
-        ["blockStyle", "font", "fontSize"],
-        "|",
-        [":Format-default.more_paragraph", "blockStyle", "font", "fontSize"],
-        ["bold", "italic", "underline", "strike"],
-        "|",
-        ["fontColor", "backgroundColor"],
-        "|",
-        ["removeFormat"],
-      ],
+            [
+              "-right",
+              "codeView",
+              "showBlocks",
+              "fullScreen",
+              "preview",
+              "print",
+            ],
+            "/",
+            ["undo", "redo"],
+            "|",
+            ["blockStyle", "font", "fontSize"],
+            "|",
+            [
+              ":Format-default.more_paragraph",
+              "blockStyle",
+              "font",
+              "fontSize",
+            ],
+            ["bold", "italic", "underline", "strike"],
+            "|",
+            ["fontColor", "backgroundColor"],
+            "|",
+            ["removeFormat"],
+          ],
     });
 
     editorRef.current = instance;

@@ -57,18 +57,9 @@ export const BiblePanel: React.FC = () => {
   };
 
   return (
-    <Container
-      maxWidth="xl"
-      sx={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        padding: "0px",
-        margin: "0px",
-      }}
-    >
+    <Container maxWidth="xl" sx={{ padding: "0px" }} disableGutters={true}>
       <ContainedButtons />
-      <Box>
+      <Box component="main" sx={{ flex: 1, padding: "0px", margin: "0px" }}>
         <Tabs
           value={currentTab}
           onChange={handleChange}
@@ -110,7 +101,7 @@ export const BiblePanel: React.FC = () => {
                     display: "grid",
                     gridTemplateColumns: {
                       xs: "1fr",
-                      sm: "1fr 1fr",
+                      sm: "1fr",
                       md: "1fr 1fr",
                     },
                     gap: 0.5,
