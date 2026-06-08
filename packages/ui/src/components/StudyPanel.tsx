@@ -48,7 +48,7 @@ export const StudyPanel: React.FC = () => {
       <CardContent>
         {!refreshNotesDate && (
           <div>
-            <h2>Notes</h2>
+            <h2>Personal notes</h2>
             <br />
             <p>
               Notes are saved to a file on your computer as a html file. So your
@@ -56,8 +56,8 @@ export const StudyPanel: React.FC = () => {
               connection.
             </p>
             <p>
-              To get started, click the "New File" button to create a new notes
-              file.
+              To get started, click the "New File" button to create a new file
+              for your notes.
             </p>
             <img
               src={editorImage}
