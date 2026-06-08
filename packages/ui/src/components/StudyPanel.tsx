@@ -15,6 +15,14 @@ export const StudyPanel: React.FC = () => {
   };
 
   if (!notes) return <></>;
+  if (!currentTabState.selectedBook) {
+    return (
+      <Card>
+        {" "}
+        <CardContent>No book selected</CardContent>
+      </Card>
+    );
+  }
   const currentNoteText =
     notes.find(
       (entry: any) =>
