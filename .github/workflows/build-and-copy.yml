@@ -1,0 +1,44 @@
+name: Build UI and copy dist to www
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and publish www
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Enable Corepack and install latest Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@stable --activate
+
+      - name: Install dependencies
+        run: yarn install --network-timeout 600000
+
+      - name: Build UI package
+        run: yarn --cwd packages/ui build
+
+      - name: Deploy to GitHub Pages (gh-pages)
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: packages/ui/dist
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: set a custom commit message
+          # commit_message: "ci: deploy UI to gh-pages [skip ci]"
+
