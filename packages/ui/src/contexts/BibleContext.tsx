@@ -169,16 +169,18 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const loadBibleText = async () => {
     try {
       setLoadingBibleText(true);
-      const res = await fetch('/public/text.json');
+
+      const res = await fetch(`./public/text.json`);
+
       if (!res.ok) {
-        console.warn('Failed to fetch bible text.json:', res.statusText);
+        console.warn("Failed to fetch bible text.json:", res.statusText);
         setBibleText(null);
         return;
       }
       const json = await res.json();
       setBibleText(json);
     } catch (err) {
-      console.warn('Error fetching bible text.json', err);
+      console.warn("Error fetching bible text.json", err);
       setBibleText(null);
     } finally {
       setLoadingBibleText(false);
