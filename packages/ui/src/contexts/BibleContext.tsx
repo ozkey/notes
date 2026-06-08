@@ -1,4 +1,4 @@
-import React, { createContext, useState, useRef } from "react";
+import React, { createContext, useState, useRef, useEffect } from "react";
 import {
   saveNotesToFile as saveNotesToFileImpl,
   loadNotesFromFile as loadNotesFromFileImpl,
@@ -102,6 +102,10 @@ export interface BibleContextType {
     text: string,
   ) => void;
   replaceAllNotes: (entries: NoteEntry[]) => void;
+  // parsed bible text loaded from public/text.json
+  bibleText: any | null;
+  loadingBibleText: boolean;
+  loadBibleText: () => Promise<void>;
   saveNotesToFile: () => Promise<void>;
   loadNotesFromFile: () => Promise<void>;
 }
@@ -127,6 +131,11 @@ export const BibleContext = createContext<BibleContextType>({
   // if file loads refresh the date
   refreshNotesDate: undefined,
   setRefreshNotesDate: () => {},
+  // bible text defaults
+  bibleText: null,
+  loadingBibleText: false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  loadBibleText: async () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setNoteForBookChapter: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -150,9 +159,36 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     undefined,
   );
   const [currentTab, setCurrentTab] = useState<number>(0);
+  const [bibleText, setBibleText] = useState<any | null>(null);
+  const [loadingBibleText, setLoadingBibleText] = useState<boolean>(false);
   // Keep a file handle so save/load can reuse the same file when supported by the
   // File System Access API.
   const fileHandleRef = useRef<any>(null);
+
+  // Load bible text.json from public folder on mount
+  const loadBibleText = async () => {
+    try {
+      setLoadingBibleText(true);
+      const res = await fetch('/public/text.json');
+      if (!res.ok) {
+        console.warn('Failed to fetch bible text.json:', res.statusText);
+        setBibleText(null);
+        return;
+      }
+      const json = await res.json();
+      setBibleText(json);
+    } catch (err) {
+      console.warn('Error fetching bible text.json', err);
+      setBibleText(null);
+    } finally {
+      setLoadingBibleText(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBibleText();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addTab = () => {
     setTabs((prev) => {
@@ -197,10 +233,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         (entry) => entry.book === book && entry.chapterNumber === chapterNumber,
       );
       if (existingIndex >= 0) {
-        const next = previousEntries.map((entry, idx) =>
+        return previousEntries.map((entry, idx) =>
           idx === existingIndex ? { ...entry, text } : entry,
         );
-        return next;
       }
       // otherwise append
       return [...previousEntries, { book, chapterNumber, text }];
@@ -240,6 +275,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         setRefreshNotesDate,
         setNoteForBookChapter,
         replaceAllNotes,
+        bibleText,
+        loadingBibleText,
+        loadBibleText,
         saveNotesToFile,
         loadNotesFromFile,
       }}

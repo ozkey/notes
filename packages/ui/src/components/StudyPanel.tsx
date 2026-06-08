@@ -18,7 +18,6 @@ export const StudyPanel: React.FC = () => {
   if (!currentTabState.selectedBook) {
     return (
       <Card>
-        {" "}
         <CardContent>No book selected</CardContent>
       </Card>
     );
