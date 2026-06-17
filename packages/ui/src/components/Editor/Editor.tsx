@@ -71,22 +71,10 @@ export default function Editor({
         : [
             //  "newDocument"
             // ["save", "|"],
-            ["copy", "selectAll", "|", "outdent", "indent", "align", "list"],
-            ["|", "table", "image", "video"],
-            ["|", "anchor", "link", "blockquote", "calloutBlock", "helloWorld"],
 
-            [
-              "-right",
-              "codeView",
-              "showBlocks",
-              "fullScreen",
-              "preview",
-              "print",
-            ],
-            "/",
             ["undo", "redo"],
             "|",
-            ["blockStyle", "font", "fontSize"],
+
             "|",
             [
               ":Format-default.more_paragraph",
@@ -94,11 +82,46 @@ export default function Editor({
               "font",
               "fontSize",
             ],
-            ["bold", "italic", "underline", "strike"],
-            "|",
-            ["fontColor", "backgroundColor"],
-            "|",
-            ["removeFormat"],
+            ["blockStyle"],
+            [
+              ":Text-default.more_text",
+              "bold",
+              "italic",
+              "underline",
+              "strike",
+              "|",
+              "fontColor",
+              "backgroundColor",
+              "|",
+              "removeFormat",
+            ],
+            ["bold", "italic", "underline", "removeFormat"],
+
+            [
+              "-right",
+              ":i-More",
+              "showBlocks",
+              "codeView",
+              "preview",
+              "print",
+              "fullScreen",
+            ],
+
+            "/",
+
+            ["outdent", "indent", "align", "list"],
+
+            [
+              "|",
+              ":Insert-default.more_plus",
+              "table",
+              "anchor",
+              // "link",
+              "image",
+              "video",
+            ],
+
+            ["-right", "link", "blockquote", "calloutBlock", "helloWorld"],
           ],
     });
 
