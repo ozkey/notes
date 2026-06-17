@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Box, Container, Autocomplete, TextField } from "@mui/material";
+import { Autocomplete, TextField, Button } from "@mui/material";
 import BibleContext from "../../contexts/BibleContext";
 
 export const BookActions: React.FC = () => {
@@ -32,7 +32,7 @@ export const BookActions: React.FC = () => {
   };
 
   return (
-    <div style={{ display: "flex", gap: "0.3em", padding: "0.3em" }}>
+    <div style={{ display: "flex", gap: "0.2em", padding: "0.2em" }}>
       <Autocomplete
         freeSolo={false}
         options={books}
@@ -46,7 +46,7 @@ export const BookActions: React.FC = () => {
             size="small"
           />
         )}
-        sx={{ width: 150 }}
+        sx={{ width: 180 }}
       />
 
       <TextField
@@ -55,15 +55,20 @@ export const BookActions: React.FC = () => {
         size="small"
         type="number"
         value={chapterInput}
-        onChange={(e) => setChapterInput(e.target.value)}
+        onChange={(e) => {
+          setChapterInput(e.target.value);
+        }}
         onBlur={commitChapter}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             commitChapter();
           }
         }}
-        sx={{ width: 80, marginLeft: 0 }}
+        sx={{ width: 70, marginLeft: 0 }}
       />
+      <Button variant="contained" onClick={commitChapter}>
+        &gt;
+      </Button>
     </div>
   );
 };

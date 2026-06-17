@@ -29,22 +29,26 @@ export const StudyPanel: React.FC = () => {
         entry.chapterNumber === currentTabState.chapterNumber,
     )?.text ?? "";
 
-  const [editorOpen, setEditorOpen] = useState(
-    currentNoteText.length || 0 === 0,
-  );
+  const [editorOpen, setEditorOpen] = useState(false);
 
   useEffect(() => {
     console.log(
       "Current note text changed, opening editor if there are no notes",
+      currentNoteText.length,
     );
-    setEditorOpen((currentNoteText.length || 0) === 0);
+    // dont open editor if there is no text at all but open if length = 0
+    if (refreshNotesDate && currentNoteText.length === 0) {
+      setEditorOpen(true);
+    }
   }, [refreshNotesDate]);
 
+  console.log("editorOpen", editorOpen);
   return (
     <Card>
       <CardActions>
         {!refreshNotesDate && (
           <div>
+            {/*Please load or create a new personal file for your notes*/}
             <SaveOpen />
           </div>
         )}
@@ -66,9 +70,13 @@ export const StudyPanel: React.FC = () => {
             <h2>Personal notes</h2>
             <br />
             <p>
-              Notes are saved to a file on your computer as a html file. So your
-              notes are private and available to you even without internet
-              connection.
+              Notes are saved to a file on your computer/mobile as a html file.
+              So your notes are <b>private</b> and available to you even without
+              internet connection.
+            </p>
+            <p>
+              If you want to share your notes between your PC and Mobile save
+              your file to OneDrive* or Google Drive* or similar service.
             </p>
             <p>
               To get started, click the "New File" button to create a new file

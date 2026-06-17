@@ -25,3 +25,7 @@ body {
     margin: 5px;
     display: block;
 }
+
+p {
+    margin-bottom: 1em;
+}
