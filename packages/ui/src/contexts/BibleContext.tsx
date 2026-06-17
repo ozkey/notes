@@ -5,74 +5,7 @@ import {
 } from "./notesFileIO";
 
 // List of common 66 books of the Protestant Bible
-export const BIBLE_BOOKS: string[] = [
-  "Genesis",
-  "Exodus",
-  "Leviticus",
-  "Numbers",
-  "Deuteronomy",
-  "Joshua",
-  "Judges",
-  "Ruth",
-  "1 Samuel",
-  "2 Samuel",
-  "1 Kings",
-  "2 Kings",
-  "1 Chronicles",
-  "2 Chronicles",
-  "Ezra",
-  "Nehemiah",
-  "Esther",
-  "Job",
-  "Psalms",
-  "Proverbs",
-  "Ecclesiastes",
-  "Song of Solomon",
-  "Isaiah",
-  "Jeremiah",
-  "Lamentations",
-  "Ezekiel",
-  "Daniel",
-  "Hosea",
-  "Joel",
-  "Amos",
-  "Obadiah",
-  "Jonah",
-  "Micah",
-  "Nahum",
-  "Habakkuk",
-  "Zephaniah",
-  "Haggai",
-  "Zechariah",
-  "Malachi",
-  "Matthew",
-  "Mark",
-  "Luke",
-  "John",
-  "Acts",
-  "Romans",
-  "1 Corinthians",
-  "2 Corinthians",
-  "Galatians",
-  "Ephesians",
-  "Philippians",
-  "Colossians",
-  "1 Thessalonians",
-  "2 Thessalonians",
-  "1 Timothy",
-  "2 Timothy",
-  "Titus",
-  "Philemon",
-  "Hebrews",
-  "James",
-  "1 Peter",
-  "2 Peter",
-  "1 John",
-  "2 John",
-  "3 John",
-  "Jude",
-  "Revelation",
-];
+export const BIBLE_BOOKS: string[] = ["Genesis", "Revelation"];
 
 export interface TabState {
   selectedBook: string | null;
@@ -155,6 +88,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const [notes, setNotes] = useState<NoteEntry[]>([
     { book: "Matthew", chapterNumber: 1, text: "" },
   ]);
+  // books are populated from the API at runtime; default to the static list
+  const [books, setBooks] = useState<string[]>([]);
   const [refreshNotesDate, setRefreshNotesDate] = useState<Date | undefined>(
     undefined,
   );
@@ -165,7 +100,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   // File System Access API.
   const fileHandleRef = useRef<any>(null);
 
-  // Load bible text.json from public folder on mount
+  // Load bible text and book list from the API on mount.
+  // The API is expected to return the same structure as the local text.json, e.g.
+  // { books: [ { name: 'Genesis', chapters: [...] }, ... ] }
   const loadBibleText = async () => {
     try {
       setLoadingBibleText(true);
@@ -173,14 +110,27 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await fetch(`./public/text.json`);
 
       if (!res.ok) {
-        console.warn("Failed to fetch bible text.json:", res.statusText);
+        console.warn("Failed to fetch bible text from API:", res.statusText);
         setBibleText(null);
         return;
       }
       const json = await res.json();
       setBibleText(json);
+
+      // If the API returned a books array, populate the books state from it.
+      if (Array.isArray(json?.books)) {
+        try {
+          const names = json.books
+            .map((b: any) => (b && typeof b.name === "string" ? b.name : null))
+            .filter(Boolean) as string[];
+          if (names.length > 0) setBooks(names);
+        } catch (e) {
+          // ignore parsing problems and keep default books
+          console.warn("Failed to parse books from API response", e);
+        }
+      }
     } catch (err) {
-      console.warn("Error fetching bible text.json", err);
+      console.warn("Error fetching bible text from API", err);
       setBibleText(null);
     } finally {
       setLoadingBibleText(false);
@@ -221,7 +171,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     setTabs((prev) =>
       prev.map((t, idx) => (idx === tabId ? { ...t, ...patch } : t)),
     );
-    setRefreshNotesDate(new Date());
+
+    if (refreshNotesDate) setRefreshNotesDate(new Date());
   };
 
   const setNoteForBookChapter = (
@@ -255,7 +206,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   // so the context value can pass functions with the expected signatures.
   const saveNotesToFile = async () => {
     await saveNotesToFileImpl(notes, fileHandleRef);
-    setRefreshNotesDate(new Date());
+    if (refreshNotesDate) setRefreshNotesDate(new Date());
   };
 
   const loadNotesFromFile = async () => {
@@ -271,7 +222,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         addTab,
         closeTab,
         updateTab,
-        books: BIBLE_BOOKS,
+        books,
         notes,
         refreshNotesDate,
         setRefreshNotesDate,
