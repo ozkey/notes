@@ -206,7 +206,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   // so the context value can pass functions with the expected signatures.
   const saveNotesToFile = async () => {
     await saveNotesToFileImpl(notes, fileHandleRef);
-    if (refreshNotesDate) setRefreshNotesDate(new Date());
+    // if (refreshNotesDate) - new file should update date
+    setRefreshNotesDate(new Date());
   };
 
   const loadNotesFromFile = async () => {
