@@ -13,7 +13,7 @@ class BibleBookmark extends interfaces.PluginDropdown {
   constructor(kernel: SunEditor.Kernel) {
     super(kernel);
     this.title = "Bible Bookmark";
-    this.icon = '<span style="font-size:16px">📖</span>';
+    this.icon = '<span style="font-size:16px">🔖</span>';
 
     const bibleBooks = (window as any).BIBLE_BOOKS || [];
 
@@ -43,7 +43,7 @@ class BibleBookmark extends interfaces.PluginDropdown {
     const menu = dom.utils.createElement(
       "div",
       { class: "se-dropdown se-list-layer" },
-      `<div class="se-list-inner">${formHtml}</div>`
+      `<div class="se-list-inner">${formHtml}</div>`,
     );
 
     this.$.menu.initDropdownTarget(BibleBookmark, menu);
@@ -61,10 +61,10 @@ class BibleBookmark extends interfaces.PluginDropdown {
 
   #insertBibleLink(menu: HTMLElement): void {
     const bookSelect = menu.querySelector(
-      "#se-bible-book"
+      "#se-bible-book",
     ) as HTMLSelectElement;
     const chapterInput = menu.querySelector(
-      "#se-bible-chapter"
+      "#se-bible-chapter",
     ) as HTMLInputElement;
 
     const book = bookSelect?.value;
