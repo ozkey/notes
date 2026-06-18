@@ -1,6 +1,6 @@
 import { Button, Card, CardActions, CardContent } from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
-import BibleContext, { TabState } from "../contexts/BibleContext";
+import BibleContext from "../contexts/BibleContext";
 import Editor from "./Editor/Editor";
 import { SaveOpen } from "./ActionBar/SaveOpen";
 import editorImage from "./Editor/editor.jpg";
