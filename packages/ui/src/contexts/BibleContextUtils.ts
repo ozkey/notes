@@ -15,8 +15,11 @@ export const parseHash = (
   const raw = hash.startsWith("#") ? hash.slice(1) : hash;
   const parts = raw.split(":");
   if (parts.length < 1) return null;
-  // decode URI components (allow %20 for spaces) and replace + with space
-  const bookRaw = decodeURIComponent(parts[0].replace(/\+/g, " ")).trim();
+  // decode URI components (allow %20 for spaces) and replace +, _ and - with space
+  // allow users to use +, underscore or hyphen as space separators in the book name
+  const bookRaw = decodeURIComponent(
+    parts[0].replace(/\+/g, " ").replace(/[_-]/g, " "),
+  ).trim();
   const chapterRaw = (parts[1] || "1").trim();
   const chapter = parseInt(chapterRaw, 10);
   if (Number.isNaN(chapter) || chapter < 1) return null;
