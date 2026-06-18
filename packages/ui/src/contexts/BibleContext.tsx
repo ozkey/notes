@@ -40,6 +40,9 @@ export interface BibleContextType {
   loadBibleText: () => Promise<void>;
   saveNotesToFile: () => Promise<void>;
   loadNotesFromFile: () => Promise<void>;
+  // editor UI state (moved from component-local state into context)
+  editorOpen: boolean;
+  setEditorOpen: (open: boolean) => void;
 }
 
 export const BibleContext = createContext<BibleContextType>({
@@ -76,6 +79,10 @@ export const BibleContext = createContext<BibleContextType>({
   saveNotesToFile: async () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   loadNotesFromFile: async () => {},
+  // editor default
+  editorOpen: false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  setEditorOpen: () => {},
 });
 
 export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -92,6 +99,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const [refreshNotesDate, setRefreshNotesDate] = useState<Date | undefined>(
     undefined,
   );
+  // Move editor open state into the context so multiple components can control it
+  const [editorOpen, setEditorOpen] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<number>(0);
   const [bibleText, setBibleText] = useState<any | null>(null);
   const [loadingBibleText, setLoadingBibleText] = useState<boolean>(false);
@@ -165,6 +174,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
             parsed.book,
             parsed.chapter,
             MAX_TAB_LIMIT,
+            setEditorOpen,
           );
       } catch (e) {
         // ignore malformed hashes
@@ -233,6 +243,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         setRefreshNotesDate,
         setNoteForBookChapter,
         replaceAllNotes,
+        // editor UI state exposed in context
+        editorOpen,
+        setEditorOpen,
         bibleText,
         loadingBibleText,
         loadBibleText,

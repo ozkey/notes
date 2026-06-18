@@ -85,6 +85,7 @@ export const openTabForBookChapter = (
   book: string,
   chapterNumber: number,
   maxLimit = MAX_TAB_LIMIT,
+  setEditorOpen: (open: boolean) => void,
 ) => {
   setTabs((prev) => {
     const existingIndex = prev.findIndex(
@@ -92,9 +93,7 @@ export const openTabForBookChapter = (
     );
     if (existingIndex >= 0) {
       // focus on the first button
-      (
-        document.getElementsByClassName("se-toolbar-btn")[0] as HTMLElement
-      )?.focus();
+      setEditorOpen(false);
       // set setCurrentTab in 1 second
       setTimeout(() => setCurrentTab(existingIndex), 1000);
 
@@ -103,9 +102,7 @@ export const openTabForBookChapter = (
     }
     if (prev.length >= maxLimit) return prev;
     const next = [...prev, { selectedBook: book, chapterNumber }];
-    (
-      document.getElementsByClassName("se-toolbar-btn")[0] as HTMLElement
-    )?.focus();
+    setEditorOpen(false);
     setTimeout(() => setCurrentTab(next.length - 1), 1000);
 
     return next;
