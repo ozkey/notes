@@ -4,6 +4,7 @@ import "suneditor/css/editor";
 import "suneditor/css/contents";
 import CalloutBlock from "./CalloutBlock";
 import HelloWorld from "./EditorPlugin";
+import BibleBookmark from "./BibleBookmark";
 
 export default function Editor({
   value = "",
@@ -24,7 +25,7 @@ export default function Editor({
 
     console.log("Initializing editor with value", value);
     const instance = suneditor.create(ref.current!, {
-      plugins: { ...plugins, HelloWorld, CalloutBlock },
+      plugins: { ...plugins, HelloWorld, CalloutBlock, BibleBookmark },
       value: value || "",
       strictMode: {
         tagFilter: false,
@@ -99,7 +100,7 @@ export default function Editor({
 
             [
               "-right",
-              ":i-More",
+              ":i-more",
               "showBlocks",
               "codeView",
               "preview",
@@ -121,7 +122,14 @@ export default function Editor({
               "video",
             ],
 
-            ["-right", "link", "blockquote", "calloutBlock", "helloWorld"],
+            [
+              "-right",
+              "BibleBookmark",
+              "link",
+              "blockquote",
+              "calloutBlock",
+              "helloWorld",
+            ],
           ],
     });
 
