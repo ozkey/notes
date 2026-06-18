@@ -122,7 +122,13 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
           const names = json.books
             .map((b: any) => (b && typeof b.name === "string" ? b.name : null))
             .filter(Boolean) as string[];
-          if (names.length > 0) setBooks(names);
+          if (names.length > 0) {
+            setBooks(names);
+
+            // Ensure a canonical copy is available on window for other code to reuse.
+            if (!(window as any).BIBLE_BOOKS)
+              (window as any).BIBLE_BOOKS = names;
+          }
         } catch (e) {
           // ignore parsing problems and keep default books
           console.warn("Failed to parse books from API response", e);
