@@ -176,6 +176,62 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     if (refreshNotesDate) setRefreshNotesDate(new Date());
   };
 
+  // Parse a hash of the form #book:chapter and return normalized book and chapter
+  const parseHash = (hash: string) => {
+    if (!hash) return null;
+    const raw = hash.startsWith("#") ? hash.slice(1) : hash;
+    const parts = raw.split(":");
+    if (parts.length < 1) return null;
+    // decode URI components (allow %20 for spaces) and replace + with space
+    const bookRaw = decodeURIComponent(parts[0].replace(/\+/g, " ")).trim();
+    const chapterRaw = (parts[1] || "1").trim();
+    const chapter = parseInt(chapterRaw, 10);
+    if (Number.isNaN(chapter) || chapter < 1) return null;
+
+    // match against the static BIBLE_BOOKS list (case-insensitive)
+    const match = BIBLE_BOOKS.find(
+      (b) => b.toLowerCase() === bookRaw.toLowerCase(),
+    );
+    if (!match) return null;
+    return { book: match, chapter } as { book: string; chapter: number };
+  };
+
+  // Open a new tab for the given book/chapter or switch to an existing matching tab.
+  const openTabForBookChapter = (book: string, chapterNumber: number) => {
+    setTabs((prev) => {
+      const existingIndex = prev.findIndex(
+        (t) => t.selectedBook === book && t.chapterNumber === chapterNumber,
+      );
+      if (existingIndex >= 0) {
+        setCurrentTab(existingIndex);
+        return prev;
+      }
+      if (prev.length >= MAX_TAB_LIMIT) return prev;
+      const next = [...prev, { selectedBook: book, chapterNumber }];
+      setCurrentTab(next.length - 1);
+      return next;
+    });
+  };
+
+  // Listen for URL hash changes and open/switch tabs when a valid #book:chapter is present.
+  useEffect(() => {
+    const handleHash = () => {
+      try {
+        const parsed = parseHash(window.location.hash);
+        if (parsed) openTabForBookChapter(parsed.book, parsed.chapter);
+      } catch (e) {
+        // ignore malformed hashes
+      }
+    };
+
+    // check initial hash on mount
+    handleHash();
+
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const setNoteForBookChapter = (
     book: string | null,
     chapterNumber: number,
