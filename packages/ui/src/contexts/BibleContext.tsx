@@ -6,6 +6,7 @@ import {
 
 // List of common 66 books of the Protestant Bible
 export const BIBLE_BOOKS: string[] = ["Genesis", "Revelation"];
+const MAX_TAB_LIMIT = 10;
 
 export interface TabState {
   selectedBook: string | null;
@@ -144,7 +145,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const addTab = () => {
     setTabs((prev) => {
-      if (prev.length >= 4) return prev;
+      if (prev.length >= MAX_TAB_LIMIT) return prev;
       const next = [
         ...prev,
         { selectedBook: null, chapterNumber: 1, notes: "" },
