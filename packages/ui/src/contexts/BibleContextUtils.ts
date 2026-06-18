@@ -26,7 +26,8 @@ export const parseHash = (
 
   const searchBooks = books && books.length ? books : defaultBooks;
   const match = searchBooks.find(
-    (b) => b && typeof b === "string" && b.toLowerCase() === bookRaw.toLowerCase(),
+    (b) =>
+      b && typeof b === "string" && b.toLowerCase() === bookRaw.toLowerCase(),
   );
   if (!match) return null;
   return { book: match, chapter } as { book: string; chapter: number };
@@ -72,7 +73,9 @@ export const updateTab = (
   tabId: number,
   patch: Partial<TabState>,
 ) => {
-  setTabs((prev) => prev.map((t, idx) => (idx === tabId ? { ...t, ...patch } : t)));
+  setTabs((prev) =>
+    prev.map((t, idx) => (idx === tabId ? { ...t, ...patch } : t)),
+  );
   if (refreshNotesDate) setRefreshNotesDate(new Date());
 };
 
@@ -88,13 +91,23 @@ export const openTabForBookChapter = (
       (t) => t.selectedBook === book && t.chapterNumber === chapterNumber,
     );
     if (existingIndex >= 0) {
-      setCurrentTab(existingIndex);
+      // focus on the first button
+      (
+        document.getElementsByClassName("se-toolbar-btn")[0] as HTMLElement
+      )?.focus();
+      // set setCurrentTab in 1 second
+      setTimeout(() => setCurrentTab(existingIndex), 1000);
+
+      // setCurrentTab(existingIndex);
       return prev;
     }
     if (prev.length >= maxLimit) return prev;
     const next = [...prev, { selectedBook: book, chapterNumber }];
-    setCurrentTab(next.length - 1);
+    (
+      document.getElementsByClassName("se-toolbar-btn")[0] as HTMLElement
+    )?.focus();
+    setTimeout(() => setCurrentTab(next.length - 1), 1000);
+
     return next;
   });
 };
-

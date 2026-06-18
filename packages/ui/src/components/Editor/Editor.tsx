@@ -135,7 +135,9 @@ export default function Editor({
 
     editorRef.current = instance;
 
-    return () => instance.destroy();
+    return () => {
+      instance.destroy();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshNotesDate]);
 
