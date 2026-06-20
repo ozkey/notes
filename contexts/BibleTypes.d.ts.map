@@ -1,0 +1,1 @@
+{"version":3,"file":"BibleTypes.d.ts","sourceRoot":"","sources":["../../src/contexts/BibleTypes.ts"],"names":[],"mappings":"AACA,MAAM,WAAW,QAAQ;IACvB,YAAY,EAAE,MAAM,GAAG,IAAI,CAAC;IAC5B,aAAa,EAAE,MAAM,CAAC;CACvB;AAED,MAAM,WAAW,SAAS;IACxB,IAAI,EAAE,MAAM,GAAG,IAAI,CAAC;IACpB,aAAa,EAAE,MAAM,CAAC;IACtB,IAAI,EAAE,MAAM,CAAC;CACd"}

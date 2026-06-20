@@ -1,0 +1,1 @@
+{"version":3,"file":"bibleTextLoader.d.ts","sourceRoot":"","sources":["../../src/contexts/bibleTextLoader.ts"],"names":[],"mappings":"AAEA,MAAM,WAAW,eAAe;IAC9B,SAAS,EAAE,GAAG,GAAG,IAAI,CAAC;IACtB,SAAS,EAAE,MAAM,EAAE,CAAC;CACrB;AAED;;;GAGG;AACH,wBAAsB,cAAc,IAAI,OAAO,CAAC,eAAe,CAAC,CAsB/D"}

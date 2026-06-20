@@ -1,14 +1,6 @@
 import React from "react";
+import { TabState, NoteEntry } from "./BibleTypes";
 export declare const BIBLE_BOOKS: string[];
-export interface TabState {
-    selectedBook: string | null;
-    chapterNumber: number;
-}
-export interface NoteEntry {
-    book: string | null;
-    chapterNumber: number;
-    text: string;
-}
 export interface BibleContextType {
     tabs: TabState[];
     currentTab: number;
@@ -27,6 +19,8 @@ export interface BibleContextType {
     loadBibleText: () => Promise<void>;
     saveNotesToFile: () => Promise<void>;
     loadNotesFromFile: () => Promise<void>;
+    editorOpen: boolean;
+    setEditorOpen: (open: boolean) => void;
 }
 export declare const BibleContext: React.Context<BibleContextType>;
 export declare const BibleProvider: React.FC<{
