@@ -4,19 +4,23 @@ import {
   loadNotesFromFile as loadNotesFromFileImpl,
 } from "./notesFileIO";
 
+import { TabState, NoteEntry } from "./BibleTypes";
+import {
+  parseHash as parseHashUtil,
+  addTab as addTabUtil,
+  closeTab as closeTabUtil,
+  updateTab as updateTabUtil,
+  openTabForBookChapter as openTabForBookChapterUtil,
+  MAX_TAB_LIMIT,
+} from "./BibleContextUtils";
+import { fetchBibleText } from "./bibleTextLoader";
+import {
+  setNoteForBookChapter as setNoteForBookChapterUtil,
+  replaceAllNotes as replaceAllNotesUtil,
+} from "./notesUtils";
+
 // List of common 66 books of the Protestant Bible
 export const BIBLE_BOOKS: string[] = ["Genesis", "Revelation"];
-
-export interface TabState {
-  selectedBook: string | null;
-  chapterNumber: number;
-}
-
-export interface NoteEntry {
-  book: string | null;
-  chapterNumber: number;
-  text: string;
-}
 
 export interface BibleContextType {
   tabs: TabState[];
@@ -41,6 +45,9 @@ export interface BibleContextType {
   loadBibleText: () => Promise<void>;
   saveNotesToFile: () => Promise<void>;
   loadNotesFromFile: () => Promise<void>;
+  // editor UI state (moved from component-local state into context)
+  editorOpen: boolean;
+  setEditorOpen: (open: boolean) => void;
 }
 
 export const BibleContext = createContext<BibleContextType>({
@@ -77,6 +84,10 @@ export const BibleContext = createContext<BibleContextType>({
   saveNotesToFile: async () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   loadNotesFromFile: async () => {},
+  // editor default
+  editorOpen: false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  setEditorOpen: () => {},
 });
 
 export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -93,6 +104,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const [refreshNotesDate, setRefreshNotesDate] = useState<Date | undefined>(
     undefined,
   );
+  // Move editor open state into the context so multiple components can control it
+  const [editorOpen, setEditorOpen] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<number>(0);
   const [bibleText, setBibleText] = useState<any | null>(null);
   const [loadingBibleText, setLoadingBibleText] = useState<boolean>(false);
@@ -106,28 +119,12 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const loadBibleText = async () => {
     try {
       setLoadingBibleText(true);
-
-      const res = await fetch(`./public/text.json`);
-
-      if (!res.ok) {
-        console.warn("Failed to fetch bible text from API:", res.statusText);
-        setBibleText(null);
-        return;
-      }
-      const json = await res.json();
-      setBibleText(json);
-
-      // If the API returned a books array, populate the books state from it.
-      if (Array.isArray(json?.books)) {
-        try {
-          const names = json.books
-            .map((b: any) => (b && typeof b.name === "string" ? b.name : null))
-            .filter(Boolean) as string[];
-          if (names.length > 0) setBooks(names);
-        } catch (e) {
-          // ignore parsing problems and keep default books
-          console.warn("Failed to parse books from API response", e);
-        }
+      const { bibleText: text, bookNames } = await fetchBibleText();
+      setBibleText(text);
+      if (bookNames.length > 0) {
+        setBooks(bookNames);
+        // Ensure a canonical copy is available on window for other code to reuse.
+        if (!(window as any).BIBLE_BOOKS) (window as any).BIBLE_BOOKS = bookNames;
       }
     } catch (err) {
       console.warn("Error fetching bible text from API", err);
@@ -142,71 +139,57 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const addTab = () => {
-    setTabs((prev) => {
-      if (prev.length >= 4) return prev;
-      const next = [
-        ...prev,
-        { selectedBook: null, chapterNumber: 1, notes: "" },
-      ];
-      setCurrentTab(next.length - 1);
-      return next;
-    });
-  };
+  // tab helpers (delegated to utils)
+  const addTab = () => addTabUtil(setTabs, setCurrentTab, MAX_TAB_LIMIT);
+  const closeTab = (i: number) => closeTabUtil(setTabs, setCurrentTab, i);
+  const updateTab = (tabId: number, patch: Partial<TabState>) =>
+    updateTabUtil(setTabs, setRefreshNotesDate, refreshNotesDate, tabId, patch);
 
-  const closeTab = (i: number) => {
-    setTabs((prev) => {
-      if (prev.length <= 1) return prev; // keep at least one
-      const next = prev.filter((_, idx) => idx !== i);
-      setCurrentTab((cur) => {
-        if (i < cur) return cur - 1;
-        if (i === cur) return Math.max(0, cur - 1);
-        return cur;
-      });
-      return next;
-    });
-  };
+  // Listen for URL hash changes and open/switch tabs when a valid #book:chapter is present.
+  useEffect(() => {
+    const handleHash = () => {
+      try {
+        const parsed = parseHashUtil(window.location.hash, books, BIBLE_BOOKS);
+        if (parsed)
+          openTabForBookChapterUtil(
+            setTabs,
+            setCurrentTab,
+            parsed.book,
+            parsed.chapter,
+            MAX_TAB_LIMIT,
+            setEditorOpen,
+            editorOpen,
+          );
+      } catch (e) {
+        // ignore malformed hashes
+      }
+      // remove window hash
+      window.location.hash = "";
+    };
 
-  const updateTab = (tabId: number, patch: Partial<TabState>) => {
-    setTabs((prev) =>
-      prev.map((t, idx) => (idx === tabId ? { ...t, ...patch } : t)),
-    );
+    // check initial hash on mount
+    handleHash();
 
-    if (refreshNotesDate) setRefreshNotesDate(new Date());
-  };
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [books, editorOpen, setEditorOpen]);
 
   const setNoteForBookChapter = (
     book: string | null,
     chapterNumber: number,
     text: string,
-  ) => {
-    setNotes((previousEntries) => {
-      // find existing note for same book and chapter
-      const existingIndex = previousEntries.findIndex(
-        (entry) => entry.book === book && entry.chapterNumber === chapterNumber,
-      );
-      if (existingIndex >= 0) {
-        return previousEntries.map((entry, idx) =>
-          idx === existingIndex ? { ...entry, text } : entry,
-        );
-      }
-      // otherwise append
-      return [...previousEntries, { book, chapterNumber, text }];
-    });
-    // makes the editor reset as you type
-    // setRefreshNotesDate(new Date());
-  };
+  ) => setNoteForBookChapterUtil(setNotes, book, chapterNumber, text);
 
-  const replaceAllNotes = (entries: NoteEntry[]) => {
-    setNotes(entries ?? []);
-    setRefreshNotesDate(new Date());
-  };
+  const replaceAllNotes = (entries: NoteEntry[]) =>
+    replaceAllNotesUtil(setNotes, setRefreshNotesDate, entries);
 
   // Use the extracted functions from notesFileIO. Provide small local wrappers
   // so the context value can pass functions with the expected signatures.
   const saveNotesToFile = async () => {
     await saveNotesToFileImpl(notes, fileHandleRef);
-    if (refreshNotesDate) setRefreshNotesDate(new Date());
+    // if (refreshNotesDate) - new file should update date
+    setRefreshNotesDate(new Date());
   };
 
   const loadNotesFromFile = async () => {
@@ -228,6 +211,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         setRefreshNotesDate,
         setNoteForBookChapter,
         replaceAllNotes,
+        // editor UI state exposed in context
+        editorOpen,
+        setEditorOpen,
         bibleText,
         loadingBibleText,
         loadBibleText,

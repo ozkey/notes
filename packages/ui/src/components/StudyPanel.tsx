@@ -1,13 +1,20 @@
 import { Button, Card, CardActions, CardContent } from "@mui/material";
-import React, { useContext, useEffect, useState } from "react";
-import BibleContext, { TabState } from "../contexts/BibleContext";
+import React, { useContext, useEffect } from "react";
+import BibleContext from "../contexts/BibleContext";
 import Editor from "./Editor/Editor";
 import { SaveOpen } from "./ActionBar/SaveOpen";
 import editorImage from "./Editor/editor.jpg";
 
 export const StudyPanel: React.FC = () => {
-  const { tabs, currentTab, notes, setNoteForBookChapter, refreshNotesDate } =
-    useContext(BibleContext as React.Context<any>);
+  const {
+    tabs,
+    currentTab,
+    notes,
+    setNoteForBookChapter,
+    refreshNotesDate,
+    editorOpen,
+    setEditorOpen,
+  } = useContext(BibleContext as React.Context<any>);
 
   const currentTabState = tabs[currentTab] ?? {
     selectedBook: null,
@@ -29,7 +36,7 @@ export const StudyPanel: React.FC = () => {
         entry.chapterNumber === currentTabState.chapterNumber,
     )?.text ?? "";
 
-  const [editorOpen, setEditorOpen] = useState(false);
+  // editorOpen state moved to context
 
   useEffect(() => {
     console.log(

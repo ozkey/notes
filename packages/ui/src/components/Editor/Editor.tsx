@@ -4,6 +4,7 @@ import "suneditor/css/editor";
 import "suneditor/css/contents";
 import CalloutBlock from "./CalloutBlock";
 import HelloWorld from "./EditorPlugin";
+import BibleBookmark from "./BibleBookmark";
 
 export default function Editor({
   value = "",
@@ -24,7 +25,7 @@ export default function Editor({
 
     console.log("Initializing editor with value", value);
     const instance = suneditor.create(ref.current!, {
-      plugins: { ...plugins, HelloWorld, CalloutBlock },
+      plugins: { ...plugins, HelloWorld, CalloutBlock, BibleBookmark },
       value: value || "",
       strictMode: {
         tagFilter: false,
@@ -71,22 +72,10 @@ export default function Editor({
         : [
             //  "newDocument"
             // ["save", "|"],
-            ["copy", "selectAll", "|", "outdent", "indent", "align", "list"],
-            ["|", "table", "image", "video"],
-            ["|", "anchor", "link", "blockquote", "calloutBlock", "helloWorld"],
 
-            [
-              "-right",
-              "codeView",
-              "showBlocks",
-              "fullScreen",
-              "preview",
-              "print",
-            ],
-            "/",
             ["undo", "redo"],
             "|",
-            ["blockStyle", "font", "fontSize"],
+
             "|",
             [
               ":Format-default.more_paragraph",
@@ -94,17 +83,61 @@ export default function Editor({
               "font",
               "fontSize",
             ],
-            ["bold", "italic", "underline", "strike"],
-            "|",
-            ["fontColor", "backgroundColor"],
-            "|",
-            ["removeFormat"],
+            ["blockStyle"],
+            [
+              ":Text-default.more_text",
+              "bold",
+              "italic",
+              "underline",
+              "strike",
+              "|",
+              "fontColor",
+              "backgroundColor",
+              "|",
+              "removeFormat",
+            ],
+            ["bold", "italic", "underline", "removeFormat"],
+
+            [
+              "-right",
+              ":i-more",
+              "showBlocks",
+              "codeView",
+              "preview",
+              "print",
+              "fullScreen",
+            ],
+
+            "/",
+
+            ["outdent", "indent", "align", "list"],
+
+            [
+              "|",
+              ":Insert-default.more_plus",
+              "table",
+              "anchor",
+              // "link",
+              "image",
+              "video",
+            ],
+
+            [
+              "-right",
+              "BibleBookmark",
+              "link",
+              "blockquote",
+              "calloutBlock",
+              "helloWorld",
+            ],
           ],
     });
 
     editorRef.current = instance;
 
-    return () => instance.destroy();
+    return () => {
+      instance.destroy();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshNotesDate]);
 
