@@ -86,25 +86,32 @@ export const openTabForBookChapter = (
   chapterNumber: number,
   maxLimit = MAX_TAB_LIMIT,
   setEditorOpen: (open: boolean) => void,
+  editorOpen: boolean,
 ) => {
   setTabs((prev) => {
     const existingIndex = prev.findIndex(
       (t) => t.selectedBook === book && t.chapterNumber === chapterNumber,
     );
+    debugger;
     if (existingIndex >= 0) {
-      // focus on the first button
-      setEditorOpen(false);
-      // set setCurrentTab in 1 second
-      setTimeout(() => setCurrentTab(existingIndex), 1000);
-
-      // setCurrentTab(existingIndex);
+      if (!editorOpen) {
+        setCurrentTab(existingIndex);
+        // i hope in future  to open but if editor it will through error
+        // // focus on the first button
+        // setEditorOpen(false);
+        // // set setCurrentTab in 1 second
+        // setTimeout(() => setCurrentTab(existingIndex), 1000);
+      }
       return prev;
     }
     if (prev.length >= maxLimit) return prev;
     const next = [...prev, { selectedBook: book, chapterNumber }];
-    setEditorOpen(false);
-    setTimeout(() => setCurrentTab(next.length - 1), 1000);
 
+    if (!editorOpen) {
+      //setEditorOpen(false);
+      // setTimeout(() => setCurrentTab(next.length - 1), 1000);
+      setCurrentTab(next.length - 1);
+    }
     return next;
   });
 };

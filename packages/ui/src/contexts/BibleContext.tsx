@@ -175,10 +175,13 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
             parsed.chapter,
             MAX_TAB_LIMIT,
             setEditorOpen,
+            editorOpen,
           );
       } catch (e) {
         // ignore malformed hashes
       }
+      // remove window hash
+      window.location.hash = "";
     };
 
     // check initial hash on mount
@@ -187,7 +190,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     window.addEventListener("hashchange", handleHash);
     return () => window.removeEventListener("hashchange", handleHash);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [books]);
+  }, [books, editorOpen, setEditorOpen]);
 
   const setNoteForBookChapter = (
     book: string | null,
