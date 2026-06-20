@@ -13,6 +13,11 @@ import {
   openTabForBookChapter as openTabForBookChapterUtil,
   MAX_TAB_LIMIT,
 } from "./BibleContextUtils";
+import { fetchBibleText } from "./bibleTextLoader";
+import {
+  setNoteForBookChapter as setNoteForBookChapterUtil,
+  replaceAllNotes as replaceAllNotesUtil,
+} from "./notesUtils";
 
 // List of common 66 books of the Protestant Bible
 export const BIBLE_BOOKS: string[] = ["Genesis", "Revelation"];
@@ -114,34 +119,12 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const loadBibleText = async () => {
     try {
       setLoadingBibleText(true);
-
-      const res = await fetch(`./public/text.json`);
-
-      if (!res.ok) {
-        console.warn("Failed to fetch bible text from API:", res.statusText);
-        setBibleText(null);
-        return;
-      }
-      const json = await res.json();
-      setBibleText(json);
-
-      // If the API returned a books array, populate the books state from it.
-      if (Array.isArray(json?.books)) {
-        try {
-          const names = json.books
-            .map((b: any) => (b && typeof b.name === "string" ? b.name : null))
-            .filter(Boolean) as string[];
-          if (names.length > 0) {
-            setBooks(names);
-
-            // Ensure a canonical copy is available on window for other code to reuse.
-            if (!(window as any).BIBLE_BOOKS)
-              (window as any).BIBLE_BOOKS = names;
-          }
-        } catch (e) {
-          // ignore parsing problems and keep default books
-          console.warn("Failed to parse books from API response", e);
-        }
+      const { bibleText: text, bookNames } = await fetchBibleText();
+      setBibleText(text);
+      if (bookNames.length > 0) {
+        setBooks(bookNames);
+        // Ensure a canonical copy is available on window for other code to reuse.
+        if (!(window as any).BIBLE_BOOKS) (window as any).BIBLE_BOOKS = bookNames;
       }
     } catch (err) {
       console.warn("Error fetching bible text from API", err);
@@ -196,28 +179,10 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     book: string | null,
     chapterNumber: number,
     text: string,
-  ) => {
-    setNotes((previousEntries) => {
-      // find existing note for same book and chapter
-      const existingIndex = previousEntries.findIndex(
-        (entry) => entry.book === book && entry.chapterNumber === chapterNumber,
-      );
-      if (existingIndex >= 0) {
-        return previousEntries.map((entry, idx) =>
-          idx === existingIndex ? { ...entry, text } : entry,
-        );
-      }
-      // otherwise append
-      return [...previousEntries, { book, chapterNumber, text }];
-    });
-    // makes the editor reset as you type
-    // setRefreshNotesDate(new Date());
-  };
+  ) => setNoteForBookChapterUtil(setNotes, book, chapterNumber, text);
 
-  const replaceAllNotes = (entries: NoteEntry[]) => {
-    setNotes(entries ?? []);
-    setRefreshNotesDate(new Date());
-  };
+  const replaceAllNotes = (entries: NoteEntry[]) =>
+    replaceAllNotesUtil(setNotes, setRefreshNotesDate, entries);
 
   // Use the extracted functions from notesFileIO. Provide small local wrappers
   // so the context value can pass functions with the expected signatures.
