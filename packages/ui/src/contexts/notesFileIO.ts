@@ -168,7 +168,10 @@ export async function saveNotesToFile(
     return;
   }
 
-  const beforeData = TEMPLATE_HTML.substring(0, startIndex + dataMarkerStart.length);
+  const beforeData = TEMPLATE_HTML.substring(
+    0,
+    startIndex + dataMarkerStart.length,
+  );
   const afterData = TEMPLATE_HTML.substring(endIndex);
 
   const htmlContent = beforeData + "\n        " + json + "\n      " + afterData;
@@ -318,4 +321,3 @@ export async function loadNotesFromFile(
     alert("Loading notes was cancelled or failed.");
   }
 }
-

@@ -44,8 +44,8 @@ export const NotesAndEditorPanel: React.FC = () => {
   const currentNoteText = (() => {
     if (currentTabState.mode === "article") {
       return (
-        articles.find((entry: any) => entry.id === currentTabState.articleId)?.text ??
-        ""
+        articles.find((entry: any) => entry.id === currentTabState.articleId)
+          ?.text ?? ""
       );
     }
     return (
@@ -129,7 +129,11 @@ export const NotesAndEditorPanel: React.FC = () => {
                   }
                   return;
                 }
-                setNoteForBookChapter(currentTabState.selectedBook, currentTabState.chapterNumber, html);
+                setNoteForBookChapter(
+                  currentTabState.selectedBook,
+                  currentTabState.chapterNumber,
+                  html,
+                );
               }}
               refreshNotesDate={refreshNotesDate}
             />

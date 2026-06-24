@@ -31,7 +31,10 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
         }}
       >
         {isBibleTab && (
-          <BibleText selectedBook={selectedBook} chapterNumber={chapterNumber} />
+          <BibleText
+            selectedBook={selectedBook}
+            chapterNumber={chapterNumber}
+          />
         )}
         <NotesAndEditorPanel />
       </Box>

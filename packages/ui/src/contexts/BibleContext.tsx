@@ -115,7 +115,12 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [tabs, setTabs] = useState<TabState[]>([
-    { mode: "bible", selectedBook: "Matthew", chapterNumber: 1, articleId: null },
+    {
+      mode: "bible",
+      selectedBook: "Matthew",
+      chapterNumber: 1,
+      articleId: null,
+    },
   ]);
   const [notes, setNotes] = useState<NoteEntry[]>([
     { book: "Matthew", chapterNumber: 1, text: "" },
@@ -146,7 +151,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       if (bookNames.length > 0) {
         setBooks(bookNames);
         // Ensure a canonical copy is available on window for other code to reuse.
-        if (!(window as any).BIBLE_BOOKS) (window as any).BIBLE_BOOKS = bookNames;
+        if (!(window as any).BIBLE_BOOKS)
+          (window as any).BIBLE_BOOKS = bookNames;
       }
     } catch (err) {
       console.warn("Error fetching bible text from API", err);
@@ -203,7 +209,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
                   articleId: matchedArticle.id,
                 },
               ];
-              setCurrentTab(nextTabs.length - 1);
+              // setCurrentTab(nextTabs.length - 1);
               return nextTabs;
             });
             setEditorOpen(true);
@@ -292,7 +298,11 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const loadNotesFromFile = async () => {
-    await loadNotesFromFileImpl(fileHandleRef, replaceAllNotes, replaceAllArticles);
+    await loadNotesFromFileImpl(
+      fileHandleRef,
+      replaceAllNotes,
+      replaceAllArticles,
+    );
   };
 
   return (

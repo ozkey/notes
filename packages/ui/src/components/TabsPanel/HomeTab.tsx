@@ -56,7 +56,8 @@ export const HomeTab: React.FC = () => {
 
   const openBible = () => {
     const parsedChapter = parseInt(chapterInput, 10);
-    if (!selectedBook || Number.isNaN(parsedChapter) || parsedChapter < 1) return;
+    if (!selectedBook || Number.isNaN(parsedChapter) || parsedChapter < 1)
+      return;
     openBibleInCurrentTab(selectedBook, parsedChapter);
   };
 
@@ -77,7 +78,9 @@ export const HomeTab: React.FC = () => {
 
           <Divider />
 
-          <Typography variant="subtitle1">Open a bible book and chapter</Typography>
+          <Typography variant="subtitle1">
+            Open a bible book and chapter
+          </Typography>
           <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
             <Autocomplete
               disablePortal
@@ -130,7 +133,10 @@ export const HomeTab: React.FC = () => {
           ) : (
             <List dense sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}>
               {existingArticleIds.map((id: string) => (
-                <ListItemButton key={id} onClick={() => openArticleInCurrentTab(id)}>
+                <ListItemButton
+                  key={id}
+                  onClick={() => openArticleInCurrentTab(id)}
+                >
                   <ListItemText primary={id} />
                 </ListItemButton>
               ))}
@@ -141,4 +147,3 @@ export const HomeTab: React.FC = () => {
     </Card>
   );
 };
-

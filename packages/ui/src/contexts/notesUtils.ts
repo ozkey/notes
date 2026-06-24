@@ -64,4 +64,3 @@ export const replaceAllArticles = (
   setArticles(entries ?? []);
   setRefreshNotesDate(new Date());
 };
-
