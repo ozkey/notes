@@ -37,6 +37,7 @@ export const HomeTab: React.FC = () => {
     String(current.chapterNumber ?? 1),
   );
   const [articleIdInput, setArticleIdInput] = useState<string>("#");
+  const [articleIdError, setArticleIdError] = useState<string>("");
 
   useEffect(() => {
     setSelectedBook(current.selectedBook ?? books[0] ?? null);
@@ -72,7 +73,12 @@ export const HomeTab: React.FC = () => {
 
   const createArticle = () => {
     const normalizedId = normalizeArticleId(articleIdInput);
-    if (!normalizedId) return;
+    const idText = normalizedId.replace(/^#/, "");
+    if (idText.length < 2) {
+      setArticleIdError("Article ID must be at least 2 characters.");
+      return;
+    }
+    setArticleIdError("");
     openArticleInCurrentTab(normalizedId);
   };
 
@@ -124,7 +130,15 @@ export const HomeTab: React.FC = () => {
               size="small"
               label="Article ID / Hashtag"
               value={articleIdInput}
-              onChange={(e) => setArticleIdInput(e.target.value)}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setArticleIdInput(nextValue);
+                const normalizedId = normalizeArticleId(nextValue);
+                const idText = normalizedId.replace(/^#/, "");
+                if (idText.length >= 2) setArticleIdError("");
+              }}
+              error={Boolean(articleIdError)}
+              helperText={articleIdError}
               sx={{ minWidth: 260 }}
             />
             <Button variant="contained" onClick={createArticle}>
