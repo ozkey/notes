@@ -1,11 +1,11 @@
 import { Button, Card, CardActions, CardContent } from "@mui/material";
 import React, { useContext, useEffect } from "react";
-import BibleContext from "../contexts/BibleContext";
-import Editor from "./Editor/Editor";
-import { SaveOpen } from "./ActionBar/SaveOpen";
-import editorImage from "./Editor/editor.jpg";
+import BibleContext from "../../contexts/BibleContext";
+import Editor from "../Editor/Editor";
+import { SaveOpen } from "../ActionBar/SaveOpen";
+import editorImage from "../Editor/editor.jpg";
 
-export const StudyPanel: React.FC = () => {
+export const NotesAndEditorPanel: React.FC = () => {
   const {
     tabs,
     currentTab,
