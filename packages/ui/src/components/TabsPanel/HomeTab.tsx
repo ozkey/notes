@@ -47,6 +47,15 @@ export const HomeTab: React.FC = () => {
     () => articles.map((article: any) => article.id),
     [articles],
   );
+  const openArticleIds = useMemo(
+    () =>
+      new Set(
+        tabs
+          .filter((tab: any) => tab.mode === "article" && tab.articleId)
+          .map((tab: any) => String(tab.articleId).toLowerCase()),
+      ),
+    [tabs],
+  );
 
   const normalizeArticleId = (raw: string) => {
     const trimmed = raw.trim();
@@ -136,8 +145,14 @@ export const HomeTab: React.FC = () => {
                 <ListItemButton
                   key={id}
                   onClick={() => openArticleInCurrentTab(id)}
+                  disabled={openArticleIds.has(id.toLowerCase())}
                 >
-                  <ListItemText primary={id} />
+                  <ListItemText
+                    primary={
+                      id +
+                      (openArticleIds.has(id.toLowerCase()) ? " - open" : "")
+                    }
+                  />
                 </ListItemButton>
               ))}
             </List>

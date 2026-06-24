@@ -110,6 +110,11 @@ export const NotesAndEditorPanel: React.FC = () => {
               To get started, click the "New File" button to create a new file
               for your notes.
             </p>
+            <p>
+              * OneDrive and Google Drive are services provided by Microsoft and
+              Google respectively. This app is not affiliated with or endorsed
+              by either company.
+            </p>
             <img
               src={editorImage}
               alt="Instructions"
