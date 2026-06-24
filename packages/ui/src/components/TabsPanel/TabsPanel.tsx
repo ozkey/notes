@@ -13,6 +13,7 @@ import BibleContext from "../../contexts/BibleContext";
 import { TabState } from "../../contexts/BibleTypes";
 import { ContainedButtons } from "../ActionBar/ActionBar";
 import { NotesPanel } from "../NotesPanel/NotesPanel";
+import { HomeTab } from "./HomeTab";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -46,10 +47,15 @@ function a11yProps(index: number) {
 function getCustomTabPanel(i: number, currentTab: number, t: TabState) {
   return (
     <CustomTabPanel key={i} value={currentTab} index={i}>
-      <NotesPanel
-        selectedBook={t.selectedBook}
-        chapterNumber={t.chapterNumber}
-      />
+      {t.mode === "home" ? (
+        <HomeTab />
+      ) : (
+        <NotesPanel
+          mode={t.mode}
+          selectedBook={t.selectedBook}
+          chapterNumber={t.chapterNumber}
+        />
+      )}
     </CustomTabPanel>
   );
 }
@@ -82,9 +88,15 @@ export const TabsPanel: React.FC = () => {
               label={
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <span style={{ marginRight: 8 }}>
-                    {t.selectedBook
-                      ? `${t.selectedBook} ${t.chapterNumber}`
-                      : "Select a book"}
+                    {t.mode === "home"
+                      ? "Home"
+                      : t.mode === "article"
+                        ? t.articleId
+                          ? `Articles ${t.articleId}`
+                          : "Articles"
+                        : t.selectedBook
+                          ? `${t.selectedBook} ${t.chapterNumber}`
+                          : "Select a book"}
                   </span>
                   <IconButton
                     size="small"

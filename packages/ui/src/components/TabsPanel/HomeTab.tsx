@@ -1,0 +1,144 @@
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import {
+  Autocomplete,
+  Button,
+  Card,
+  CardContent,
+  Divider,
+  List,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import BibleContext from "../../contexts/BibleContext";
+
+export const HomeTab: React.FC = () => {
+  const {
+    tabs,
+    currentTab,
+    books,
+    articles,
+    openBibleInCurrentTab,
+    openArticleInCurrentTab,
+  } = useContext(BibleContext as React.Context<any>);
+
+  const current = tabs[currentTab] ?? {
+    selectedBook: null,
+    chapterNumber: 1,
+    articleId: null,
+  };
+
+  const [selectedBook, setSelectedBook] = useState<string | null>(
+    current.selectedBook ?? books[0] ?? null,
+  );
+  const [chapterInput, setChapterInput] = useState<string>(
+    String(current.chapterNumber ?? 1),
+  );
+  const [articleIdInput, setArticleIdInput] = useState<string>("#");
+
+  useEffect(() => {
+    setSelectedBook(current.selectedBook ?? books[0] ?? null);
+    setChapterInput(String(current.chapterNumber ?? 1));
+  }, [currentTab, current.selectedBook, current.chapterNumber, books]);
+
+  const existingArticleIds = useMemo(
+    () => articles.map((article: any) => article.id),
+    [articles],
+  );
+
+  const normalizeArticleId = (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return "";
+    return trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+  };
+
+  const openBible = () => {
+    const parsedChapter = parseInt(chapterInput, 10);
+    if (!selectedBook || Number.isNaN(parsedChapter) || parsedChapter < 1) return;
+    openBibleInCurrentTab(selectedBook, parsedChapter);
+  };
+
+  const createArticle = () => {
+    const normalizedId = normalizeArticleId(articleIdInput);
+    if (!normalizedId) return;
+    openArticleInCurrentTab(normalizedId);
+  };
+
+  return (
+    <Card>
+      <CardContent>
+        <Stack spacing={2}>
+          <Typography variant="h6">Home</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Choose what you want to open in this tab.
+          </Typography>
+
+          <Divider />
+
+          <Typography variant="subtitle1">Open a bible book and chapter</Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
+            <Autocomplete
+              disablePortal
+              options={books}
+              value={selectedBook}
+              onChange={(_, value) => setSelectedBook(value)}
+              renderInput={(params) => (
+                <TextField {...params} label="Bible Book" size="small" />
+              )}
+              sx={{ minWidth: 260 }}
+            />
+            <TextField
+              size="small"
+              label="Chapter"
+              type="number"
+              value={chapterInput}
+              onChange={(e) => setChapterInput(e.target.value)}
+              sx={{ width: 120 }}
+            />
+            <Button variant="contained" onClick={openBible}>
+              Open
+            </Button>
+          </Stack>
+
+          <Divider />
+
+          <Typography variant="subtitle1">
+            Create a new article that is not linked to a book and chapter
+          </Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
+            <TextField
+              size="small"
+              label="Article ID / Hashtag"
+              value={articleIdInput}
+              onChange={(e) => setArticleIdInput(e.target.value)}
+              sx={{ minWidth: 260 }}
+            />
+            <Button variant="contained" onClick={createArticle}>
+              Create article
+            </Button>
+          </Stack>
+
+          <Divider />
+
+          <Typography variant="subtitle1">Open an article</Typography>
+          {existingArticleIds.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No saved articles yet.
+            </Typography>
+          ) : (
+            <List dense sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}>
+              {existingArticleIds.map((id: string) => (
+                <ListItemButton key={id} onClick={() => openArticleInCurrentTab(id)}>
+                  <ListItemText primary={id} />
+                </ListItemButton>
+              ))}
+            </List>
+          )}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+};
+

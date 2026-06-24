@@ -28,12 +28,13 @@ const TEMPLATE_HTML = `<!doctype html>
         // ========= DATA START =========
         {
           notes: [],
+          articles: [],
           savedAt: "",
         };
       // ========= DATA END =========
 
-      // Script to append each note into the #displayNotes container as an <article>
-      function addNotesToDisplay() {
+        // Script to append each saved note/article into the #displayNotes container.
+       function addNotesToDisplay() {
         const container = document.getElementById("displayNotes");
         const indexContainer = document.getElementById("indexList");
         if (!container) {
@@ -52,47 +53,69 @@ const TEMPLATE_HTML = `<!doctype html>
           indexListEl.className = "index-list";
         }
 
-        if (!data || !Array.isArray(data.notes)) {
-          console.warn("No notes found in data.");
-          return;
-        }
+         if (!data) {
+           console.warn("No data found.");
+           return;
+         }
 
-        data.notes.forEach((note, index) => {
-          try {
-            const article = document.createElement("article");
-            article.className = "note";
-            article.dataset.index = index;
-            article.id = \`note-\${index}\`; // add id so links can target it
+         const noteEntries = Array.isArray(data.notes) ? data.notes : [];
+         const articleEntries = Array.isArray(data.articles) ? data.articles : [];
+         const combined = [
+           ...noteEntries.map((note) => ({ type: "note", value: note })),
+           ...articleEntries.map((article) => ({ type: "article", value: article })),
+         ];
 
-            const book = note.book || "Unknown Book";
-            const chapter =
-              note.chapterNumber !== undefined && note.chapterNumber !== null
-                ? note.chapterNumber
-                : "Unknown Chapter";
+         combined.forEach((entry, index) => {
+           try {
+             const article = document.createElement("article");
+             article.className = "note";
+             article.dataset.index = index;
+             article.id = \`note-\${index}\`; // add id so links can target it
 
-            const heading = document.createElement("h2");
-            heading.textContent = \`\${book} \${chapter}\`;
-            article.appendChild(heading);
+             const heading = document.createElement("h2");
+             if (entry.type === "article") {
+               heading.textContent = \`Article \${entry.value.id || "Unknown ID"}\`;
+             } else {
+               const book = entry.value.book || "Unknown Book";
+               const chapter =
+                 entry.value.chapterNumber !== undefined &&
+                 entry.value.chapterNumber !== null
+                   ? entry.value.chapterNumber
+                   : "Unknown Chapter";
+               heading.textContent = \`\${book} \${chapter}\`;
+             }
+             article.appendChild(heading);
 
-            const content = document.createElement("div");
-            content.className = "note-content";
+             const content = document.createElement("div");
+             content.className = "note-content";
 
-            // note.text is HTML string in the data; insert as HTML
-            content.innerHTML = note.text || "";
-            article.appendChild(content);
+             content.innerHTML = entry.value.text || "";
+             article.appendChild(content);
 
             container.appendChild(article);
 
             // Add to index list if present
-            if (indexListEl) {
-              const li = document.createElement("li");
-              const a = document.createElement("a");
-              a.href = \`#\${article.id}\`;
-              a.textContent = \`\${book} \${chapter}\`;
-              a.setAttribute("aria-label", \`Go to \${book} \${chapter}\`);
-              li.appendChild(a);
-              indexListEl.appendChild(li);
-            }
+             if (indexListEl) {
+               const li = document.createElement("li");
+               const a = document.createElement("a");
+               a.href = \`#\${article.id}\`;
+               if (entry.type === "article") {
+                 const articleId = entry.value.id || "Unknown ID";
+                 a.textContent = \`Article \${articleId}\`;
+                 a.setAttribute("aria-label", \`Go to Article \${articleId}\`);
+               } else {
+                 const book = entry.value.book || "Unknown Book";
+                 const chapter =
+                   entry.value.chapterNumber !== undefined &&
+                   entry.value.chapterNumber !== null
+                     ? entry.value.chapterNumber
+                     : "Unknown Chapter";
+                 a.textContent = \`\${book} \${chapter}\`;
+                 a.setAttribute("aria-label", \`Go to \${book} \${chapter}\`);
+               }
+               li.appendChild(a);
+               indexListEl.appendChild(li);
+             }
           } catch (err) {
             console.error("Failed to render note at index", index, err);
           }
@@ -122,10 +145,12 @@ const TEMPLATE_HTML = `<!doctype html>
 // The notes and metadata are embedded as a JavaScript object in the HTML template.
 export async function saveNotesToFile(
   notes: any[],
+  articles: any[],
   fileHandleRef: React.MutableRefObject<any | null>,
 ): Promise<void> {
   const payload = {
     notes: notes,
+    articles: articles,
     savedAt: new Date().toISOString(),
   };
 
@@ -208,6 +233,7 @@ export async function saveNotesToFile(
 export async function loadNotesFromFile(
   fileHandleRef: React.MutableRefObject<any | null>,
   replaceAllNotes: (entries: any[]) => void,
+  replaceAllArticles: (entries: any[]) => void,
 ): Promise<void> {
   try {
     let file: File | null;
@@ -269,13 +295,16 @@ export async function loadNotesFromFile(
 
     // Normalized parsed -> entries array. Accept multiple formats:
     // - { notes: [...] }
+    // - { notes: [...], articles: [...] }
     // - array of entries
     // - raw string -> wrap as a single note
     let loadedNotes: any[] = [];
+    let loadedArticles: any[] = [];
     if (Array.isArray(parsed)) {
       loadedNotes = parsed;
     } else if (parsed && parsed.notes && Array.isArray(parsed.notes)) {
       loadedNotes = parsed.notes;
+      if (Array.isArray(parsed.articles)) loadedArticles = parsed.articles;
     } else if (typeof parsed === "string") {
       loadedNotes = [{ book: null, chapterNumber: 1, text: parsed }];
     } else if (parsed && parsed.text) {
@@ -283,6 +312,7 @@ export async function loadNotesFromFile(
     }
 
     replaceAllNotes(loadedNotes as any[]);
+    replaceAllArticles(loadedArticles as any[]);
   } catch (err) {
     console.error("Failed to load notes:", err);
     alert("Loading notes was cancelled or failed.");

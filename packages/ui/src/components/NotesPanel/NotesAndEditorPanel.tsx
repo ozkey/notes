@@ -10,31 +10,52 @@ export const NotesAndEditorPanel: React.FC = () => {
     tabs,
     currentTab,
     notes,
+    articles,
     setNoteForBookChapter,
+    setArticleById,
     refreshNotesDate,
     editorOpen,
     setEditorOpen,
   } = useContext(BibleContext as React.Context<any>);
 
   const currentTabState = tabs[currentTab] ?? {
+    mode: "home",
     selectedBook: null,
     chapterNumber: 1,
+    articleId: null,
   };
 
   if (!notes) return <></>;
-  if (!currentTabState.selectedBook) {
+  if (currentTabState.mode === "home") {
+    return (
+      <Card>
+        <CardContent>Select an option from Home to get started.</CardContent>
+      </Card>
+    );
+  }
+  if (currentTabState.mode === "bible" && !currentTabState.selectedBook) {
     return (
       <Card>
         <CardContent>No book selected</CardContent>
       </Card>
     );
   }
-  const currentNoteText =
-    notes.find(
-      (entry: any) =>
-        entry.book === currentTabState.selectedBook &&
-        entry.chapterNumber === currentTabState.chapterNumber,
-    )?.text ?? "";
+
+  const currentNoteText = (() => {
+    if (currentTabState.mode === "article") {
+      return (
+        articles.find((entry: any) => entry.id === currentTabState.articleId)?.text ??
+        ""
+      );
+    }
+    return (
+      notes.find(
+        (entry: any) =>
+          entry.book === currentTabState.selectedBook &&
+          entry.chapterNumber === currentTabState.chapterNumber,
+      )?.text ?? ""
+    );
+  })();
 
   // editorOpen state moved to context
 
@@ -102,11 +123,13 @@ export const NotesAndEditorPanel: React.FC = () => {
               value={currentNoteText}
               onChange={(html) => {
                 console.log("Saving notes to file", html);
-                setNoteForBookChapter(
-                  currentTabState.selectedBook,
-                  currentTabState.chapterNumber,
-                  html,
-                );
+                if (currentTabState.mode === "article") {
+                  if (currentTabState.articleId) {
+                    setArticleById(currentTabState.articleId, html);
+                  }
+                  return;
+                }
+                setNoteForBookChapter(currentTabState.selectedBook, currentTabState.chapterNumber, html);
               }}
               refreshNotesDate={refreshNotesDate}
             />
