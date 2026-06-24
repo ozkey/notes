@@ -171,6 +171,46 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const handleHash = () => {
       try {
+        const rawHash = decodeURIComponent(
+          window.location.hash.startsWith("#")
+            ? window.location.hash.slice(1)
+            : window.location.hash,
+        ).trim();
+
+        if (rawHash) {
+          const articleHashCandidates = [
+            rawHash,
+            rawHash.startsWith("#") ? rawHash : `#${rawHash}`,
+            rawHash.startsWith("#") ? rawHash.slice(1) : rawHash,
+          ].filter(Boolean);
+
+          const matchedArticle = articles.find((article) =>
+            articleHashCandidates.some(
+              (candidate) =>
+                article.id.toLowerCase() === String(candidate).toLowerCase(),
+            ),
+          );
+
+          if (matchedArticle) {
+            setTabs((previousTabs) => {
+              if (previousTabs.length >= MAX_TAB_LIMIT) return previousTabs;
+              const nextTabs: TabState[] = [
+                ...previousTabs,
+                {
+                  mode: "article",
+                  selectedBook: null,
+                  chapterNumber: 1,
+                  articleId: matchedArticle.id,
+                },
+              ];
+              setCurrentTab(nextTabs.length - 1);
+              return nextTabs;
+            });
+            setEditorOpen(true);
+            return;
+          }
+        }
+
         const parsed = parseHashUtil(window.location.hash, books, BIBLE_BOOKS);
         if (parsed)
           openTabForBookChapterUtil(
@@ -193,7 +233,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     window.addEventListener("hashchange", handleHash);
     return () => window.removeEventListener("hashchange", handleHash);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [books]);
+  }, [books, articles]);
 
   const setNoteForBookChapter = (
     book: string | null,

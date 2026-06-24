@@ -92,8 +92,8 @@ export const TabsPanel: React.FC = () => {
                       ? "Home"
                       : t.mode === "article"
                         ? t.articleId
-                          ? `Articles ${t.articleId}`
-                          : "Articles"
+                          ? `${t.articleId}`
+                          : "Article"
                         : t.selectedBook
                           ? `${t.selectedBook} ${t.chapterNumber}`
                           : "Select a book"}
@@ -117,9 +117,7 @@ export const TabsPanel: React.FC = () => {
         </Tabs>
         <Card sx={{ bgcolor: "grey.50", padding: "0px", margin: "0px" }}>
           <CardContent sx={{ padding: "0px", margin: "0px" }}>
-            {tabs.map((t, i: number) =>
-              getCustomTabPanel(i, currentTab, t),
-            )}
+            {tabs.map((t, i: number) => getCustomTabPanel(i, currentTab, t))}
           </CardContent>
         </Card>
       </Box>
