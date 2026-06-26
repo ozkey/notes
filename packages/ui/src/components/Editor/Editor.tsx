@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import JoditEditor from "jodit-react";
 import "jodit/es5/jodit.min.css";
 import { BIBLE_BOOKMARK_BUTTON, insertBibleBookmark } from "./BibleBookmark";
@@ -59,9 +59,15 @@ export default function Editor({
   onChange?: (html: string) => void;
 }) {
   const [content, setContent] = useState(value || "");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isEditingRef = useRef(false);
+  const draftContentRef = useRef(value || "");
 
   useEffect(() => {
-    setContent(value || "");
+    if (isEditingRef.current) return;
+    const nextValue = value || "";
+    draftContentRef.current = nextValue;
+    setContent((prev) => (prev === nextValue ? prev : nextValue));
   }, [value]);
 
   const config = useMemo(
@@ -186,13 +192,29 @@ export default function Editor({
   );
 
   return (
-    <JoditEditor
-      value={content}
-      config={config}
-      onChange={(html) => {
-        setContent(html);
-        onChange?.(html);
+    <div
+      ref={containerRef}
+      onFocusCapture={() => {
+        isEditingRef.current = true;
       }}
-    />
+      onBlurCapture={(event) => {
+        const nextTarget = event.relatedTarget as Node | null;
+        if (nextTarget && containerRef.current?.contains(nextTarget)) return;
+        isEditingRef.current = false;
+      }}
+    >
+        <JoditEditor
+          value={content}
+          config={config}
+          onChange={(html) => {
+            draftContentRef.current = html;
+          }}
+          onBlur={(html) => {
+            isEditingRef.current = false;
+            setContent((prev) => (prev === html ? prev : html));
+            onChange?.(html);
+          }}
+        />
+      </div>
   );
 }
