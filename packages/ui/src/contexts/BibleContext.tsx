@@ -209,7 +209,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
                   articleId: matchedArticle.id,
                 },
               ];
-              // setCurrentTab(nextTabs.length - 1);
+              setCurrentTab(nextTabs.length - 1);
               return nextTabs;
             });
             setEditorOpen(true);

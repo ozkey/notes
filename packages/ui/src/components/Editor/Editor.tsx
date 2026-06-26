@@ -1,157 +1,75 @@
-import { useEffect, useRef } from "react";
-import suneditor, { plugins } from "suneditor";
-import "suneditor/css/editor";
-import "suneditor/css/contents";
-import CalloutBlock from "./CalloutBlock";
-import HelloWorld from "./EditorPlugin";
-import BibleBookmark from "./BibleBookmark";
+import { useEffect, useMemo, useState } from "react";
+import JoditEditor from "jodit-react";
+import "jodit/es5/jodit.min.css";
+import {
+  BIBLE_BOOKMARK_BUTTON,
+  insertBibleBookmark,
+} from "./BibleBookmark";
 
 export default function Editor({
   value = "",
-  refreshNotesDate,
+  refreshNotesDate: _refreshNotesDate,
   onChange,
 }: {
   value?: string;
   refreshNotesDate?: Date;
   onChange?: (html: string) => void;
 }) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-  const editorRef = useRef<any>(null);
+  const [content, setContent] = useState(value || "");
 
   useEffect(() => {
-    const smallScreen = window.innerWidth < 900;
-    if (smallScreen)
-      console.log("small screen detected, editor will be disabled");
+    setContent(value || "");
+  }, [value]);
 
-    console.log("Initializing editor with value", value);
-    const instance = suneditor.create(ref.current!, {
-      plugins: { ...plugins, HelloWorld, CalloutBlock, BibleBookmark },
-      value: value || "",
-      strictMode: {
-        tagFilter: false,
-        formatFilter: true,
-        classFilter: false,
-        textStyleTagFilter: true,
-        attrFilter: false,
-        styleFilter: false,
-      },
-      events: {
-        // widen type to any to avoid incorrect Event typing from lib
-        // onSave: async (params: any) => {
-        //   let contents = "";
-        //   if (typeof params === "string") {
-        //     contents = params;
-        //   } else if (params && typeof params.data === "string") {
-        //     contents = params.data;
-        //   } else if (
-        //     editorRef.current &&
-        //     typeof editorRef.current.getContents === "function"
-        //   ) {
-        //     contents = editorRef.current.getContents();
-        //   }
-        //
-        //   onSave?.(contents || "");
-        //   console.log(contents);
-        //   return true;
-        // },
-        onChange: (params: {
-          $: unknown;
-          frameContext: unknown;
-          data: string;
-        }) => {
-          console.log(params.data);
-          onChange?.(params.data);
+  const config = useMemo(
+    () => ({
+      readonly: false,
+      height: 420,
+      askBeforePasteHTML: false,
+      askBeforePasteFromWord: false,
+      controls: {
+        [BIBLE_BOOKMARK_BUTTON]: {
+          tooltip: "Bible Bookmark",
+          text: "BB",
+          exec: (editor: { s?: { insertHTML?: (html: string) => void } }) => {
+            insertBibleBookmark(editor);
+          },
         },
       },
-      buttonList: smallScreen
-        ? [
-            ["bold", "italic", "underline", "strike"],
-            "/",
-            ["blockStyle", "font", "fontSize"],
-          ]
-        : [
-            //  "newDocument"
-            // ["save", "|"],
+      buttons: [
+        "undo",
+        "redo",
+        "|",
+        "bold",
+        "italic",
+        "underline",
+        "strikethrough",
+        "|",
+        "ul",
+        "ol",
+        "|",
+        "outdent",
+        "indent",
+        "|",
+        "link",
+        "image",
+        "table",
+        "video",
+        "source",
+        BIBLE_BOOKMARK_BUTTON,
+      ],
+    }),
+    [],
+  );
 
-            ["undo", "redo"],
-            "|",
-
-            "|",
-            [
-              ":Format-default.more_paragraph",
-              "blockStyle",
-              "font",
-              "fontSize",
-            ],
-            ["blockStyle"],
-            [
-              ":Text-default.more_text",
-              "bold",
-              "italic",
-              "underline",
-              "strike",
-              "|",
-              "fontColor",
-              "backgroundColor",
-              "|",
-              "removeFormat",
-            ],
-            ["bold", "italic", "underline", "removeFormat"],
-
-            [
-              "-right",
-              ":i-more",
-              "showBlocks",
-              "codeView",
-              "preview",
-              "print",
-              "fullScreen",
-            ],
-
-            "/",
-
-            ["outdent", "indent", "align", "list"],
-
-            [
-              "|",
-              ":Insert-default.more_plus",
-              "table",
-              "anchor",
-              // "link",
-              "image",
-              "video",
-            ],
-
-            [
-              "-right",
-              "BibleBookmark",
-              "link",
-              "blockquote",
-              "calloutBlock",
-              "helloWorld",
-            ],
-          ],
-    });
-
-    editorRef.current = instance;
-
-    return () => {
-      instance.destroy();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshNotesDate]);
-
-  // update editor contents when value changes from parent
-  // useEffect(() => {
-  //   if (editorRef.current) {
-  //     try {
-  //       console.log("Updating editor contents", value);
-  //       editorRef.current.setContents(value + <span>x</span> || "");
-  //     } catch (e) {
-  //       // ignore
-  //     }
-  //   }
-  // }, [value]);
-
-  return <textarea ref={ref} />;
+  return (
+    <JoditEditor
+      value={content}
+      config={config}
+      onChange={(html) => {
+        setContent(html);
+        onChange?.(html);
+      }}
+    />
+  );
 }
