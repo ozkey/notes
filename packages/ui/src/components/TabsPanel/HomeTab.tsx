@@ -19,6 +19,7 @@ export const HomeTab: React.FC = () => {
     tabs,
     currentTab,
     books,
+    notes,
     articles,
     openBibleInCurrentTab,
     openArticleInCurrentTab,
@@ -57,6 +58,30 @@ export const HomeTab: React.FC = () => {
       ),
     [tabs],
   );
+  const existingNoteRefs = useMemo(() => {
+    const seen = new Set<string>();
+    const refs: Array<{ id: string; book: string; chapterNumber: number }> = [];
+    for (const entry of notes) {
+      if (!entry?.book || !entry?.chapterNumber) continue;
+      const id = `${entry.book}|${entry.chapterNumber}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      refs.push({ id, book: entry.book, chapterNumber: entry.chapterNumber });
+    }
+    return refs;
+  }, [notes]);
+  const openBibleRefs = useMemo(
+    () =>
+      new Set(
+        tabs
+          .filter((tab: any) => tab.mode === "bible" && tab.selectedBook)
+          .map(
+            (tab: any) =>
+              `${tab.selectedBook}|${String(tab.chapterNumber ?? 1)}`.toLowerCase(),
+          ),
+      ),
+    [tabs],
+  );
 
   const normalizeArticleId = (raw: string) => {
     const trimmed = raw.trim();
@@ -83,96 +108,132 @@ export const HomeTab: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Stack spacing={2}>
-          <Typography variant="h6">Home</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Choose what you want to open in this tab.
-          </Typography>
+    <Stack spacing={2}>
+      <Typography variant="h6">Home</Typography>
+      <Typography variant="body2" color="text.secondary">
+        Choose what you want to open in this tab.
+      </Typography>
 
-          <Divider />
+      <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+        <Card sx={{ flex: 1 }}>
+          <CardContent>
+            <Stack spacing={2}>
+              <Typography variant="subtitle1">
+                Open a bible book and chapter
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <Autocomplete
+                  disablePortal
+                  options={books}
+                  value={selectedBook}
+                  onChange={(_, value) => setSelectedBook(value)}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Bible Book" size="small" />
+                  )}
+                  sx={{ minWidth: 220 }}
+                />
+                <TextField
+                  size="small"
+                  label="Chapter"
+                  type="number"
+                  value={chapterInput}
+                  onChange={(e) => setChapterInput(e.target.value)}
+                  sx={{ width: 120 }}
+                />
+                <Button variant="contained" onClick={openBible}>
+                  Open
+                </Button>
+              </Stack>
 
-          <Typography variant="subtitle1">
-            Open a bible book and chapter
-          </Typography>
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
-            <Autocomplete
-              disablePortal
-              options={books}
-              value={selectedBook}
-              onChange={(_, value) => setSelectedBook(value)}
-              renderInput={(params) => (
-                <TextField {...params} label="Bible Book" size="small" />
+              <Divider />
+
+              <Typography variant="subtitle1">Open a note</Typography>
+              {existingNoteRefs.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  No saved notes yet.
+                </Typography>
+              ) : (
+                <List dense sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}>
+                  {existingNoteRefs.map((note) => {
+                    const isOpen = openBibleRefs.has(note.id.toLowerCase());
+                    return (
+                      <ListItemButton
+                        key={note.id}
+                        onClick={() =>
+                          openBibleInCurrentTab(note.book, note.chapterNumber)
+                        }
+                        disabled={isOpen}
+                      >
+                        <ListItemText
+                          primary={`${note.book} ${note.chapterNumber}${
+                            isOpen ? " - open" : ""
+                          }`}
+                        />
+                      </ListItemButton>
+                    );
+                  })}
+                </List>
               )}
-              sx={{ minWidth: 260 }}
-            />
-            <TextField
-              size="small"
-              label="Chapter"
-              type="number"
-              value={chapterInput}
-              onChange={(e) => setChapterInput(e.target.value)}
-              sx={{ width: 120 }}
-            />
-            <Button variant="contained" onClick={openBible}>
-              Open
-            </Button>
-          </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
 
-          <Divider />
+        <Card sx={{ flex: 1 }}>
+          <CardContent>
+            <Stack spacing={2}>
+              <Typography variant="subtitle1">
+                Create a new article that is not linked to a book and chapter
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <TextField
+                  size="small"
+                  label="Article ID / Hashtag"
+                  value={articleIdInput}
+                  onChange={(e) => {
+                    const nextValue = e.target.value;
+                    setArticleIdInput(nextValue);
+                    const normalizedId = normalizeArticleId(nextValue);
+                    const idText = normalizedId.replace(/^#/, "");
+                    if (idText.length >= 2) setArticleIdError("");
+                  }}
+                  error={Boolean(articleIdError)}
+                  helperText={articleIdError}
+                  sx={{ minWidth: 260 }}
+                />
+                <Button variant="contained" onClick={createArticle}>
+                  Create article
+                </Button>
+              </Stack>
 
-          <Typography variant="subtitle1">
-            Create a new article that is not linked to a book and chapter
-          </Typography>
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
-            <TextField
-              size="small"
-              label="Article ID / Hashtag"
-              value={articleIdInput}
-              onChange={(e) => {
-                const nextValue = e.target.value;
-                setArticleIdInput(nextValue);
-                const normalizedId = normalizeArticleId(nextValue);
-                const idText = normalizedId.replace(/^#/, "");
-                if (idText.length >= 2) setArticleIdError("");
-              }}
-              error={Boolean(articleIdError)}
-              helperText={articleIdError}
-              sx={{ minWidth: 260 }}
-            />
-            <Button variant="contained" onClick={createArticle}>
-              Create article
-            </Button>
-          </Stack>
+              <Divider />
 
-          <Divider />
-
-          <Typography variant="subtitle1">Open an article</Typography>
-          {existingArticleIds.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              No saved articles yet.
-            </Typography>
-          ) : (
-            <List dense sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}>
-              {existingArticleIds.map((id: string) => (
-                <ListItemButton
-                  key={id}
-                  onClick={() => openArticleInCurrentTab(id)}
-                  disabled={openArticleIds.has(id.toLowerCase())}
-                >
-                  <ListItemText
-                    primary={
-                      id +
-                      (openArticleIds.has(id.toLowerCase()) ? " - open" : "")
-                    }
-                  />
-                </ListItemButton>
-              ))}
-            </List>
-          )}
-        </Stack>
-      </CardContent>
-    </Card>
+              <Typography variant="subtitle1">Open an article</Typography>
+              {existingArticleIds.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  No saved articles yet.
+                </Typography>
+              ) : (
+                <List dense sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}>
+                  {existingArticleIds.map((id: string) => (
+                    <ListItemButton
+                      key={id}
+                      onClick={() => openArticleInCurrentTab(id)}
+                      disabled={openArticleIds.has(id.toLowerCase())}
+                    >
+                      <ListItemText
+                        primary={
+                          id +
+                          (openArticleIds.has(id.toLowerCase()) ? " - open" : "")
+                        }
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
+      </Stack>
+    </Stack>
   );
 };
