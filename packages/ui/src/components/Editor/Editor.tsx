@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import JoditEditor from "jodit-react";
 import "jodit/es5/jodit.min.css";
-import {
-  BIBLE_BOOKMARK_BUTTON,
-  insertBibleBookmark,
-} from "./BibleBookmark";
+import { BIBLE_BOOKMARK_BUTTON, insertBibleBookmark } from "./BibleBookmark";
 
 export default function Editor({
   value = "",
@@ -25,6 +22,7 @@ export default function Editor({
     () => ({
       readonly: false,
       height: 420,
+      toolbarAdaptive: false,
       askBeforePasteHTML: false,
       askBeforePasteFromWord: false,
       controls: {
@@ -56,6 +54,56 @@ export default function Editor({
         "table",
         "video",
         "source",
+        BIBLE_BOOKMARK_BUTTON,
+      ],
+      buttonsMD: [
+        "undo",
+        "redo",
+        "|",
+        "bold",
+        "italic",
+        "underline",
+        "strikethrough",
+        "|",
+        "ul",
+        "ol",
+        "|",
+        "outdent",
+        "indent",
+        "|",
+        "link",
+        "image",
+        "table",
+        "video",
+        "source",
+        BIBLE_BOOKMARK_BUTTON,
+      ],
+      buttonsSM: [
+        "undo",
+        "redo",
+        "|",
+        "bold",
+        "italic",
+        "underline",
+        "|",
+        "ul",
+        "ol",
+        "|",
+        "link",
+        "image",
+        "table",
+        BIBLE_BOOKMARK_BUTTON,
+        "source",
+      ],
+      buttonsXS: [
+        "undo",
+        "redo",
+        "|",
+        "bold",
+        "italic",
+        "underline",
+        "link",
+        "image",
         BIBLE_BOOKMARK_BUTTON,
       ],
     }),
