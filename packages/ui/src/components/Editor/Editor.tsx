@@ -28,7 +28,7 @@ export default function Editor({
       controls: {
         [BIBLE_BOOKMARK_BUTTON]: {
           tooltip: "Bible Bookmark",
-          text: "BB",
+          text: "🔖",
           exec: (editor: { s?: { insertHTML?: (html: string) => void } }) => {
             insertBibleBookmark(editor);
           },
