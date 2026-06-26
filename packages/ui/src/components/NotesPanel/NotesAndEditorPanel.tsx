@@ -1,40 +1,61 @@
 import { Button, Card, CardActions, CardContent } from "@mui/material";
 import React, { useContext, useEffect } from "react";
-import BibleContext from "../contexts/BibleContext";
-import Editor from "./Editor/Editor";
-import { SaveOpen } from "./ActionBar/SaveOpen";
-import editorImage from "./Editor/editor.jpg";
+import BibleContext from "../../contexts/BibleContext";
+import Editor from "../Editor/Editor";
+import { SaveOpen } from "../ActionBar/SaveOpen";
+import editorImage from "../Editor/editor.jpg";
 
-export const StudyPanel: React.FC = () => {
+export const NotesAndEditorPanel: React.FC = () => {
   const {
     tabs,
     currentTab,
     notes,
+    articles,
     setNoteForBookChapter,
+    setArticleById,
     refreshNotesDate,
     editorOpen,
     setEditorOpen,
   } = useContext(BibleContext as React.Context<any>);
 
   const currentTabState = tabs[currentTab] ?? {
+    mode: "home",
     selectedBook: null,
     chapterNumber: 1,
+    articleId: null,
   };
 
   if (!notes) return <></>;
-  if (!currentTabState.selectedBook) {
+  if (currentTabState.mode === "home") {
+    return (
+      <Card>
+        <CardContent>Select an option from Home to get started.</CardContent>
+      </Card>
+    );
+  }
+  if (currentTabState.mode === "bible" && !currentTabState.selectedBook) {
     return (
       <Card>
         <CardContent>No book selected</CardContent>
       </Card>
     );
   }
-  const currentNoteText =
-    notes.find(
-      (entry: any) =>
-        entry.book === currentTabState.selectedBook &&
-        entry.chapterNumber === currentTabState.chapterNumber,
-    )?.text ?? "";
+
+  const currentNoteText = (() => {
+    if (currentTabState.mode === "article") {
+      return (
+        articles.find((entry: any) => entry.id === currentTabState.articleId)
+          ?.text ?? ""
+      );
+    }
+    return (
+      notes.find(
+        (entry: any) =>
+          entry.book === currentTabState.selectedBook &&
+          entry.chapterNumber === currentTabState.chapterNumber,
+      )?.text ?? ""
+    );
+  })();
 
   // editorOpen state moved to context
 
@@ -89,6 +110,11 @@ export const StudyPanel: React.FC = () => {
               To get started, click the "New File" button to create a new file
               for your notes.
             </p>
+            <p>
+              * OneDrive and Google Drive are services provided by Microsoft and
+              Google respectively. This app is not affiliated with or endorsed
+              by either company.
+            </p>
             <img
               src={editorImage}
               alt="Instructions"
@@ -102,6 +128,12 @@ export const StudyPanel: React.FC = () => {
               value={currentNoteText}
               onChange={(html) => {
                 console.log("Saving notes to file", html);
+                if (currentTabState.mode === "article") {
+                  if (currentTabState.articleId) {
+                    setArticleById(currentTabState.articleId, html);
+                  }
+                  return;
+                }
                 setNoteForBookChapter(
                   currentTabState.selectedBook,
                   currentTabState.chapterNumber,

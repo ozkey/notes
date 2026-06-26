@@ -1,7 +1,11 @@
 // Shared types used by Bible context and utilities
+export type TabMode = "home" | "bible" | "article";
+
 export interface TabState {
+  mode: TabMode;
   selectedBook: string | null;
   chapterNumber: number;
+  articleId?: string | null;
 }
 
 export interface NoteEntry {
@@ -10,3 +14,7 @@ export interface NoteEntry {
   text: string;
 }
 
+export interface ArticleEntry {
+  id: string;
+  text: string;
+}

@@ -32,4 +32,3 @@ export async function fetchBibleText(): Promise<BibleTextResult> {
 
   return { bibleText: json, bookNames };
 }
-

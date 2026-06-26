@@ -1,7 +1,7 @@
 import { Box, Card, CardActions, CardContent, Typography } from "@mui/material";
 import React, { useContext } from "react";
 import { BookActions } from "./BookActions";
-import BibleContext from "../../contexts/BibleContext";
+import BibleContext from "../../../contexts/BibleContext";
 
 export const BibleText: React.FC<{
   selectedBook: string | null;

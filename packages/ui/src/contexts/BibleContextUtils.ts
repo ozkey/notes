@@ -43,7 +43,10 @@ export const addTab = (
 ) => {
   setTabs((prev) => {
     if (prev.length >= maxLimit) return prev;
-    const next = [...prev, { selectedBook: null, chapterNumber: 1 }];
+    const next: TabState[] = [
+      ...prev,
+      { mode: "home", selectedBook: null, chapterNumber: 1, articleId: null },
+    ];
     setCurrentTab(next.length - 1);
     return next;
   });
@@ -85,33 +88,24 @@ export const openTabForBookChapter = (
   book: string,
   chapterNumber: number,
   maxLimit = MAX_TAB_LIMIT,
-  setEditorOpen: (open: boolean) => void,
-  editorOpen: boolean,
 ) => {
   setTabs((prev) => {
     const existingIndex = prev.findIndex(
-      (t) => t.selectedBook === book && t.chapterNumber === chapterNumber,
+      (t) =>
+        t.mode === "bible" &&
+        t.selectedBook === book &&
+        t.chapterNumber === chapterNumber,
     );
-    debugger;
     if (existingIndex >= 0) {
-      if (!editorOpen) {
-        setCurrentTab(existingIndex);
-        // i hope in future  to open but if editor it will through error
-        // // focus on the first button
-        // setEditorOpen(false);
-        // // set setCurrentTab in 1 second
-        // setTimeout(() => setCurrentTab(existingIndex), 1000);
-      }
+      setCurrentTab(existingIndex);
       return prev;
     }
     if (prev.length >= maxLimit) return prev;
-    const next = [...prev, { selectedBook: book, chapterNumber }];
-
-    if (!editorOpen) {
-      //setEditorOpen(false);
-      // setTimeout(() => setCurrentTab(next.length - 1), 1000);
-      setCurrentTab(next.length - 1);
-    }
+    const next: TabState[] = [
+      ...prev,
+      { mode: "bible", selectedBook: book, chapterNumber, articleId: null },
+    ];
+    setCurrentTab(next.length - 1);
     return next;
   });
 };

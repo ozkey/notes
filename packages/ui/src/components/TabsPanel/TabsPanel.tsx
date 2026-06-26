@@ -10,9 +10,10 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import React, { useContext } from "react";
 import BibleContext from "../../contexts/BibleContext";
-import { BibleText } from "./BibleText";
-import { StudyPanel } from "../StudyPanel";
+import { TabState } from "../../contexts/BibleTypes";
 import { ContainedButtons } from "../ActionBar/ActionBar";
+import { NotesPanel } from "../NotesPanel/NotesPanel";
+import { HomeTab } from "./HomeTab";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -42,10 +43,26 @@ function a11yProps(index: number) {
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
-export const BiblePanel: React.FC = () => {
-  const { tabs, currentTab, setCurrentTab, addTab, closeTab } = useContext(
-    BibleContext as React.Context<any>,
+
+function getCustomTabPanel(i: number, currentTab: number, t: TabState) {
+  return (
+    <CustomTabPanel key={i} value={currentTab} index={i}>
+      {t.mode === "home" ? (
+        <HomeTab />
+      ) : (
+        <NotesPanel
+          mode={t.mode}
+          selectedBook={t.selectedBook}
+          chapterNumber={t.chapterNumber}
+        />
+      )}
+    </CustomTabPanel>
   );
+}
+
+export const TabsPanel: React.FC = () => {
+  const { tabs, currentTab, setCurrentTab, addTab, closeTab } =
+    useContext(BibleContext);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     // if user clicked the + tab (index === tabs.length) then add
@@ -65,15 +82,21 @@ export const BiblePanel: React.FC = () => {
           onChange={handleChange}
           aria-label="bible tabs"
         >
-          {tabs.map((t: any, i: number) => (
+          {tabs.map((t, i: number) => (
             <Tab
               key={i}
               label={
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <span style={{ marginRight: 8 }}>
-                    {t.selectedBook
-                      ? `${t.selectedBook} ${t.chapterNumber}`
-                      : "Select a book"}
+                    {t.mode === "home"
+                      ? "Home"
+                      : t.mode === "article"
+                        ? t.articleId
+                          ? `${t.articleId}`
+                          : "Article"
+                        : t.selectedBook
+                          ? `${t.selectedBook} ${t.chapterNumber}`
+                          : "Select a book"}
                   </span>
                   <IconButton
                     size="small"
@@ -94,29 +117,7 @@ export const BiblePanel: React.FC = () => {
         </Tabs>
         <Card sx={{ bgcolor: "grey.50", padding: "0px", margin: "0px" }}>
           <CardContent sx={{ padding: "0px", margin: "0px" }}>
-            {tabs.map((t: any, i: number) => (
-              <CustomTabPanel key={i} value={currentTab} index={i}>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "1fr",
-                      sm: "1fr",
-                      md: "1fr 1fr",
-                    },
-                    gap: 0.5,
-                    padding: "0px",
-                    margin: "0px",
-                  }}
-                >
-                  <BibleText
-                    selectedBook={t.selectedBook}
-                    chapterNumber={t.chapterNumber}
-                  />
-                  <StudyPanel />
-                </Box>
-              </CustomTabPanel>
-            ))}
+            {tabs.map((t, i: number) => getCustomTabPanel(i, currentTab, t))}
           </CardContent>
         </Card>
       </Box>
