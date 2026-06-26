@@ -8,6 +8,7 @@ import {
   Container,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
 import React, { useContext } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import { TabState } from "../../contexts/BibleTypes";
@@ -74,9 +75,16 @@ export const TabsPanel: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ padding: "0px" }} disableGutters={true}>
+    <Container
+      maxWidth="xl"
+      sx={{ padding: "0px", marginTop: "10px" }}
+      disableGutters={true}
+    >
       <ContainedButtons />
-      <Box component="main" sx={{ flex: 1, padding: "0px", margin: "0px" }}>
+      <Box
+        component="main"
+        sx={{ flex: 1, padding: "0px", margin: "0px", marginTop: "20px" }}
+      >
         <Tabs
           value={currentTab}
           onChange={handleChange}
@@ -113,7 +121,34 @@ export const TabsPanel: React.FC = () => {
               {...a11yProps(i)}
             />
           ))}
-          {tabs.length < 4 && <Tab label="+" {...a11yProps(tabs.length)} />}
+          {tabs.length < 4 && (
+            <Tab
+              label={
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    fontWeight: 700,
+                    color: "primary.main",
+                  }}
+                >
+                  <AddIcon fontSize="small" />
+                  New Tab
+                </Box>
+              }
+              sx={{
+                minHeight: 48,
+                textTransform: "none",
+                border: 1,
+                borderColor: "primary.main",
+                borderRadius: 1,
+                marginLeft: 1,
+              }}
+              {...a11yProps(tabs.length)}
+            />
+          )}
         </Tabs>
         <Card sx={{ bgcolor: "grey.50", padding: "0px", margin: "0px" }}>
           <CardContent sx={{ padding: "0px", margin: "0px" }}>

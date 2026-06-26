@@ -75,9 +75,8 @@ export const HomeTab: React.FC = () => {
       new Set(
         tabs
           .filter((tab: any) => tab.mode === "bible" && tab.selectedBook)
-          .map(
-            (tab: any) =>
-              `${tab.selectedBook}|${String(tab.chapterNumber ?? 1)}`.toLowerCase(),
+          .map((tab: any) =>
+            `${tab.selectedBook}|${String(tab.chapterNumber ?? 1)}`.toLowerCase(),
           ),
       ),
     [tabs],
@@ -109,8 +108,11 @@ export const HomeTab: React.FC = () => {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h6">Home</Typography>
-      <Typography variant="body2" color="text.secondary">
+      {/*<Typography variant="h6">Home</Typography>*/}
+      {/*<Typography variant="body2" color="text.secondary">*/}
+      {/*  Choose what you want to open in this tab.*/}
+      {/*</Typography>*/}
+      <Typography variant="h6" color="text.secondary">
         Choose what you want to open in this tab.
       </Typography>
 
@@ -153,7 +155,10 @@ export const HomeTab: React.FC = () => {
                   No saved notes yet.
                 </Typography>
               ) : (
-                <List dense sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}>
+                <List
+                  dense
+                  sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}
+                >
                   {existingNoteRefs.map((note) => {
                     const isOpen = openBibleRefs.has(note.id.toLowerCase());
                     return (
@@ -213,7 +218,10 @@ export const HomeTab: React.FC = () => {
                   No saved articles yet.
                 </Typography>
               ) : (
-                <List dense sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}>
+                <List
+                  dense
+                  sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}
+                >
                   {existingArticleIds.map((id: string) => (
                     <ListItemButton
                       key={id}
@@ -223,7 +231,9 @@ export const HomeTab: React.FC = () => {
                       <ListItemText
                         primary={
                           id +
-                          (openArticleIds.has(id.toLowerCase()) ? " - open" : "")
+                          (openArticleIds.has(id.toLowerCase())
+                            ? " - open"
+                            : "")
                         }
                       />
                     </ListItemButton>
