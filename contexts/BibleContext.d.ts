@@ -1,5 +1,5 @@
 import React from "react";
-import { TabState, NoteEntry } from "./BibleTypes";
+import { TabState, NoteEntry, ArticleEntry } from "./BibleTypes";
 export declare const BIBLE_BOOKS: string[];
 export interface BibleContextType {
     tabs: TabState[];
@@ -10,10 +10,16 @@ export interface BibleContextType {
     updateTab: (index: number, patch: Partial<TabState>) => void;
     books: string[];
     notes: NoteEntry[];
+    articles: ArticleEntry[];
     refreshNotesDate: Date | undefined;
     setRefreshNotesDate: (date: Date) => void;
     setNoteForBookChapter: (book: string | null, chapterNumber: number, text: string) => void;
+    setArticleById: (id: string, text: string) => void;
     replaceAllNotes: (entries: NoteEntry[]) => void;
+    replaceAllArticles: (entries: ArticleEntry[]) => void;
+    openHomeInCurrentTab: () => void;
+    openBibleInCurrentTab: (book: string, chapterNumber: number) => void;
+    openArticleInCurrentTab: (articleId: string) => void;
     bibleText: any | null;
     loadingBibleText: boolean;
     loadBibleText: () => Promise<void>;
