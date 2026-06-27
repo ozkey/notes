@@ -1,1 +1,1 @@
-{"version":3,"file":"HomeTab.d.ts","sourceRoot":"","sources":["../../../src/components/TabsPanel/HomeTab.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAmD,MAAM,OAAO,CAAC;AAgKxE,eAAO,MAAM,OAAO,EAAE,KAAK,CAAC,EAkV3B,CAAC"}
+{"version":3,"file":"HomeTab.d.ts","sourceRoot":"","sources":["../../../src/components/TabsPanel/HomeTab.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAmD,MAAM,OAAO,CAAC;AAiKxE,eAAO,MAAM,OAAO,EAAE,KAAK,CAAC,EA+V3B,CAAC"}
