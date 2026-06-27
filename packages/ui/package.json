@@ -14,9 +14,10 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^9.0.1",
     "@mui/material": "^9.0.1",
+    "jodit": "^4.12.31",
+    "jodit-react": "^5.3.21",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "suneditor": "^3.1.4"
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

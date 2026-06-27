@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 import { BibleProvider } from "./contexts/BibleContext";
 import { TabsPanel } from "./components/TabsPanel/TabsPanel";
+import appLogo from "./public/BibleNotesApp.png";
 
 const App: React.FC = () => {
   return (
@@ -21,9 +22,24 @@ const App: React.FC = () => {
           backgroundColor: "#1976d2",
           color: "white",
           padding: "7px",
-          textAlign: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          gap: 1.5,
+          paddingLeft: 2,
         }}
       >
+        <Box
+          component="img"
+          src={appLogo}
+          alt="Bible Notes App logo"
+          sx={{
+            width: 66,
+            height: 66,
+            objectFit: "contain",
+            display: "block",
+          }}
+        />
         <Typography variant="h4" component="h1">
           Bible Notes App
         </Typography>

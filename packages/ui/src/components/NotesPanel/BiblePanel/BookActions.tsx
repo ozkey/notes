@@ -67,7 +67,8 @@ export const BookActions: React.FC = () => {
         sx={{ width: 70, marginLeft: 0 }}
       />
       <Button variant="contained" onClick={commitChapter}>
-        &gt;
+        {/*&gt;*/}
+        Open
       </Button>
     </div>
   );

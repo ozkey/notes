@@ -74,12 +74,12 @@ export const NotesAndEditorPanel: React.FC = () => {
   return (
     <Card>
       <CardActions>
-        {!refreshNotesDate && (
-          <div>
-            {/*Please load or create a new personal file for your notes*/}
-            <SaveOpen />
-          </div>
-        )}
+        {/*{!refreshNotesDate && (*/}
+        {/*  <div>*/}
+        {/*    /!*Please load or create a new personal file for your notes*!/*/}
+        {/*    <SaveOpen />*/}
+        {/*  </div>*/}
+        {/*)}*/}
         {refreshNotesDate && !editorOpen && (
           <Button variant="outlined" onClick={() => setEditorOpen(true)}>
             Open Editor
@@ -90,6 +90,7 @@ export const NotesAndEditorPanel: React.FC = () => {
             Close Editor
           </Button>
         )}
+        <SaveOpen />
       </CardActions>
       <hr />
       <CardContent>
@@ -97,29 +98,17 @@ export const NotesAndEditorPanel: React.FC = () => {
           <div>
             <h2>Personal notes</h2>
             <br />
-            <p>
-              Notes are saved to a file on your computer/mobile as a html file.
-              So your notes are <b>private</b> and available to you even without
-              internet connection.
-            </p>
-            <p>
-              If you want to share your notes between your PC and Mobile save
-              your file to OneDrive* or Google Drive* or similar service.
-            </p>
+
             <p>
               To get started, click the "New File" button to create a new file
               for your notes.
             </p>
-            <p>
-              * OneDrive and Google Drive are services provided by Microsoft and
-              Google respectively. This app is not affiliated with or endorsed
-              by either company.
-            </p>
-            <img
-              src={editorImage}
-              alt="Instructions"
-              style={{ width: "100%" }}
-            />
+
+            {/*<img*/}
+            {/*  src={editorImage}*/}
+            {/*  alt="Instructions"*/}
+            {/*  style={{ width: "100%" }}*/}
+            {/*/>*/}
           </div>
         )}
         {refreshNotesDate && editorOpen && (

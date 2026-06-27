@@ -61,8 +61,8 @@ export interface BibleContextType {
 export const BibleContext = createContext<BibleContextType>({
   tabs: [
     {
-      mode: "bible",
-      selectedBook: "Matthew",
+      mode: "home",
+      selectedBook: null,
       chapterNumber: 1,
       articleId: null,
     },
@@ -116,8 +116,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [tabs, setTabs] = useState<TabState[]>([
     {
-      mode: "bible",
-      selectedBook: "Matthew",
+      mode: "home",
+      selectedBook: null,
       chapterNumber: 1,
       articleId: null,
     },
@@ -209,7 +209,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
                   articleId: matchedArticle.id,
                 },
               ];
-              // setCurrentTab(nextTabs.length - 1);
+              setCurrentTab(nextTabs.length - 1);
               return nextTabs;
             });
             setEditorOpen(true);

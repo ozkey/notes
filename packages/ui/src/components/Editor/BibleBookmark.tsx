@@ -1,94 +1,147 @@
-import { interfaces, helper } from "suneditor";
-import type { SunEditor } from "suneditor/types";
+export const BIBLE_BOOKMARK_BUTTON = "bibleBookmark";
 
-const { dom } = helper;
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
-/**
- * @class
- * @description BibleBookmark — Opens a form to insert Bible book:chapter links as hashes
- */
-class BibleBookmark extends interfaces.PluginDropdown {
-  static key = "BibleBookmark";
+type EditorWithInsertHtml = {
+  s?: {
+    insertHTML?: (html: string) => void;
+  };
+};
 
-  constructor(kernel: SunEditor.Kernel) {
-    super(kernel);
-    this.title = "Bible Bookmark";
-    this.icon = '<span style="font-size:16px">🔖</span>';
+type BibleBookmarkSelection = {
+  book: string;
+  chapterNumber: number;
+};
 
-    const bibleBooks = (window as any).BIBLE_BOOKS || [];
+const showBibleBookmarkDialog = (
+  bibleBooks: string[],
+): Promise<BibleBookmarkSelection | null> =>
+  new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.style.position = "fixed";
+    overlay.style.inset = "0";
+    overlay.style.background = "rgba(0,0,0,0.45)";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.zIndex = "2147483647";
 
-    // Build the book select options
-    const bookOptions = bibleBooks
-      .map((book: string) => `<option value="${book}">${book}</option>`)
-      .join("");
+    const dialog = document.createElement("form");
+    dialog.style.background = "#fff";
+    dialog.style.padding = "16px";
+    dialog.style.borderRadius = "8px";
+    dialog.style.minWidth = "280px";
+    dialog.style.boxShadow = "0 12px 32px rgba(0,0,0,0.25)";
 
-    // Create the form HTML
-    const formHtml = `
-      <div class="se-button-group" style="padding: 12px;">
-        <div style="margin-bottom: 10px;">
-          <label for="se-bible-book" style="display: block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Book:</label>
-          <select id="se-bible-book" style="width: 100%; padding: 6px; font-size: 13px;">
-            <option value="">Select a book...</option>
-            ${bookOptions}
-          </select>
-        </div>
-        <div>
-          <label for="se-bible-chapter" style="display: block; font-size: 12px; margin-bottom: 4px; font-weight: bold;">Chapter:</label>
-          <input type="number" id="se-bible-chapter" min="1" value="1" style="width: 100%; padding: 6px; font-size: 13px;" />
-        </div>
-        <button type="button" class="se-btn se-btn-list" id="se-bible-insert" style="width: 100%; margin-top: 10px; padding: 8px; cursor: pointer;">Insert Link</button>
-      </div>
-    `;
+    const title = document.createElement("div");
+    title.textContent = "Insert Bible Bookmark";
+    title.style.fontWeight = "600";
+    title.style.marginBottom = "12px";
 
-    const menu = dom.utils.createElement(
-      "div",
-      { class: "se-dropdown se-list-layer" },
-      `<div class="se-list-inner">${formHtml}</div>`,
-    );
+    const bookLabel = document.createElement("label");
+    bookLabel.textContent = "Book";
+    bookLabel.style.display = "block";
+    bookLabel.style.marginBottom = "6px";
 
-    this.$.menu.initDropdownTarget(BibleBookmark, menu);
+    const bookSelect = document.createElement("select");
+    bookSelect.style.width = "100%";
+    bookSelect.style.marginBottom = "12px";
+    bookSelect.style.padding = "8px";
 
-    // Add click handler for the insert button
-    setTimeout(() => {
-      const insertBtn = menu.querySelector("#se-bible-insert") as HTMLElement;
-      if (insertBtn) {
-        insertBtn.addEventListener("click", () => {
-          this.#insertBibleLink(menu);
-        });
-      }
-    }, 0);
-  }
+    const noBooksOption = document.createElement("option");
+    noBooksOption.value = "";
+    noBooksOption.textContent =
+      bibleBooks.length > 0 ? "Select a book..." : "No books available";
+    bookSelect.appendChild(noBooksOption);
 
-  #insertBibleLink(menu: HTMLElement): void {
-    const bookSelect = menu.querySelector(
-      "#se-bible-book",
-    ) as HTMLSelectElement;
-    const chapterInput = menu.querySelector(
-      "#se-bible-chapter",
-    ) as HTMLInputElement;
-
-    const book = bookSelect?.value;
-    const chapter = chapterInput?.value || "1";
-
-    if (book && chapter) {
-      // Replace spaces with hyphens in the book name for the hash
-      const bookHash = book.replace(/\s+/g, "-");
-      const hash = `#${bookHash}:${chapter}`;
-      const linkText = `${book} ${chapter}`;
-
-      // Insert a link element
-      const link = `<a href="${hash}">${linkText}</a>`;
-      this.$.html.insert(link);
-      this.$.history.push(false);
-      this.$.menu.dropdownOff();
+    for (const book of bibleBooks) {
+      const option = document.createElement("option");
+      option.value = book;
+      option.textContent = book;
+      bookSelect.appendChild(option);
     }
-  }
 
-  /** @override @type {PluginDropdown['action']} — Dropdown item click handler */
-  action(target: HTMLElement): void {
-    // This is called when a dropdown item is clicked
-    // In our case, we handle it via the insert button, so this can be empty
-  }
-}
+    const chapterLabel = document.createElement("label");
+    chapterLabel.textContent = "Chapter";
+    chapterLabel.style.display = "block";
+    chapterLabel.style.marginBottom = "6px";
 
-export default BibleBookmark;
+    const chapterInput = document.createElement("input");
+    chapterInput.type = "number";
+    chapterInput.min = "1";
+    chapterInput.value = "1";
+    chapterInput.style.width = "100%";
+    chapterInput.style.marginBottom = "12px";
+    chapterInput.style.padding = "8px";
+
+    const actions = document.createElement("div");
+    actions.style.display = "flex";
+    actions.style.justifyContent = "flex-end";
+    actions.style.gap = "8px";
+
+    const cancelButton = document.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.textContent = "Cancel";
+
+    const insertButton = document.createElement("button");
+    insertButton.type = "submit";
+    insertButton.textContent = "Insert";
+
+    actions.append(cancelButton, insertButton);
+    dialog.append(
+      title,
+      bookLabel,
+      bookSelect,
+      chapterLabel,
+      chapterInput,
+      actions,
+    );
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    const closeDialog = (result: BibleBookmarkSelection | null) => {
+      overlay.remove();
+      resolve(result);
+    };
+
+    cancelButton.addEventListener("click", () => closeDialog(null));
+
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) closeDialog(null);
+    });
+
+    dialog.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const book = bookSelect.value.trim();
+      const chapterNumber = Number.parseInt(chapterInput.value, 10);
+      if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1) return;
+
+      closeDialog({ book, chapterNumber });
+    });
+
+    bookSelect.focus();
+  });
+
+export const insertBibleBookmark = (editor: EditorWithInsertHtml): void => {
+  const bibleBooks = ((window as Window & { BIBLE_BOOKS?: string[] })
+    .BIBLE_BOOKS || []) as string[];
+
+  void showBibleBookmarkDialog(bibleBooks).then((selection) => {
+    if (!selection) return;
+
+    const bookHash = selection.book.replace(/\s+/g, "-");
+    const hash = `#${bookHash}:${selection.chapterNumber}`;
+    const linkText = `${selection.book} ${selection.chapterNumber}`;
+
+    editor.s?.insertHTML?.(
+      `<a href="${escapeHtml(hash)}">${escapeHtml(linkText)}</a>`,
+    );
+  });
+};

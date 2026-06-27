@@ -4142,6 +4142,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jodit-react@npm:^5.3.21":
+  version: 5.3.21
+  resolution: "jodit-react@npm:5.3.21"
+  dependencies:
+    jodit: "npm:^4.9.4"
+  peerDependencies:
+    react: ~0.14 || ^15 || ^16 || ^17 || ^18 || ^19
+    react-dom: ~0.14 || ^15 || ^16 || ^17 || ^18 || ^19
+  checksum: 10c0/b1147db1f06381ecd8f3c23d09acca0a4d0d785fc6af80805254f9c1574123b9c56da10ddd0492b052c40aba9fd8d3e46d497f7a964932cc9f66fc4ae773dc9f
+  languageName: node
+  linkType: hard
+
+"jodit@npm:^4.12.31, jodit@npm:^4.9.4":
+  version: 4.12.31
+  resolution: "jodit@npm:4.12.31"
+  checksum: 10c0/9c2e37119a6ed258158be2ece18f0492634c5157b2d85a0d1dea879075d4e5723e2d6c836ffb2c4dc568972344ce13d1d7119b0ea2a04bb29da756c11b22dbfe
+  languageName: node
+  linkType: hard
+
 "js-tokens@npm:^3.0.0 || ^4.0.0, js-tokens@npm:^4.0.0":
   version: 4.0.0
   resolution: "js-tokens@npm:4.0.0"
@@ -4550,10 +4569,11 @@ __metadata:
     copy-webpack-plugin: "npm:^14.0.0"
     css-loader: "npm:^7.1.1"
     html-webpack-plugin: "npm:^5.6.7"
+    jodit: "npm:^4.12.31"
+    jodit-react: "npm:^5.3.21"
     react: "npm:^19.2.6"
     react-dom: "npm:^19.2.6"
     style-loader: "npm:^4.0.0"
-    suneditor: "npm:^3.1.4"
     ts-loader: "npm:^9.5.7"
     typescript: "npm:^6.0.3"
     webpack: "npm:^5.107.0"
@@ -5563,13 +5583,6 @@ __metadata:
   version: 4.2.0
   resolution: "stylis@npm:4.2.0"
   checksum: 10c0/a7128ad5a8ed72652c6eba46bed4f416521bc9745a460ef5741edc725252cebf36ee45e33a8615a7057403c93df0866ab9ee955960792db210bb80abd5ac6543
-  languageName: node
-  linkType: hard
-
-"suneditor@npm:^3.1.4":
-  version: 3.1.4
-  resolution: "suneditor@npm:3.1.4"
-  checksum: 10c0/2e6509e2f3436b2d6161b24b3ebb5580f9d263219895104feb9179b2a8f3abb9a96f07f4db8a0bc97df5024ab453b585571a65fdaae75d73dce67649af347ce8
   languageName: node
   linkType: hard
 

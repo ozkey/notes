@@ -1,157 +1,220 @@
-import { useEffect, useRef } from "react";
-import suneditor, { plugins } from "suneditor";
-import "suneditor/css/editor";
-import "suneditor/css/contents";
-import CalloutBlock from "./CalloutBlock";
-import HelloWorld from "./EditorPlugin";
-import BibleBookmark from "./BibleBookmark";
+import { useEffect, useMemo, useRef, useState } from "react";
+import JoditEditor from "jodit-react";
+import "jodit/es5/jodit.min.css";
+import { BIBLE_BOOKMARK_BUTTON, insertBibleBookmark } from "./BibleBookmark";
+
+const canOpenLinkHref = (href: string): boolean => {
+  const value = href.trim();
+  if (!value) return false;
+  if (/^(javascript:|data:|vbscript:)/i.test(value)) return false;
+  return /^(https?:|mailto:|tel:|#|\/|\?)/i.test(value);
+};
+
+type JoditLikeEditor = {
+  s?: { current?: () => Node | null };
+  editor?: Element | null;
+};
+
+const resolveAnchor = (
+  editor: JoditLikeEditor | unknown,
+  current: unknown,
+): HTMLAnchorElement | null => {
+  const currentNode = current instanceof Node ? current : null;
+  if (currentNode?.nodeType === Node.ELEMENT_NODE) {
+    const anchor = (currentNode as Element).closest("a");
+    if (anchor instanceof HTMLAnchorElement) return anchor;
+  }
+
+  const editorLike =
+    editor && typeof editor === "object" ? (editor as JoditLikeEditor) : null;
+  const selectedNode = editorLike?.s?.current?.();
+  if (selectedNode?.nodeType === Node.ELEMENT_NODE) {
+    const anchor = (selectedNode as Element).closest("a");
+    if (anchor instanceof HTMLAnchorElement) return anchor;
+  }
+
+  return null;
+};
+
+const openEditorLink = (editor: unknown, current: unknown): void => {
+  const anchor = resolveAnchor(editor, current);
+  const href = anchor?.getAttribute("href") || "";
+  if (!canOpenLinkHref(href)) return;
+
+  if (href.startsWith("#")) {
+    window.location.hash = href.slice(1);
+    return;
+  }
+
+  window.open(href, "_blank", "noopener,noreferrer");
+};
 
 export default function Editor({
   value = "",
-  refreshNotesDate,
+  refreshNotesDate: _refreshNotesDate,
   onChange,
 }: {
   value?: string;
   refreshNotesDate?: Date;
   onChange?: (html: string) => void;
 }) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-  const editorRef = useRef<any>(null);
+  const [content, setContent] = useState(value || "");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isEditingRef = useRef(false);
+  const draftContentRef = useRef(value || "");
 
   useEffect(() => {
-    const smallScreen = window.innerWidth < 900;
-    if (smallScreen)
-      console.log("small screen detected, editor will be disabled");
+    if (isEditingRef.current) return;
+    const nextValue = value || "";
+    draftContentRef.current = nextValue;
+    setContent((prev) => (prev === nextValue ? prev : nextValue));
+  }, [value]);
 
-    console.log("Initializing editor with value", value);
-    const instance = suneditor.create(ref.current!, {
-      plugins: { ...plugins, HelloWorld, CalloutBlock, BibleBookmark },
-      value: value || "",
-      strictMode: {
-        tagFilter: false,
-        formatFilter: true,
-        classFilter: false,
-        textStyleTagFilter: true,
-        attrFilter: false,
-        styleFilter: false,
+  const config = useMemo(
+    () => ({
+      readonly: false,
+      height: 420,
+      toolbarAdaptive: false,
+      askBeforePasteHTML: false,
+      askBeforePasteFromWord: false,
+      popup: {
+        a: [
+          {
+            name: "eye",
+            tooltip: "Open link",
+            exec: (editor: unknown, current: unknown) => {
+              openEditorLink(editor, current);
+            },
+          },
+          "link",
+          "unlink",
+          "brush",
+          "file",
+        ],
       },
-      events: {
-        // widen type to any to avoid incorrect Event typing from lib
-        // onSave: async (params: any) => {
-        //   let contents = "";
-        //   if (typeof params === "string") {
-        //     contents = params;
-        //   } else if (params && typeof params.data === "string") {
-        //     contents = params.data;
-        //   } else if (
-        //     editorRef.current &&
-        //     typeof editorRef.current.getContents === "function"
-        //   ) {
-        //     contents = editorRef.current.getContents();
-        //   }
-        //
-        //   onSave?.(contents || "");
-        //   console.log(contents);
-        //   return true;
-        // },
-        onChange: (params: {
-          $: unknown;
-          frameContext: unknown;
-          data: string;
-        }) => {
-          console.log(params.data);
-          onChange?.(params.data);
+      controls: {
+        eye: {
+          tooltip: "Open link",
+          exec: (editor: unknown, current: unknown) => {
+            openEditorLink(editor, current);
+          },
+        },
+        [BIBLE_BOOKMARK_BUTTON]: {
+          tooltip: "Bible Bookmark",
+          text: "🔖",
+          exec: (editor: { s?: { insertHTML?: (html: string) => void } }) => {
+            insertBibleBookmark(editor);
+          },
         },
       },
-      buttonList: smallScreen
-        ? [
-            ["bold", "italic", "underline", "strike"],
-            "/",
-            ["blockStyle", "font", "fontSize"],
-          ]
-        : [
-            //  "newDocument"
-            // ["save", "|"],
+      buttons: [
+        "undo",
+        "redo",
+        "|",
+        "paragraph",
+        "|",
+        "bold",
+        "italic",
+        "underline",
+        "strikethrough",
+        "|",
+        "ul",
+        "ol",
+        "|",
+        "outdent",
+        "indent",
+        "|",
+        "link",
+        "image",
+        "table",
+        "video",
+        "source",
+        BIBLE_BOOKMARK_BUTTON,
+      ],
+      buttonsMD: [
+        "undo",
+        "redo",
+        "|",
+        "paragraph",
+        "|",
+        "bold",
+        "italic",
+        "underline",
+        "strikethrough",
+        "|",
+        "ul",
+        "ol",
+        "|",
+        "outdent",
+        "indent",
+        "|",
+        "link",
+        "image",
+        "table",
+        "video",
+        "source",
+        BIBLE_BOOKMARK_BUTTON,
+      ],
+      buttonsSM: [
+        "undo",
+        "redo",
+        "|",
+        "paragraph",
+        "|",
+        "bold",
+        "italic",
+        "underline",
+        "|",
+        "ul",
+        "ol",
+        "|",
+        "link",
+        "image",
+        "table",
+        BIBLE_BOOKMARK_BUTTON,
+        "source",
+      ],
+      buttonsXS: [
+        "undo",
+        "redo",
+        "|",
+        "paragraph",
+        "|",
+        "bold",
+        "italic",
+        "underline",
+        "link",
+        "image",
+        BIBLE_BOOKMARK_BUTTON,
+      ],
+    }),
+    [],
+  );
 
-            ["undo", "redo"],
-            "|",
-
-            "|",
-            [
-              ":Format-default.more_paragraph",
-              "blockStyle",
-              "font",
-              "fontSize",
-            ],
-            ["blockStyle"],
-            [
-              ":Text-default.more_text",
-              "bold",
-              "italic",
-              "underline",
-              "strike",
-              "|",
-              "fontColor",
-              "backgroundColor",
-              "|",
-              "removeFormat",
-            ],
-            ["bold", "italic", "underline", "removeFormat"],
-
-            [
-              "-right",
-              ":i-more",
-              "showBlocks",
-              "codeView",
-              "preview",
-              "print",
-              "fullScreen",
-            ],
-
-            "/",
-
-            ["outdent", "indent", "align", "list"],
-
-            [
-              "|",
-              ":Insert-default.more_plus",
-              "table",
-              "anchor",
-              // "link",
-              "image",
-              "video",
-            ],
-
-            [
-              "-right",
-              "BibleBookmark",
-              "link",
-              "blockquote",
-              "calloutBlock",
-              "helloWorld",
-            ],
-          ],
-    });
-
-    editorRef.current = instance;
-
-    return () => {
-      instance.destroy();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshNotesDate]);
-
-  // update editor contents when value changes from parent
-  // useEffect(() => {
-  //   if (editorRef.current) {
-  //     try {
-  //       console.log("Updating editor contents", value);
-  //       editorRef.current.setContents(value + <span>x</span> || "");
-  //     } catch (e) {
-  //       // ignore
-  //     }
-  //   }
-  // }, [value]);
-
-  return <textarea ref={ref} />;
+  return (
+    <div
+      ref={containerRef}
+      onFocusCapture={() => {
+        isEditingRef.current = true;
+      }}
+      onBlurCapture={(event) => {
+        const nextTarget = event.relatedTarget as Node | null;
+        if (nextTarget && containerRef.current?.contains(nextTarget)) return;
+        isEditingRef.current = false;
+      }}
+    >
+        <JoditEditor
+          value={content}
+          config={config}
+          onChange={(html) => {
+            draftContentRef.current = html;
+          }}
+          onBlur={(html) => {
+            isEditingRef.current = false;
+            setContent((prev) => (prev === html ? prev : html));
+            onChange?.(html);
+          }}
+        />
+      </div>
+  );
 }
