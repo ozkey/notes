@@ -58,7 +58,17 @@ export const closeTab = (
   i: number,
 ) => {
   setTabs((prev) => {
-    if (prev.length <= 1) return prev; // keep at least one
+    if (prev.length <= 1) {
+      setCurrentTab(0);
+      return [
+        {
+          mode: "home",
+          selectedBook: null,
+          chapterNumber: 1,
+          articleId: null,
+        },
+      ];
+    }
     const next = prev.filter((_, idx) => idx !== i);
     setCurrentTab((cur) => {
       if (i < cur) return cur - 1;

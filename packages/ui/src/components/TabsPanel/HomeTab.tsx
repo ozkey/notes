@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import BibleContext from "../../contexts/BibleContext";
+import { SaveOpen } from "../ActionBar/SaveOpen";
 
 const normalizeBookKey = (book: string) =>
   book.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -288,6 +289,18 @@ export const HomeTab: React.FC = () => {
     <>
       <Box
         component="main"
+        sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
+      >
+        <Card sx={{ bgcolor: "grey.50" }}>
+          <CardContent>
+            <Stack direction="row" spacing={2}>
+              <SaveOpen />
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+      <Box
+        component="main"
         sx={{ flex: 1, padding: "0px 0 0 0", marginBottom: "1rem" }}
       >
         <Card sx={{ bgcolor: "grey.50" }}>
@@ -363,6 +376,7 @@ export const HomeTab: React.FC = () => {
           </CardContent>
         </Card>
       </Box>
+
       <Stack spacing={2}>
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
           <Card sx={{ flex: 1 }}>
