@@ -292,9 +292,8 @@ export const HomeTab: React.FC = () => {
                       key={group.title}
                       sx={{
                         flexShrink: 0,
-                        border: "1px solid",
-                        borderColor: "divider",
-                        borderRadius: 1,
+                        borderBottom: "4px solid",
+                        borderColor: "#234",
                         px: 1,
                         py: 0.75,
                       }}
