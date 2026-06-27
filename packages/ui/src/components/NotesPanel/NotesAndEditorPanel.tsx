@@ -74,12 +74,12 @@ export const NotesAndEditorPanel: React.FC = () => {
   return (
     <Card>
       <CardActions>
-        {!refreshNotesDate && (
-          <div>
-            {/*Please load or create a new personal file for your notes*/}
-            <SaveOpen />
-          </div>
-        )}
+        {/*{!refreshNotesDate && (*/}
+        {/*  <div>*/}
+        {/*    /!*Please load or create a new personal file for your notes*!/*/}
+        {/*    <SaveOpen />*/}
+        {/*  </div>*/}
+        {/*)}*/}
         {refreshNotesDate && !editorOpen && (
           <Button variant="outlined" onClick={() => setEditorOpen(true)}>
             Open Editor
@@ -90,6 +90,7 @@ export const NotesAndEditorPanel: React.FC = () => {
             Close Editor
           </Button>
         )}
+        <SaveOpen />
       </CardActions>
       <hr />
       <CardContent>
