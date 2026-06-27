@@ -302,7 +302,8 @@ export const HomeTab: React.FC = () => {
                   sx={{ flexWrap: "nowrap", width: "max-content", pb: 0.5 }}
                 >
                   {groupedBooks.map((group) => {
-                    const groupColor = GROUP_SPINE_COLORS[group.title] ?? "#e5e7eb";
+                    const groupColor =
+                      GROUP_SPINE_COLORS[group.title] ?? "#e5e7eb";
                     return (
                       <Box
                         key={group.title}
@@ -319,7 +320,7 @@ export const HomeTab: React.FC = () => {
                         </Typography>
                         <Stack
                           direction="row"
-                          spacing={0.75}
+                          spacing={0.5}
                           useFlexGap
                           sx={{ mt: 0.5, flexWrap: "nowrap" }}
                         >
@@ -333,6 +334,7 @@ export const HomeTab: React.FC = () => {
                               sx={{
                                 ...bookSpineSx,
                                 bgcolor: groupColor,
+                                padding: "0px",
                                 color: "text.primary",
                                 borderColor:
                                   selectedBook === book
