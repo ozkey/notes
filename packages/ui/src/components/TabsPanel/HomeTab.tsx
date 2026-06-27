@@ -327,7 +327,11 @@ export const HomeTab: React.FC = () => {
                           {group.books.map((book) => (
                             <Button
                               key={book}
-                              onClick={() => setSelectedBook(book)}
+                              onClick={() => {
+                                setSelectedBook(book);
+                                setChapterInput("1");
+                                openBibleInCurrentTab(book, 1);
+                              }}
                               variant={
                                 selectedBook === book ? "contained" : "outlined"
                               }
