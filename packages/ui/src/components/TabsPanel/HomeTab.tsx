@@ -18,7 +18,11 @@ import BibleContext from "../../contexts/BibleContext";
 const normalizeBookKey = (book: string) =>
   book.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-const ORDINAL_TO_ROMAN: Record<string, string> = { "1": "I", "2": "II", "3": "III" };
+const ORDINAL_TO_ROMAN: Record<string, string> = {
+  "1": "I",
+  "2": "II",
+  "3": "III",
+};
 const ROMAN_TO_ORDINAL: Record<string, string> = { I: "1", II: "2", III: "3" };
 
 const toRomanOrdinalBook = (book: string) =>
@@ -36,7 +40,10 @@ const formatBookLabel = (book: string) => {
 };
 
 const BOOK_GROUPS: Array<{ title: string; books: string[] }> = [
-  { title: "Law", books: ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"] },
+  {
+    title: "Law",
+    books: ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"],
+  },
   {
     title: "History",
     books: [
@@ -222,7 +229,9 @@ export const HomeTab: React.FC = () => {
           );
           const match = candidates
             .map((candidate) => booksByKey.get(normalizeBookKey(candidate)))
-            .find((candidateBook): candidateBook is string => Boolean(candidateBook));
+            .find((candidateBook): candidateBook is string =>
+              Boolean(candidateBook),
+            );
           if (!match) return null;
           picked.add(match);
           return match;
@@ -279,7 +288,17 @@ export const HomeTab: React.FC = () => {
                   sx={{ flexWrap: "nowrap", width: "max-content", pb: 0.5 }}
                 >
                   {groupedBooks.map((group) => (
-                    <Box key={group.title} sx={{ flexShrink: 0 }}>
+                    <Box
+                      key={group.title}
+                      sx={{
+                        flexShrink: 0,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 1,
+                        px: 1,
+                        py: 0.75,
+                      }}
+                    >
                       <Typography variant="caption" color="text.secondary">
                         {group.title}
                       </Typography>
@@ -290,16 +309,18 @@ export const HomeTab: React.FC = () => {
                         sx={{ mt: 0.5, flexWrap: "nowrap" }}
                       >
                         {group.books.map((book) => (
-                        <Button
-                          key={book}
-                          onClick={() => setSelectedBook(book)}
-                          variant={selectedBook === book ? "contained" : "outlined"}
-                          sx={bookSpineSx}
-                        >
-                          {formatBookLabel(book)}
-                        </Button>
-                      ))}
-                    </Stack>
+                          <Button
+                            key={book}
+                            onClick={() => setSelectedBook(book)}
+                            variant={
+                              selectedBook === book ? "contained" : "outlined"
+                            }
+                            sx={bookSpineSx}
+                          >
+                            {formatBookLabel(book)}
+                          </Button>
+                        ))}
+                      </Stack>
                     </Box>
                   ))}
                 </Stack>
