@@ -39,6 +39,20 @@ const formatBookLabel = (book: string) => {
   return toRomanOrdinalBook(book);
 };
 
+const GROUP_SPINE_COLORS: Record<string, string> = {
+  Law: "#fde68a",
+  History: "#fecdd3",
+  Poetry: "#bfdbfe",
+  "Major Prophets": "#ddd6fe",
+  "Minor Prophets": "#bbf7d0",
+  Gospels: "#fed7aa",
+  "History (NT)": "#bae6fd",
+  "Paul Letters": "#fbcfe8",
+  "General Letters": "#c7d2fe",
+  Prophecy: "#e9d5ff",
+  Other: "#e5e7eb",
+};
+
 const BOOK_GROUPS: Array<{ title: string; books: string[] }> = [
   {
     title: "Law",
@@ -287,41 +301,56 @@ export const HomeTab: React.FC = () => {
                   useFlexGap
                   sx={{ flexWrap: "nowrap", width: "max-content", pb: 0.5 }}
                 >
-                  {groupedBooks.map((group) => (
-                    <Box
-                      key={group.title}
-                      sx={{
-                        flexShrink: 0,
-                        borderBottom: "4px solid",
-                        borderColor: "#234",
-                        px: 1,
-                        py: 0.75,
-                      }}
-                    >
-                      <Typography variant="caption" color="text.secondary">
-                        {group.title}
-                      </Typography>
-                      <Stack
-                        direction="row"
-                        spacing={0.75}
-                        useFlexGap
-                        sx={{ mt: 0.5, flexWrap: "nowrap" }}
+                  {groupedBooks.map((group) => {
+                    const groupColor = GROUP_SPINE_COLORS[group.title] ?? "#e5e7eb";
+                    return (
+                      <Box
+                        key={group.title}
+                        sx={{
+                          flexShrink: 0,
+                          borderBottom: "4px solid",
+                          borderColor: "#234",
+                          px: 1,
+                          py: 0.75,
+                        }}
                       >
-                        {group.books.map((book) => (
-                          <Button
-                            key={book}
-                            onClick={() => setSelectedBook(book)}
-                            variant={
-                              selectedBook === book ? "contained" : "outlined"
-                            }
-                            sx={bookSpineSx}
-                          >
-                            {formatBookLabel(book)}
-                          </Button>
-                        ))}
-                      </Stack>
-                    </Box>
-                  ))}
+                        <Typography variant="caption" color="text.secondary">
+                          {group.title}
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={0.75}
+                          useFlexGap
+                          sx={{ mt: 0.5, flexWrap: "nowrap" }}
+                        >
+                          {group.books.map((book) => (
+                            <Button
+                              key={book}
+                              onClick={() => setSelectedBook(book)}
+                              variant={
+                                selectedBook === book ? "contained" : "outlined"
+                              }
+                              sx={{
+                                ...bookSpineSx,
+                                bgcolor: groupColor,
+                                color: "text.primary",
+                                borderColor:
+                                  selectedBook === book
+                                    ? "primary.main"
+                                    : "rgba(0, 0, 0, 0.2)",
+                                "&:hover": {
+                                  bgcolor: groupColor,
+                                  filter: "brightness(0.96)",
+                                },
+                              }}
+                            >
+                              {formatBookLabel(book)}
+                            </Button>
+                          ))}
+                        </Stack>
+                      </Box>
+                    );
+                  })}
                 </Stack>
               </Box>
             </Stack>
