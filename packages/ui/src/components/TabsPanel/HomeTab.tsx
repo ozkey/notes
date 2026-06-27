@@ -112,9 +112,9 @@ export const HomeTab: React.FC = () => {
       {/*<Typography variant="body2" color="text.secondary">*/}
       {/*  Choose what you want to open in this tab.*/}
       {/*</Typography>*/}
-      <Typography variant="h6" color="text.secondary">
-        Choose what you want to open in this tab.
-      </Typography>
+      {/*<Typography variant="h6" color="text.secondary">*/}
+      {/*  Choose what you want to open in this tab.*/}
+      {/*</Typography>*/}
 
       <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
         <Card sx={{ flex: 1 }}>
@@ -186,9 +186,7 @@ export const HomeTab: React.FC = () => {
         <Card sx={{ flex: 1 }}>
           <CardContent>
             <Stack spacing={2}>
-              <Typography variant="subtitle1">
-                Create a new article that is not linked to a book and chapter
-              </Typography>
+              <Typography variant="subtitle1">Create a new article</Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                 <TextField
                   size="small"
