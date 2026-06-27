@@ -15,6 +15,128 @@ import {
 } from "@mui/material";
 import BibleContext from "../../contexts/BibleContext";
 
+const normalizeBookKey = (book: string) =>
+  book.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const ORDINAL_TO_ROMAN: Record<string, string> = { "1": "I", "2": "II", "3": "III" };
+const ROMAN_TO_ORDINAL: Record<string, string> = { I: "1", II: "2", III: "3" };
+
+const toRomanOrdinalBook = (book: string) =>
+  book.replace(/^([1-3])\s+(.+)$/, (_, ordinal: string, name: string) => {
+    return `${ORDINAL_TO_ROMAN[ordinal]} ${name}`;
+  });
+
+const toArabicOrdinalBook = (book: string) =>
+  book.replace(/^(III|II|I)\s+(.+)$/, (_, roman: string, name: string) => {
+    return `${ROMAN_TO_ORDINAL[roman]} ${name}`;
+  });
+
+const formatBookLabel = (book: string) => {
+  return toRomanOrdinalBook(book);
+};
+
+const BOOK_GROUPS: Array<{ title: string; books: string[] }> = [
+  { title: "Law", books: ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"] },
+  {
+    title: "History",
+    books: [
+      "Joshua",
+      "Judges",
+      "Ruth",
+      "I Samuel",
+      "II Samuel",
+      "I Kings",
+      "II Kings",
+      "I Chronicles",
+      "II Chronicles",
+      "Ezra",
+      "Nehemiah",
+      "Esther",
+    ],
+  },
+  {
+    title: "Poetry",
+    books: ["Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon"],
+  },
+  {
+    title: "Major Prophets",
+    books: ["Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel"],
+  },
+  {
+    title: "Minor Prophets",
+    books: [
+      "Hosea",
+      "Joel",
+      "Amos",
+      "Obadiah",
+      "Jonah",
+      "Micah",
+      "Nahum",
+      "Habakkuk",
+      "Zephaniah",
+      "Haggai",
+      "Zechariah",
+      "Malachi",
+    ],
+  },
+  { title: "Gospels", books: ["Matthew", "Mark", "Luke", "John"] },
+  { title: "History (NT)", books: ["Acts"] },
+  {
+    title: "Paul Letters",
+    books: [
+      "Romans",
+      "I Corinthians",
+      "II Corinthians",
+      "Galatians",
+      "Ephesians",
+      "Philippians",
+      "Colossians",
+      "I Thessalonians",
+      "II Thessalonians",
+      "I Timothy",
+      "II Timothy",
+      "Titus",
+      "Philemon",
+    ],
+  },
+  {
+    title: "General Letters",
+    books: [
+      "Hebrews",
+      "James",
+      "I Peter",
+      "II Peter",
+      "I John",
+      "II John",
+      "III John",
+      "Jude",
+    ],
+  },
+  { title: "Prophecy", books: ["Revelation"] },
+];
+
+const BOOK_ALIASES: Record<string, string[]> = {
+  "Song of Solomon": ["Song of Songs", "Canticles"],
+};
+
+const bookSpineSx = {
+  textTransform: "none",
+  minWidth: 44,
+  height: 130,
+  px: 0.75,
+  py: 1,
+  borderRadius: "4px 10px 10px 4px",
+  borderLeftWidth: 5,
+  borderLeftStyle: "solid",
+  borderLeftColor: "primary.dark",
+  justifyContent: "center",
+  writingMode: "vertical-rl",
+  textOrientation: "mixed",
+  whiteSpace: "normal",
+  fontWeight: 600,
+  letterSpacing: 0.2,
+};
+
 export const HomeTab: React.FC = () => {
   const {
     tabs,
@@ -82,6 +204,38 @@ export const HomeTab: React.FC = () => {
       ),
     [tabs],
   );
+  const groupedBooks = useMemo(() => {
+    const booksByKey = new Map(
+      books.map((book: string) => [normalizeBookKey(book), book]),
+    );
+    const picked = new Set<string>();
+    const groups = BOOK_GROUPS.map((group) => {
+      const resolvedBooks = group.books
+        .map((baseBook) => {
+          const candidates = Array.from(
+            new Set([
+              baseBook,
+              toArabicOrdinalBook(baseBook),
+              toRomanOrdinalBook(baseBook),
+              ...(BOOK_ALIASES[baseBook] ?? []),
+            ]),
+          );
+          const match = candidates
+            .map((candidate) => booksByKey.get(normalizeBookKey(candidate)))
+            .find((candidateBook): candidateBook is string => Boolean(candidateBook));
+          if (!match) return null;
+          picked.add(match);
+          return match;
+        })
+        .filter((book): book is string => Boolean(book));
+      return { title: group.title, books: resolvedBooks };
+    }).filter((group) => group.books.length > 0);
+    const uncategorized = books.filter((book: string) => !picked.has(book));
+    if (uncategorized.length > 0) {
+      groups.push({ title: "Other", books: uncategorized });
+    }
+    return groups;
+  }, [books]);
 
   const normalizeArticleId = (raw: string) => {
     const trimmed = raw.trim();
@@ -115,8 +269,41 @@ export const HomeTab: React.FC = () => {
       >
         <Card sx={{ bgcolor: "grey.50" }}>
           <CardContent>
-            <Stack direction="row" spacing={2}>
-              books go here
+            <Stack spacing={1.25}>
+              <Typography variant="subtitle1">Bookshelf</Typography>
+              <Box sx={{ overflowX: "auto" }}>
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  useFlexGap
+                  sx={{ flexWrap: "nowrap", width: "max-content", pb: 0.5 }}
+                >
+                  {groupedBooks.map((group) => (
+                    <Box key={group.title} sx={{ flexShrink: 0 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {group.title}
+                      </Typography>
+                      <Stack
+                        direction="row"
+                        spacing={0.75}
+                        useFlexGap
+                        sx={{ mt: 0.5, flexWrap: "nowrap" }}
+                      >
+                        {group.books.map((book) => (
+                        <Button
+                          key={book}
+                          onClick={() => setSelectedBook(book)}
+                          variant={selectedBook === book ? "contained" : "outlined"}
+                          sx={bookSpineSx}
+                        >
+                          {formatBookLabel(book)}
+                        </Button>
+                      ))}
+                    </Stack>
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
             </Stack>
           </CardContent>
         </Card>
@@ -135,6 +322,7 @@ export const HomeTab: React.FC = () => {
                     options={books}
                     value={selectedBook}
                     onChange={(_, value) => setSelectedBook(value)}
+                    getOptionLabel={(option) => formatBookLabel(option)}
                     renderInput={(params) => (
                       <TextField {...params} label="Bible Book" size="small" />
                     )}
@@ -176,7 +364,7 @@ export const HomeTab: React.FC = () => {
                           disabled={isOpen}
                         >
                           <ListItemText
-                            primary={`${note.book} ${note.chapterNumber}${
+                            primary={`${formatBookLabel(note.book)} ${note.chapterNumber}${
                               isOpen ? " - open" : ""
                             }`}
                           />
