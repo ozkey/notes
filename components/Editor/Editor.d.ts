@@ -1,7 +1,9 @@
-import "jodit/es5/jodit.min.css";
-export default function Editor({ value, refreshNotesDate: _refreshNotesDate, onChange, }: {
+import "./Editor.css";
+type EditorProps = {
     value?: string;
     refreshNotesDate?: Date;
     onChange?: (html: string) => void;
-}): import("react").JSX.Element;
+};
+export default function Editor({ value, refreshNotesDate: _refreshNotesDate, onChange, }: EditorProps): import("react").JSX.Element;
+export {};
 //# sourceMappingURL=Editor.d.ts.map

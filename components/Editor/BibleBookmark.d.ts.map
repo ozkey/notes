@@ -1,1 +1,0 @@
-{"version":3,"file":"BibleBookmark.d.ts","sourceRoot":"","sources":["../../../src/components/Editor/BibleBookmark.tsx"],"names":[],"mappings":"AAAA,eAAO,MAAM,qBAAqB,kBAAkB,CAAC;AAUrD,KAAK,oBAAoB,GAAG;IAC1B,CAAC,CAAC,EAAE;QACF,UAAU,CAAC,EAAE,CAAC,IAAI,EAAE,MAAM,KAAK,IAAI,CAAC;KACrC,CAAC;CACH,CAAC;AAqHF,eAAO,MAAM,mBAAmB,GAAI,QAAQ,oBAAoB,KAAG,IAelE,CAAC"}

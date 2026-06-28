@@ -1,5 +1,6 @@
 import React from "react";
 import { TabState, NoteEntry, ArticleEntry } from "./BibleTypes";
+import { BibleTranslationId, BibleTranslationOption } from "./bibleTextLoader";
 export declare const BIBLE_BOOKS: string[];
 export interface BibleContextType {
     tabs: TabState[];
@@ -22,7 +23,10 @@ export interface BibleContextType {
     openArticleInCurrentTab: (articleId: string) => void;
     bibleText: any | null;
     loadingBibleText: boolean;
-    loadBibleText: () => Promise<void>;
+    loadBibleText: (translationId?: BibleTranslationId) => Promise<void>;
+    bibleTranslations: BibleTranslationOption[];
+    selectedBibleTranslation: BibleTranslationId;
+    setSelectedBibleTranslation: (translationId: BibleTranslationId) => void;
     saveNotesToFile: () => Promise<void>;
     loadNotesFromFile: () => Promise<void>;
     editorOpen: boolean;
