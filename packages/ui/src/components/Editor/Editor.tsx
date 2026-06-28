@@ -68,13 +68,55 @@ const canOpenLinkHref = (href: string): boolean => {
   return /^(https?:|mailto:|tel:|#|\/|\?)/i.test(value);
 };
 
-const readFileAsDataUrl = (file: File): Promise<string> =>
+const readFileAsDataUrl = (file: Blob): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error("Failed to read image"));
     reader.onload = () => resolve(String(reader.result || ""));
     reader.readAsDataURL(file);
   });
+
+const loadImage = (blob: Blob): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image"));
+    };
+    image.src = url;
+  });
+
+const compressToWebPSmall = async (file: File): Promise<string> => {
+  const image = await loadImage(file);
+  const maxDimension = 1200;
+  const scale = Math.min(
+    maxDimension / image.width,
+    maxDimension / image.height,
+    1,
+  );
+  const targetWidth = Math.max(1, Math.round(image.width * scale));
+  const targetHeight = Math.max(1, Math.round(image.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const context = canvas.getContext("2d");
+  if (!context) return readFileAsDataUrl(file);
+
+  context.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+  const webpBlob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/webp", 0.7);
+  });
+
+  if (!webpBlob) return readFileAsDataUrl(file);
+  return readFileAsDataUrl(webpBlob);
+};
 
 const findParentTag = (node: Node | null, editor: HTMLElement, tag: string) => {
   let current: Node | null = node;
@@ -128,7 +170,11 @@ export default function Editor({
   }, [value, isEditing, sourceMode]);
 
   useEffect(() => {
-    if (!sourceMode && editorRef.current && editorRef.current.innerHTML !== content) {
+    if (
+      !sourceMode &&
+      editorRef.current &&
+      editorRef.current.innerHTML !== content
+    ) {
       editorRef.current.innerHTML = content;
     }
   }, [content, sourceMode]);
@@ -173,12 +219,18 @@ export default function Editor({
     runExec("formatBlock", blockTag);
   };
 
-  const applyAlertVariant = (variant: "quote" | "info" | "warning" | "error") => {
+  const applyAlertVariant = (
+    variant: "quote" | "info" | "warning" | "error",
+  ) => {
     runFormatBlock("blockquote");
     const selection = window.getSelection();
     const anchorNode = selection?.anchorNode || null;
     if (!editorRef.current) return;
-    const blockquote = findParentTag(anchorNode, editorRef.current, "BLOCKQUOTE");
+    const blockquote = findParentTag(
+      anchorNode,
+      editorRef.current,
+      "BLOCKQUOTE",
+    );
     if (!blockquote) return;
     blockquote.className = variant === "quote" ? "" : `editor-alert-${variant}`;
     syncFromEditor();
@@ -200,7 +252,12 @@ export default function Editor({
       runFormatBlock("pre");
       return;
     }
-    if (next === "quote" || next === "info" || next === "warning" || next === "error") {
+    if (
+      next === "quote" ||
+      next === "info" ||
+      next === "warning" ||
+      next === "error"
+    ) {
       applyAlertVariant(next);
     }
   };
@@ -263,16 +320,19 @@ export default function Editor({
 
   const editBibleLink = (anchor: HTMLAnchorElement) => {
     const parsed = parseBibleBookmarkHash(anchor.getAttribute("href") || "");
-    void showBibleBookmarkDialog(getBibleBooks(), parsed || undefined).then((selection) => {
-      if (!selection) return;
-      const wrapper = document.createElement("div");
-      wrapper.innerHTML = createBibleBookmarkHtml(selection);
-      const replacement = wrapper.firstElementChild as HTMLAnchorElement | null;
-      if (!replacement) return;
-      anchor.setAttribute("href", replacement.getAttribute("href") || "#");
-      anchor.textContent = replacement.textContent || "";
-      syncFromEditor();
-    });
+    void showBibleBookmarkDialog(getBibleBooks(), parsed || undefined).then(
+      (selection) => {
+        if (!selection) return;
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = createBibleBookmarkHtml(selection);
+        const replacement =
+          wrapper.firstElementChild as HTMLAnchorElement | null;
+        if (!replacement) return;
+        anchor.setAttribute("href", replacement.getAttribute("href") || "#");
+        anchor.textContent = replacement.textContent || "";
+        syncFromEditor();
+      },
+    );
   };
 
   const editLink = (anchor: HTMLAnchorElement) => {
@@ -334,7 +394,8 @@ export default function Editor({
     }
 
     updateResizeOverlayFromImage(imageMenu.image);
-    const handleWindowChange = () => updateResizeOverlayFromImage(imageMenu.image);
+    const handleWindowChange = () =>
+      updateResizeOverlayFromImage(imageMenu.image);
     window.addEventListener("scroll", handleWindowChange, true);
     window.addEventListener("resize", handleWindowChange);
     return () => {
@@ -347,7 +408,10 @@ export default function Editor({
     const onMouseMove = (event: MouseEvent) => {
       if (!activeResizeRef.current || !imageMenu?.image) return;
       const deltaX = event.clientX - activeResizeRef.current.startX;
-      const nextWidth = Math.max(80, activeResizeRef.current.startWidth + deltaX);
+      const nextWidth = Math.max(
+        80,
+        activeResizeRef.current.startWidth + deltaX,
+      );
       imageMenu.image.style.width = `${Math.round(nextWidth)}px`;
       imageMenu.image.style.height = "auto";
       updateResizeOverlayFromImage(imageMenu.image);
@@ -372,15 +436,19 @@ export default function Editor({
       file.type.toLowerCase().startsWith("image/"),
     );
     for (const file of imageFiles) {
-      const dataUrl = await readFileAsDataUrl(file);
+      const dataUrl = await compressToWebPSmall(file);
       insertHtmlAtSelection(
-        `<img src="${dataUrl}" alt="${file.name.replace(/"/g, "&quot;")}" class="editor-image" />`,
+        `<img src="${dataUrl}" alt="${file.name.replace(/"/g, "&quot;")}" class="editor-image" data-original-format="${file.type.replace(/"/g, "&quot;")}" />`,
       );
     }
   };
 
   const withCurrentCell = (
-    callback: (table: HTMLTableElement, row: HTMLTableRowElement, cellIndex: number) => void,
+    callback: (
+      table: HTMLTableElement,
+      row: HTMLTableRowElement,
+      cellIndex: number,
+    ) => void,
   ) => {
     const selection = window.getSelection();
     const node = selection?.anchorNode || null;
@@ -573,7 +641,9 @@ export default function Editor({
             type="button"
             className="editor-toolbar-btn"
             title={sourceMode ? "Apply source" : "View or edit HTML source"}
-            aria-label={sourceMode ? "Apply source" : "View or edit HTML source"}
+            aria-label={
+              sourceMode ? "Apply source" : "View or edit HTML source"
+            }
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => {
               if (sourceMode) {
@@ -645,7 +715,8 @@ export default function Editor({
             type="button"
             onClick={() =>
               withCurrentCell((table, _row, cellIndex) => {
-                if (!table.rows.length || table.rows[0].cells.length <= 1) return;
+                if (!table.rows.length || table.rows[0].cells.length <= 1)
+                  return;
                 for (const row of Array.from(table.rows)) {
                   if (row.cells[cellIndex]) row.deleteCell(cellIndex);
                 }
@@ -668,7 +739,10 @@ export default function Editor({
       )}
 
       {showLinkDialog && (
-        <div className="editor-modal-overlay" onClick={() => setShowLinkDialog(false)}>
+        <div
+          className="editor-modal-overlay"
+          onClick={() => setShowLinkDialog(false)}
+        >
           <div
             className="editor-modal"
             onClick={(event) => {
@@ -707,7 +781,10 @@ export default function Editor({
       )}
 
       {linkMenu && (
-        <div className="editor-floating-menu" style={{ left: linkMenu.x, top: linkMenu.y }}>
+        <div
+          className="editor-floating-menu"
+          style={{ left: linkMenu.x, top: linkMenu.y }}
+        >
           <button
             type="button"
             onClick={() => {
@@ -744,14 +821,26 @@ export default function Editor({
       )}
 
       {imageMenu && (
-        <div className="editor-floating-menu" style={{ left: imageMenu.x, top: imageMenu.y }}>
-          <button type="button" onClick={() => applyImageLayout("small", "left")}>
+        <div
+          className="editor-floating-menu"
+          style={{ left: imageMenu.x, top: imageMenu.y }}
+        >
+          <button
+            type="button"
+            onClick={() => applyImageLayout("small", "left")}
+          >
             Small
           </button>
-          <button type="button" onClick={() => applyImageLayout("medium", "center")}>
+          <button
+            type="button"
+            onClick={() => applyImageLayout("medium", "center")}
+          >
             Medium
           </button>
-          <button type="button" onClick={() => applyImageLayout("full", "center")}>
+          <button
+            type="button"
+            onClick={() => applyImageLayout("full", "center")}
+          >
             Full
           </button>
           <button type="button" onClick={() => applyImageAlignment("left")}>
