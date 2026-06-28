@@ -22,6 +22,11 @@ It is designed to provide a rich text editing experience with support for variou
   - when user clicks on a Bible link a menu should come up to allow editing or navigating to the referenced book and chapter
 - redo and undo
 
+## other requirements
+
+- it should work on mobile and desktop devices
+- build completely in React and TypeScript
+
 ## Buttons
 buttons should be ordered as follows: 
 
