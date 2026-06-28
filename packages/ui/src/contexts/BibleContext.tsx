@@ -47,7 +47,7 @@ export interface BibleContextType {
   openHomeInCurrentTab: () => void;
   openBibleInCurrentTab: (book: string, chapterNumber: number) => void;
   openArticleInCurrentTab: (articleId: string) => void;
-  // parsed bible text loaded from public/text.json
+  // parsed bible text loaded from public/Douay-Rheims.json
   bibleText: any | null;
   loadingBibleText: boolean;
   loadBibleText: () => Promise<void>;
@@ -141,7 +141,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const fileHandleRef = useRef<any>(null);
 
   // Load bible text and book list from the API on mount.
-  // The API is expected to return the same structure as the local text.json, e.g.
+  // The API is expected to return the same structure as the local Douay-Rheims.json, e.g.
   // { books: [ { name: 'Genesis', chapters: [...] }, ... ] }
   const loadBibleText = async () => {
     try {
