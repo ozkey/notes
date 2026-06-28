@@ -10,7 +10,9 @@ export interface BibleTextResult {
  * the list of book names extracted from it.
  */
 export async function fetchBibleText(): Promise<BibleTextResult> {
-  const res = await fetch(`./public/Douay-Rheims.json`);
+  // https://github.com/scrollmapper/bible_databases/tree/master/sources/en/CPDV
+  // https://github.com/scrollmapper/bible_databases/tree/master/sources/en/DRC
+  const res = await fetch(`./public/Catholic-Public-Domain-Version.json`);
 
   if (!res.ok) {
     console.warn("Failed to fetch bible text from API:", res.statusText);

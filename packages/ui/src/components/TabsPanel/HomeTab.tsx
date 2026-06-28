@@ -306,7 +306,11 @@ export const HomeTab: React.FC = () => {
         <Card sx={{ bgcolor: "grey.50" }}>
           <CardContent>
             <Stack spacing={1.25}>
-              <Typography variant="subtitle1">Bookshelf</Typography>
+              <Typography variant="subtitle1">
+                Bookshelf
+                {/*// TODO dropdown for*/}
+                {/*// Catholic-Public-Domain-Version.json (default)  or Douay-Rheims.json*/}
+              </Typography>
               <Box sx={{ overflowX: "auto" }}>
                 <Stack
                   direction="row"
