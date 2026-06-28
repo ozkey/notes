@@ -217,6 +217,75 @@ export default function Editor({
     restoreSelection();
   };
 
+  const withSelectedNode = (
+    node: Node,
+    apply: (selection: Selection) => boolean,
+  ): boolean => {
+    if (!editorRef.current) return false;
+    const selection = window.getSelection();
+    if (!selection) return false;
+    editorRef.current.focus();
+    const range = document.createRange();
+    range.selectNode(node);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return apply(selection);
+  };
+
+  const replaceElementUndoably = <T extends HTMLElement>(
+    element: T,
+    mutate: (draft: T) => void,
+  ): T | null => {
+    if (!editorRef.current || !element.isConnected) return null;
+    const draft = element.cloneNode(true) as T;
+    const before = draft.outerHTML;
+    mutate(draft);
+    if (draft.outerHTML === before) return null;
+
+    const tokenAttr = "data-editor-replace-token";
+    const token = `t-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    draft.setAttribute(tokenAttr, token);
+    const html = draft.outerHTML;
+    const didReplace = withSelectedNode(element, () =>
+      document.execCommand("insertHTML", false, html),
+    );
+
+    if (!didReplace) {
+      draft.removeAttribute(tokenAttr);
+      element.replaceWith(draft);
+      return draft;
+    }
+
+    const nextElement = editorRef.current.querySelector(
+      `[${tokenAttr}="${token}"]`,
+    ) as T | null;
+    if (!nextElement) return null;
+    nextElement.removeAttribute(tokenAttr);
+    return nextElement;
+  };
+
+  const replaceNodeWithTextUndoably = (node: Node, text: string): boolean => {
+    const replaced = withSelectedNode(node, () =>
+      document.execCommand("insertText", false, text),
+    );
+    if (replaced) return true;
+    const parent = node.parentNode;
+    if (!parent) return false;
+    parent.replaceChild(document.createTextNode(text), node);
+    return true;
+  };
+
+  const removeNodeUndoably = (node: Node): boolean => {
+    const deleted = withSelectedNode(node, () => document.execCommand("delete"));
+    if (deleted) return true;
+    const parent = node.parentNode;
+    if (parent) {
+      parent.removeChild(node);
+      return true;
+    }
+    return false;
+  };
+
   const runExec = (command: string, valueArg?: string) => {
     focusEditor();
     document.execCommand(command, false, valueArg);
@@ -288,16 +357,18 @@ export default function Editor({
     const text = linkText.trim() || href;
     const safeHref = href.replace(/"/g, "&quot;");
     if (editingLinkAnchor) {
-      editingLinkAnchor.setAttribute("href", safeHref);
-      if (linkOpenNewTab) {
-        editingLinkAnchor.setAttribute("target", "_blank");
-        editingLinkAnchor.setAttribute("rel", "noopener noreferrer");
-      } else {
-        editingLinkAnchor.removeAttribute("target");
-        editingLinkAnchor.removeAttribute("rel");
-      }
-      editingLinkAnchor.textContent = text;
-      syncFromEditor();
+      const updated = replaceElementUndoably(editingLinkAnchor, (anchor) => {
+        anchor.setAttribute("href", safeHref);
+        if (linkOpenNewTab) {
+          anchor.setAttribute("target", "_blank");
+          anchor.setAttribute("rel", "noopener noreferrer");
+        } else {
+          anchor.removeAttribute("target");
+          anchor.removeAttribute("rel");
+        }
+        anchor.textContent = text;
+      });
+      if (updated) syncFromEditor();
     } else {
       const target = linkOpenNewTab
         ? ' target="_blank" rel="noopener noreferrer"'
@@ -336,9 +407,11 @@ export default function Editor({
         const replacement =
           wrapper.firstElementChild as HTMLAnchorElement | null;
         if (!replacement) return;
-        anchor.setAttribute("href", replacement.getAttribute("href") || "#");
-        anchor.textContent = replacement.textContent || "";
-        syncFromEditor();
+        const updated = replaceElementUndoably(anchor, (draft) => {
+          draft.setAttribute("href", replacement.getAttribute("href") || "#");
+          draft.textContent = replacement.textContent || "";
+        });
+        if (updated) syncFromEditor();
       },
     );
   };
@@ -354,8 +427,7 @@ export default function Editor({
   const removeLink = () => {
     if (!linkMenu?.anchor) return;
     const anchor = linkMenu.anchor;
-    const textNode = document.createTextNode(anchor.textContent || "");
-    anchor.replaceWith(textNode);
+    replaceNodeWithTextUndoably(anchor, anchor.textContent || "");
     setLinkMenu(null);
     syncFromEditor();
   };
@@ -375,29 +447,39 @@ export default function Editor({
     align: "left" | "center" | "right",
   ) => {
     if (!imageMenu?.image) return;
-    const image = imageMenu.image;
-    image.style.width =
-      size === "small" ? "33%" : size === "medium" ? "66%" : "100%";
-    image.style.display = "block";
-    image.style.marginLeft = align === "left" ? "0" : "auto";
-    image.style.marginRight = align === "right" ? "0" : "auto";
-    updateResizeOverlayFromImage(image);
+    const nextImage = replaceElementUndoably(imageMenu.image, (image) => {
+      image.style.width =
+        size === "small" ? "33%" : size === "medium" ? "66%" : "100%";
+      image.style.display = "block";
+      image.style.marginLeft = align === "left" ? "0" : "auto";
+      image.style.marginRight = align === "right" ? "0" : "auto";
+    });
+    if (!nextImage) return;
+    setImageMenu((previous) =>
+      previous ? { ...previous, image: nextImage } : previous,
+    );
+    updateResizeOverlayFromImage(nextImage);
     syncFromEditor();
   };
 
   const applyImageAlignment = (align: "left" | "center" | "right") => {
     if (!imageMenu?.image) return;
-    const image = imageMenu.image;
-    image.style.display = "block";
-    image.style.marginLeft = align === "left" ? "0" : "auto";
-    image.style.marginRight = align === "right" ? "0" : "auto";
-    updateResizeOverlayFromImage(image);
+    const nextImage = replaceElementUndoably(imageMenu.image, (image) => {
+      image.style.display = "block";
+      image.style.marginLeft = align === "left" ? "0" : "auto";
+      image.style.marginRight = align === "right" ? "0" : "auto";
+    });
+    if (!nextImage) return;
+    setImageMenu((previous) =>
+      previous ? { ...previous, image: nextImage } : previous,
+    );
+    updateResizeOverlayFromImage(nextImage);
     syncFromEditor();
   };
 
   const removeImage = () => {
     if (!imageMenu?.image) return;
-    imageMenu.image.remove();
+    removeNodeUndoably(imageMenu.image);
     setImageMenu(null);
     setResizeOverlay(null);
     syncFromEditor();
@@ -482,8 +564,12 @@ export default function Editor({
     ) {
       return;
     }
-    callback(table, row, cell.cellIndex);
-    syncFromEditor();
+    const nextTable = replaceElementUndoably(table, (draftTable) => {
+      const draftRow = draftTable.rows[row.rowIndex];
+      if (!(draftRow instanceof HTMLTableRowElement)) return;
+      callback(draftTable, draftRow, cell.cellIndex);
+    });
+    if (nextTable) syncFromEditor();
   };
 
   const toolbarButtons = useMemo(
