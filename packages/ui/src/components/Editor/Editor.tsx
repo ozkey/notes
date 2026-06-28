@@ -1156,6 +1156,15 @@ export default function Editor({
             syncFromEditor();
           }}
           onInput={syncFromEditor}
+          onKeyDown={(event) => {
+            if (event.key !== "Backspace" && event.key !== "Delete") return;
+            const editor = editorRef.current;
+            if (!imageMenu?.image || !editor || !editor.contains(imageMenu.image)) {
+              return;
+            }
+            event.preventDefault();
+            removeImage();
+          }}
           onKeyUp={saveSelection}
           onMouseUp={saveSelection}
           onClick={(event) => {
