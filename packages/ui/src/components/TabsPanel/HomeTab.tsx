@@ -6,9 +6,13 @@ import {
   Card,
   CardContent,
   Divider,
+  FormControl,
   List,
   ListItemButton,
   ListItemText,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   TextField,
   Typography,
@@ -166,6 +170,10 @@ export const HomeTab: React.FC = () => {
     books,
     notes,
     articles,
+    bibleTranslations,
+    selectedBibleTranslation,
+    setSelectedBibleTranslation,
+    loadBibleText,
     openBibleInCurrentTab,
     openArticleInCurrentTab,
   } = useContext(BibleContext as React.Context<any>);
@@ -285,20 +293,13 @@ export const HomeTab: React.FC = () => {
     openArticleInCurrentTab(normalizedId);
   };
 
+  const handleBibleTranslationChange = (nextTranslation: string) => {
+    setSelectedBibleTranslation(nextTranslation);
+    loadBibleText(nextTranslation);
+  };
+
   return (
     <>
-      <Box
-        component="main"
-        sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
-      >
-        <Card sx={{ bgcolor: "grey.50" }}>
-          <CardContent>
-            <Stack direction="row" spacing={2}>
-              <SaveOpen />
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
       <Box
         component="main"
         sx={{ flex: 1, padding: "0px 0 0 0", marginBottom: "1rem" }}
@@ -307,6 +308,23 @@ export const HomeTab: React.FC = () => {
           <CardContent>
             <Stack spacing={1.25}>
               <Typography variant="subtitle1">Bookshelf</Typography>
+              <FormControl size="small" sx={{ maxWidth: 360 }}>
+                <InputLabel id="home-tab-bible-select-label">Bible</InputLabel>
+                <Select
+                  labelId="home-tab-bible-select-label"
+                  label="Bible"
+                  value={selectedBibleTranslation}
+                  onChange={(event) =>
+                    handleBibleTranslationChange(String(event.target.value))
+                  }
+                >
+                  {bibleTranslations.map((translation: any) => (
+                    <MenuItem key={translation.id} value={translation.id}>
+                      {translation.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <Box sx={{ overflowX: "auto" }}>
                 <Stack
                   direction="row"
@@ -372,6 +390,22 @@ export const HomeTab: React.FC = () => {
                   })}
                 </Stack>
               </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+
+      <Box
+        component="main"
+        sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
+      >
+        <Card sx={{ bgcolor: "grey.50" }}>
+          <CardContent>
+            <Stack direction="row" spacing={2}>
+              <Typography variant="subtitle1">
+                Would you like top open your notes or start a new
+              </Typography>
+              <SaveOpen />
             </Stack>
           </CardContent>
         </Card>

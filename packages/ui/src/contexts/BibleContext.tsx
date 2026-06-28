@@ -13,7 +13,13 @@ import {
   openTabForBookChapter as openTabForBookChapterUtil,
   MAX_TAB_LIMIT,
 } from "./BibleContextUtils";
-import { fetchBibleText } from "./bibleTextLoader";
+import {
+  BIBLE_TRANSLATIONS,
+  DEFAULT_BIBLE_TRANSLATION,
+  BibleTranslationId,
+  BibleTranslationOption,
+  fetchBibleText,
+} from "./bibleTextLoader";
 import {
   setNoteForBookChapter as setNoteForBookChapterUtil,
   replaceAllNotes as replaceAllNotesUtil,
@@ -47,10 +53,13 @@ export interface BibleContextType {
   openHomeInCurrentTab: () => void;
   openBibleInCurrentTab: (book: string, chapterNumber: number) => void;
   openArticleInCurrentTab: (articleId: string) => void;
-  // parsed bible text loaded from public/text.json
+  // parsed bible text loaded from public/Douay-Rheims.json
   bibleText: any | null;
   loadingBibleText: boolean;
-  loadBibleText: () => Promise<void>;
+  loadBibleText: (translationId?: BibleTranslationId) => Promise<void>;
+  bibleTranslations: BibleTranslationOption[];
+  selectedBibleTranslation: BibleTranslationId;
+  setSelectedBibleTranslation: (translationId: BibleTranslationId) => void;
   saveNotesToFile: () => Promise<void>;
   loadNotesFromFile: () => Promise<void>;
   // editor UI state (moved from component-local state into context)
@@ -87,6 +96,10 @@ export const BibleContext = createContext<BibleContextType>({
   loadingBibleText: false,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   loadBibleText: async () => {},
+  bibleTranslations: BIBLE_TRANSLATIONS,
+  selectedBibleTranslation: DEFAULT_BIBLE_TRANSLATION,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  setSelectedBibleTranslation: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setNoteForBookChapter: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -136,17 +149,22 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const [currentTab, setCurrentTab] = useState<number>(0);
   const [bibleText, setBibleText] = useState<any | null>(null);
   const [loadingBibleText, setLoadingBibleText] = useState<boolean>(false);
+  const [selectedBibleTranslation, setSelectedBibleTranslation] =
+    useState<BibleTranslationId>(DEFAULT_BIBLE_TRANSLATION);
   // Keep a file handle so save/load can reuse the same file when supported by the
   // File System Access API.
   const fileHandleRef = useRef<any>(null);
 
   // Load bible text and book list from the API on mount.
-  // The API is expected to return the same structure as the local text.json, e.g.
+  // The API is expected to return the same structure as the local Douay-Rheims.json, e.g.
   // { books: [ { name: 'Genesis', chapters: [...] }, ... ] }
-  const loadBibleText = async () => {
+  const loadBibleText = async (
+    translationId: BibleTranslationId = selectedBibleTranslation,
+  ) => {
     try {
       setLoadingBibleText(true);
-      const { bibleText: text, bookNames } = await fetchBibleText();
+      const { bibleText: text, bookNames } = await fetchBibleText(translationId);
+      setSelectedBibleTranslation(translationId);
       setBibleText(text);
       if (bookNames.length > 0) {
         setBooks(bookNames);
@@ -163,7 +181,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   useEffect(() => {
-    loadBibleText();
+    loadBibleText(DEFAULT_BIBLE_TRANSLATION);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -332,6 +350,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         bibleText,
         loadingBibleText,
         loadBibleText,
+        bibleTranslations: BIBLE_TRANSLATIONS,
+        selectedBibleTranslation,
+        setSelectedBibleTranslation,
         saveNotesToFile,
         loadNotesFromFile,
       }}
