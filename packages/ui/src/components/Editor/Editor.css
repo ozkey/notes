@@ -185,12 +185,20 @@
   margin: 0 0 10px 0;
 }
 
-.editor-modal input {
+.editor-modal input,
+.editor-modal select {
   width: 100%;
   min-height: 36px;
   border: 1px solid #90a4ae;
   border-radius: 6px;
   padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.editor-inline-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 10px;
 }
 

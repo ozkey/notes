@@ -2,7 +2,7 @@
 # Editor requirements
 
 The editor components is a WYSIWYG editor built with React and TypeScript.
-It is designed to provide a rich text editing experience with support for various formatting options, media embedding, and custom plugins.
+It is designed to provide a rich text editing experience with support for various formatting options, media embedding, and built-in editor actions.
 
 ### Features
 
@@ -18,7 +18,7 @@ It is designed to provide a rich text editing experience with support for variou
   - images can be resized and aligned using a simple UI (drag to resize)
 - links (internal and external)
 - Bible links (using hash links to reference specific book and chapter in the Bible)
-  - the editor would show a popup or form so user can select the book and chapter, and then generate the appropriate hash link
+  - the editor shows a built-in modal so user can select the book and chapter, and then generate the appropriate hash link
   - when user clicks on a Bible link a menu should come up to allow editing or navigating to the referenced book and chapter
 - redo and undo
 

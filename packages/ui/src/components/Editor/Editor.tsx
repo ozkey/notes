@@ -24,12 +24,6 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import UndoIcon from "@mui/icons-material/Undo";
 import WidthFullIcon from "@mui/icons-material/WidthFull";
 import "./Editor.css";
-import {
-  createBibleBookmarkHtml,
-  getBibleBooks,
-  parseBibleBookmarkHash,
-  showBibleBookmarkDialog,
-} from "./BibleBookmark";
 
 type EditorProps = {
   value?: string;
@@ -67,6 +61,42 @@ type ToolbarButton = {
   label: string;
   icon: ReactNode;
   action: () => void;
+};
+
+type BibleBookmarkSelection = {
+  book: string;
+  chapterNumber: number;
+};
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const getBibleBooks = (): string[] =>
+  ((window as Window & { BIBLE_BOOKS?: string[] }).BIBLE_BOOKS || []) as string[];
+
+const parseBibleBookmarkHash = (
+  href: string,
+): BibleBookmarkSelection | null => {
+  const match = href.trim().match(/^#([^:]+):(\d+)$/);
+  if (!match) return null;
+
+  const book = match[1].replace(/-/g, " ").trim();
+  const chapterNumber = Number.parseInt(match[2], 10);
+  if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1) return null;
+
+  return { book, chapterNumber };
+};
+
+const createBibleBookmarkHtml = (selection: BibleBookmarkSelection): string => {
+  const bookHash = selection.book.trim().replace(/\s+/g, "-");
+  const hash = `#${bookHash}:${selection.chapterNumber}`;
+  const linkText = `${selection.book.trim()} ${selection.chapterNumber}`;
+  return `<a href="${escapeHtml(hash)}">${escapeHtml(linkText)}</a>`;
 };
 
 const canOpenLinkHref = (href: string): boolean => {
@@ -161,6 +191,11 @@ export default function Editor({
   const [linkText, setLinkText] = useState("");
   const [linkOpenNewTab, setLinkOpenNewTab] = useState(false);
   const [editingLinkAnchor, setEditingLinkAnchor] =
+    useState<HTMLAnchorElement | null>(null);
+  const [showBibleDialog, setShowBibleDialog] = useState(false);
+  const [bibleBook, setBibleBook] = useState("");
+  const [bibleChapter, setBibleChapter] = useState("1");
+  const [editingBibleAnchor, setEditingBibleAnchor] =
     useState<HTMLAnchorElement | null>(null);
 
   const editorRef = useRef<HTMLDivElement>(null);
@@ -350,6 +385,18 @@ export default function Editor({
     setShowLinkDialog(true);
   };
 
+  const openBibleDialog = (anchor?: HTMLAnchorElement) => {
+    saveSelection();
+    const books = getBibleBooks();
+    const parsed = anchor
+      ? parseBibleBookmarkHash(anchor.getAttribute("href") || "")
+      : null;
+    setEditingBibleAnchor(anchor || null);
+    setBibleBook(parsed?.book && books.includes(parsed.book) ? parsed.book : "");
+    setBibleChapter(String(parsed?.chapterNumber || 1));
+    setShowBibleDialog(true);
+  };
+
   const submitLink = () => {
     const href = linkUrl.trim();
     if (!href) return;
@@ -381,11 +428,7 @@ export default function Editor({
   };
 
   const insertBibleBookmark = () => {
-    saveSelection();
-    void showBibleBookmarkDialog(getBibleBooks()).then((selection) => {
-      if (!selection) return;
-      insertHtmlAtSelection(createBibleBookmarkHtml(selection));
-    });
+    openBibleDialog();
   };
 
   const openLink = (href: string) => {
@@ -398,22 +441,7 @@ export default function Editor({
   };
 
   const editBibleLink = (anchor: HTMLAnchorElement) => {
-    const parsed = parseBibleBookmarkHash(anchor.getAttribute("href") || "");
-    void showBibleBookmarkDialog(getBibleBooks(), parsed || undefined).then(
-      (selection) => {
-        if (!selection) return;
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = createBibleBookmarkHtml(selection);
-        const replacement =
-          wrapper.firstElementChild as HTMLAnchorElement | null;
-        if (!replacement) return;
-        const updated = replaceElementUndoably(anchor, (draft) => {
-          draft.setAttribute("href", replacement.getAttribute("href") || "#");
-          draft.textContent = replacement.textContent || "";
-        });
-        if (updated) syncFromEditor();
-      },
-    );
+    openBibleDialog(anchor);
   };
 
   const editLink = (anchor: HTMLAnchorElement) => {
@@ -483,6 +511,30 @@ export default function Editor({
     setImageMenu(null);
     setResizeOverlay(null);
     syncFromEditor();
+  };
+
+  const submitBibleBookmark = () => {
+    const book = bibleBook.trim();
+    const chapterNumber = Number.parseInt(bibleChapter, 10);
+    if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1) return;
+
+    const selection = { book, chapterNumber };
+    if (editingBibleAnchor) {
+      const updated = replaceElementUndoably(editingBibleAnchor, (anchor) => {
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = createBibleBookmarkHtml(selection);
+        const replacement = wrapper.firstElementChild as HTMLAnchorElement | null;
+        if (!replacement) return;
+        anchor.setAttribute("href", replacement.getAttribute("href") || "#");
+        anchor.textContent = replacement.textContent || "";
+      });
+      if (updated) syncFromEditor();
+    } else {
+      insertHtmlAtSelection(createBibleBookmarkHtml(selection));
+    }
+
+    setEditingBibleAnchor(null);
+    setShowBibleDialog(false);
   };
 
   useEffect(() => {
@@ -641,6 +693,8 @@ export default function Editor({
     }),
     [],
   );
+
+  const bibleBooks = getBibleBooks();
 
   return (
     <div className="custom-editor">
@@ -876,6 +930,69 @@ export default function Editor({
               </button>
               <button type="button" onClick={submitLink}>
                 {editingLinkAnchor ? "Save" : "Insert"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBibleDialog && (
+        <div
+          className="editor-modal-overlay"
+          onClick={() => {
+            setShowBibleDialog(false);
+            setEditingBibleAnchor(null);
+          }}
+        >
+          <div
+            className="editor-modal"
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+          >
+            <h3>{editingBibleAnchor ? "Edit Bible Link" : "Insert Bible Link"}</h3>
+            <label className="editor-inline-label">
+              Book
+              <select
+                value={bibleBook}
+                onChange={(event) => setBibleBook(event.target.value)}
+              >
+                {bibleBooks.length === 0 ? (
+                  <option value="">No books available</option>
+                ) : (
+                  <>
+                    <option value="">Select a book...</option>
+                    {bibleBooks.map((book) => (
+                      <option key={book} value={book}>
+                        {book}
+                      </option>
+                    ))}
+                  </>
+                )}
+              </select>
+            </label>
+            <label className="editor-inline-label">
+              Chapter
+              <input
+                type="number"
+                min="1"
+                value={bibleChapter}
+                onChange={(event) => setBibleChapter(event.target.value)}
+                placeholder="1"
+              />
+            </label>
+            <div className="editor-modal-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBibleDialog(false);
+                  setEditingBibleAnchor(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button type="button" onClick={submitBibleBookmark}>
+                {editingBibleAnchor ? "Save" : "Insert"}
               </button>
             </div>
           </div>
