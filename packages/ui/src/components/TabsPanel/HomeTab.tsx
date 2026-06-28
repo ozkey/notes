@@ -6,9 +6,13 @@ import {
   Card,
   CardContent,
   Divider,
+  FormControl,
   List,
   ListItemButton,
   ListItemText,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   TextField,
   Typography,
@@ -166,6 +170,10 @@ export const HomeTab: React.FC = () => {
     books,
     notes,
     articles,
+    bibleTranslations,
+    selectedBibleTranslation,
+    setSelectedBibleTranslation,
+    loadBibleText,
     openBibleInCurrentTab,
     openArticleInCurrentTab,
   } = useContext(BibleContext as React.Context<any>);
@@ -285,6 +293,11 @@ export const HomeTab: React.FC = () => {
     openArticleInCurrentTab(normalizedId);
   };
 
+  const handleBibleTranslationChange = (nextTranslation: string) => {
+    setSelectedBibleTranslation(nextTranslation);
+    loadBibleText(nextTranslation);
+  };
+
   return (
     <>
       <Box
@@ -308,9 +321,24 @@ export const HomeTab: React.FC = () => {
             <Stack spacing={1.25}>
               <Typography variant="subtitle1">
                 Bookshelf
-                {/*// TODO dropdown for*/}
-                {/*// Catholic-Public-Domain-Version.json (default)  or Douay-Rheims.json*/}
               </Typography>
+              <FormControl size="small" sx={{ maxWidth: 360 }}>
+                <InputLabel id="home-tab-bible-select-label">Bible</InputLabel>
+                <Select
+                  labelId="home-tab-bible-select-label"
+                  label="Bible"
+                  value={selectedBibleTranslation}
+                  onChange={(event) =>
+                    handleBibleTranslationChange(String(event.target.value))
+                  }
+                >
+                  {bibleTranslations.map((translation: any) => (
+                    <MenuItem key={translation.id} value={translation.id}>
+                      {translation.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <Box sx={{ overflowX: "auto" }}>
                 <Stack
                   direction="row"
