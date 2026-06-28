@@ -131,6 +131,16 @@
   overflow-x: auto;
 }
 
+.editor-content ul,
+.editor-content ol {
+  margin: 0 0 1em 0;
+  padding-left: 2rem;
+}
+
+.editor-content li {
+  margin: 0.25em 0;
+}
+
 .editor-content blockquote {
   border-left: 4px solid #607d8b;
   padding: 8px 12px;
