@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import CloseIcon from "@mui/icons-material/Close";
 import CodeIcon from "@mui/icons-material/Code";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
+import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
+import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatIndentDecreaseIcon from "@mui/icons-material/FormatIndentDecrease";
 import FormatIndentIncreaseIcon from "@mui/icons-material/FormatIndentIncrease";
@@ -11,10 +16,13 @@ import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
 import ImageIcon from "@mui/icons-material/Image";
 import LinkIcon from "@mui/icons-material/Link";
+import PhotoSizeSelectLargeIcon from "@mui/icons-material/PhotoSizeSelectLarge";
+import PhotoSizeSelectSmallIcon from "@mui/icons-material/PhotoSizeSelectSmall";
 import RedoIcon from "@mui/icons-material/Redo";
 import StrikethroughSIcon from "@mui/icons-material/StrikethroughS";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import UndoIcon from "@mui/icons-material/Undo";
+import WidthFullIcon from "@mui/icons-material/WidthFull";
 import "./Editor.css";
 import {
   createBibleBookmarkHtml,
@@ -384,6 +392,14 @@ export default function Editor({
     image.style.marginLeft = align === "left" ? "0" : "auto";
     image.style.marginRight = align === "right" ? "0" : "auto";
     updateResizeOverlayFromImage(image);
+    syncFromEditor();
+  };
+
+  const removeImage = () => {
+    if (!imageMenu?.image) return;
+    imageMenu.image.remove();
+    setImageMenu(null);
+    setResizeOverlay(null);
     syncFromEditor();
   };
 
@@ -827,33 +843,67 @@ export default function Editor({
         >
           <button
             type="button"
+            title="Small image size"
+            aria-label="Small image size"
             onClick={() => applyImageLayout("small", "left")}
           >
-            Small
+            <PhotoSizeSelectSmallIcon fontSize="small" />
           </button>
           <button
             type="button"
+            title="Medium image size"
+            aria-label="Medium image size"
             onClick={() => applyImageLayout("medium", "center")}
           >
-            Medium
+            <PhotoSizeSelectLargeIcon fontSize="small" />
           </button>
           <button
             type="button"
+            title="Full width image"
+            aria-label="Full width image"
             onClick={() => applyImageLayout("full", "center")}
           >
-            Full
+            <WidthFullIcon fontSize="small" />
           </button>
-          <button type="button" onClick={() => applyImageAlignment("left")}>
-            Align Left
+          <button
+            type="button"
+            title="Align image left"
+            aria-label="Align image left"
+            onClick={() => applyImageAlignment("left")}
+          >
+            <FormatAlignLeftIcon fontSize="small" />
           </button>
-          <button type="button" onClick={() => applyImageAlignment("center")}>
-            Align Center
+          <button
+            type="button"
+            title="Align image center"
+            aria-label="Align image center"
+            onClick={() => applyImageAlignment("center")}
+          >
+            <FormatAlignCenterIcon fontSize="small" />
           </button>
-          <button type="button" onClick={() => applyImageAlignment("right")}>
-            Align Right
+          <button
+            type="button"
+            title="Align image right"
+            aria-label="Align image right"
+            onClick={() => applyImageAlignment("right")}
+          >
+            <FormatAlignRightIcon fontSize="small" />
           </button>
-          <button type="button" onClick={() => setImageMenu(null)}>
-            Close
+          <button
+            type="button"
+            title="Delete image"
+            aria-label="Delete image"
+            onClick={removeImage}
+          >
+            <DeleteIcon fontSize="small" />
+          </button>
+          <button
+            type="button"
+            title="Close image menu"
+            aria-label="Close image menu"
+            onClick={() => setImageMenu(null)}
+          >
+            <CloseIcon fontSize="small" />
           </button>
         </div>
       )}
