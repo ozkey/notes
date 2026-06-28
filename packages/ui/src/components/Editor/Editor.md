@@ -15,7 +15,7 @@ It is designed to provide a rich text editing experience with support for variou
 - Code blocks with syntax highlighting
 - Image embedding
   - images can be dropped into the editor and encoded as base64
-  - images can be resized and aligned
+  - images can be resized and aligned using a simple UI (drag to resize)
 - links (internal and external)
 - Bible links (using hash links to reference specific book and chapter in the Bible)
   - the editor would show a popup or form so user can select the book and chapter, and then generate the appropriate hash link
@@ -28,7 +28,7 @@ It is designed to provide a rich text editing experience with support for variou
 - build completely in React and TypeScript
 
 ## Buttons
-buttons should be ordered as follows: 
+buttons (using traditional icons) should be ordered as follows: 
 
 - undo, redo,
 - headings (dropdown: H1, H2, H3, p, quote , info, warning, error),

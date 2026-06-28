@@ -14,13 +14,39 @@ type EditorWithInsertHtml = {
   };
 };
 
-type BibleBookmarkSelection = {
+export type BibleBookmarkSelection = {
   book: string;
   chapterNumber: number;
 };
 
-const showBibleBookmarkDialog = (
+export const getBibleBooks = (): string[] =>
+  ((window as Window & { BIBLE_BOOKS?: string[] }).BIBLE_BOOKS || []) as string[];
+
+export const parseBibleBookmarkHash = (
+  href: string,
+): BibleBookmarkSelection | null => {
+  const match = href.trim().match(/^#([^:]+):(\d+)$/);
+  if (!match) return null;
+
+  const book = match[1].replace(/-/g, " ").trim();
+  const chapterNumber = Number.parseInt(match[2], 10);
+  if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1) return null;
+
+  return { book, chapterNumber };
+};
+
+export const createBibleBookmarkHtml = (
+  selection: BibleBookmarkSelection,
+): string => {
+  const bookHash = selection.book.trim().replace(/\s+/g, "-");
+  const hash = `#${bookHash}:${selection.chapterNumber}`;
+  const linkText = `${selection.book.trim()} ${selection.chapterNumber}`;
+  return `<a href="${escapeHtml(hash)}">${escapeHtml(linkText)}</a>`;
+};
+
+export const showBibleBookmarkDialog = (
   bibleBooks: string[],
+  initialSelection?: BibleBookmarkSelection,
 ): Promise<BibleBookmarkSelection | null> =>
   new Promise((resolve) => {
     const overlay = document.createElement("div");
@@ -67,6 +93,10 @@ const showBibleBookmarkDialog = (
       bookSelect.appendChild(option);
     }
 
+    if (initialSelection?.book && bibleBooks.includes(initialSelection.book)) {
+      bookSelect.value = initialSelection.book;
+    }
+
     const chapterLabel = document.createElement("label");
     chapterLabel.textContent = "Chapter";
     chapterLabel.style.display = "block";
@@ -75,7 +105,7 @@ const showBibleBookmarkDialog = (
     const chapterInput = document.createElement("input");
     chapterInput.type = "number";
     chapterInput.min = "1";
-    chapterInput.value = "1";
+    chapterInput.value = String(initialSelection?.chapterNumber || 1);
     chapterInput.style.width = "100%";
     chapterInput.style.marginBottom = "12px";
     chapterInput.style.padding = "8px";
@@ -130,18 +160,10 @@ const showBibleBookmarkDialog = (
   });
 
 export const insertBibleBookmark = (editor: EditorWithInsertHtml): void => {
-  const bibleBooks = ((window as Window & { BIBLE_BOOKS?: string[] })
-    .BIBLE_BOOKS || []) as string[];
+  const bibleBooks = getBibleBooks();
 
   void showBibleBookmarkDialog(bibleBooks).then((selection) => {
     if (!selection) return;
-
-    const bookHash = selection.book.replace(/\s+/g, "-");
-    const hash = `#${bookHash}:${selection.chapterNumber}`;
-    const linkText = `${selection.book} ${selection.chapterNumber}`;
-
-    editor.s?.insertHTML?.(
-      `<a href="${escapeHtml(hash)}">${escapeHtml(linkText)}</a>`,
-    );
+    editor.s?.insertHTML?.(createBibleBookmarkHtml(selection));
   });
 };
