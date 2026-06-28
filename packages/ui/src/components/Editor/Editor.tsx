@@ -823,8 +823,8 @@ export default function Editor({
               const rect = image.getBoundingClientRect();
               setImageMenu({
                 image,
-                x: rect.left + window.scrollX,
-                y: rect.bottom + window.scrollY + 6,
+                x: rect.left,
+                y: rect.bottom + 6,
               });
               updateResizeOverlayFromImage(image);
               setLinkMenu(null);
@@ -844,8 +844,8 @@ export default function Editor({
             const rect = anchor.getBoundingClientRect();
             setLinkMenu({
               anchor,
-              x: rect.left + window.scrollX,
-              y: rect.bottom + window.scrollY + 6,
+              x: rect.left,
+              y: rect.bottom + 6,
               isBibleLink: parseBibleBookmarkHash(href) !== null,
             });
           }}

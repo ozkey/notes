@@ -52,12 +52,13 @@
 }
 
 .editor-content {
-  min-height: 420px;
+  height: 50vh;
   border: 1px solid #cfd8dc;
   border-radius: 8px;
   padding: 12px;
   background: #fff;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
 }
 
 .editor-content:focus {
@@ -67,12 +68,13 @@
 
 .editor-source {
   width: 100%;
-  min-height: 420px;
+  height: 50vh;
   border: 1px solid #cfd8dc;
   border-radius: 8px;
   padding: 12px;
   font-family: "Consolas", "Courier New", monospace;
   font-size: 13px;
+  overflow-y: auto;
   resize: vertical;
 }
 
@@ -201,8 +203,8 @@
 }
 
 .editor-floating-menu {
-  position: absolute;
-  z-index: 20;
+  position: fixed;
+  z-index: 30;
   display: flex;
   gap: 8px;
   border: 1px solid #cfd8dc;
@@ -240,6 +242,6 @@
 
   .editor-content,
   .editor-source {
-    min-height: 320px;
+    height: 50vh;
   }
 }
