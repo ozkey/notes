@@ -302,26 +302,12 @@ export const HomeTab: React.FC = () => {
     <>
       <Box
         component="main"
-        sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
-      >
-        <Card sx={{ bgcolor: "grey.50" }}>
-          <CardContent>
-            <Stack direction="row" spacing={2}>
-              <SaveOpen />
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
-      <Box
-        component="main"
         sx={{ flex: 1, padding: "0px 0 0 0", marginBottom: "1rem" }}
       >
         <Card sx={{ bgcolor: "grey.50" }}>
           <CardContent>
             <Stack spacing={1.25}>
-              <Typography variant="subtitle1">
-                Bookshelf
-              </Typography>
+              <Typography variant="subtitle1">Bookshelf</Typography>
               <FormControl size="small" sx={{ maxWidth: 360 }}>
                 <InputLabel id="home-tab-bible-select-label">Bible</InputLabel>
                 <Select
@@ -404,6 +390,22 @@ export const HomeTab: React.FC = () => {
                   })}
                 </Stack>
               </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+
+      <Box
+        component="main"
+        sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
+      >
+        <Card sx={{ bgcolor: "grey.50" }}>
+          <CardContent>
+            <Stack direction="row" spacing={2}>
+              <Typography variant="subtitle1">
+                Would you like top open your notes or start a new
+              </Typography>
+              <SaveOpen />
             </Stack>
           </CardContent>
         </Card>
