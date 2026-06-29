@@ -1,6 +1,7 @@
 import { Button, Card, CardActions, CardContent } from "@mui/material";
 import React, { useContext, useEffect } from "react";
 import BibleContext from "../../contexts/BibleContext";
+import { articleIdsMatch } from "../../contexts/BibleContextUtils";
 import Editor from "../Editor/Editor";
 import { SaveOpen } from "../ActionBar/SaveOpen";
 import editorImage from "../Editor/editor.jpg";
@@ -44,7 +45,9 @@ export const NotesAndEditorPanel: React.FC = () => {
   const currentNoteText = (() => {
     if (currentTabState.mode === "article") {
       return (
-        articles.find((entry: any) => entry.id === currentTabState.articleId)
+        articles.find((entry: any) =>
+          articleIdsMatch(entry.id, String(currentTabState.articleId ?? "")),
+        )
           ?.text ?? ""
       );
     }

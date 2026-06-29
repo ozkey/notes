@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import BibleContext from "../../contexts/BibleContext";
 import { SaveOpen } from "../ActionBar/SaveOpen";
+import { normalizeArticleId as normalizeArticleIdUtil } from "../../contexts/BibleContextUtils";
 
 const normalizeBookKey = (book: string) =>
   book.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -270,9 +271,9 @@ export const HomeTab: React.FC = () => {
   }, [books]);
 
   const normalizeArticleId = (raw: string) => {
-    const trimmed = raw.trim();
-    if (!trimmed) return "";
-    return trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+    const normalized = normalizeArticleIdUtil(raw);
+    if (!normalized) return "";
+    return `#${normalized}`;
   };
 
   const openBible = () => {

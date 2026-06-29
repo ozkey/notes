@@ -11,6 +11,8 @@ import {
   closeTab as closeTabUtil,
   updateTab as updateTabUtil,
   openTabForBookChapter as openTabForBookChapterUtil,
+  articleIdsMatch,
+  normalizeArticleId,
   MAX_TAB_LIMIT,
 } from "./BibleContextUtils";
 import {
@@ -201,19 +203,10 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
             : window.location.hash,
         ).trim();
 
-        if (rawHash) {
-          const articleHashCandidates = [
-            rawHash,
-            rawHash.startsWith("#") ? rawHash : `#${rawHash}`,
-            rawHash.startsWith("#") ? rawHash.slice(1) : rawHash,
-          ].filter(Boolean);
-
-          const matchedArticle = articles.find((article) =>
-            articleHashCandidates.some(
-              (candidate) =>
-                article.id.toLowerCase() === String(candidate).toLowerCase(),
-            ),
-          );
+          if (rawHash) {
+            const matchedArticle = articles.find((article) =>
+              articleIdsMatch(article.id, rawHash),
+            );
 
           if (matchedArticle) {
             setTabs((previousTabs) => {
@@ -291,10 +284,12 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
   const openArticleInCurrentTab = (articleId: string) => {
-    const normalizedId = articleId.trim();
+    const normalizedId = normalizeArticleId(articleId);
     if (!normalizedId) return;
     setArticles((previous) => {
-      const exists = previous.some((entry) => entry.id === normalizedId);
+      const exists = previous.some((entry) =>
+        articleIdsMatch(entry.id, normalizedId),
+      );
       if (exists) return previous;
       return [...previous, { id: normalizedId, text: "" }];
     });

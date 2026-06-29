@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
 import { ArticleEntry, NoteEntry } from "./BibleTypes";
+import { articleIdsMatch, normalizeArticleId } from "./BibleContextUtils";
 
 type SetNotes = Dispatch<SetStateAction<NoteEntry[]>>;
 type SetArticles = Dispatch<SetStateAction<ArticleEntry[]>>;
@@ -45,14 +46,17 @@ export const setArticleById = (
   id: string,
   text: string,
 ) => {
+  const normalizedId = normalizeArticleId(id);
   setArticles((previousEntries) => {
-    const existingIndex = previousEntries.findIndex((entry) => entry.id === id);
+    const existingIndex = previousEntries.findIndex((entry) =>
+      articleIdsMatch(entry.id, normalizedId),
+    );
     if (existingIndex >= 0) {
       return previousEntries.map((entry, idx) =>
         idx === existingIndex ? { ...entry, text } : entry,
       );
     }
-    return [...previousEntries, { id, text }];
+    return [...previousEntries, { id: normalizedId, text }];
   });
 };
 

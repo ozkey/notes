@@ -33,6 +33,21 @@ export const parseHash = (
   return { book: match, chapter } as { book: string; chapter: number };
 };
 
+export const normalizeArticleId = (raw: string) => {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  return trimmed
+    .replace(/^#/, "")
+    .replace(/[+_\s-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .trim();
+};
+
+export const articleIdsMatch = (left: string, right: string) =>
+  normalizeArticleId(left).toLowerCase() ===
+  normalizeArticleId(right).toLowerCase();
+
 type SetTabs = Dispatch<SetStateAction<TabState[]>>;
 type SetCurrentTab = Dispatch<SetStateAction<number>>;
 

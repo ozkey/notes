@@ -85,7 +85,10 @@ const parseBibleBookmarkHash = (
   const match = href.trim().match(/^#([^:]+):(\d+)$/);
   if (!match) return null;
 
-  const book = match[1].replace(/-/g, " ").trim();
+  const book = decodeURIComponent(match[1])
+    .replace(/\+/g, " ")
+    .replace(/[_-]/g, " ")
+    .trim();
   const chapterNumber = Number.parseInt(match[2], 10);
   if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1) return null;
 
@@ -470,6 +473,30 @@ export default function Editor({
     });
   };
 
+  const setImageAlignmentStyles = (
+    image: HTMLImageElement,
+    align: "left" | "center" | "right",
+  ) => {
+    if (align === "center") {
+      image.style.setProperty("float", "none");
+      image.style.display = "block";
+      image.style.clear = "both";
+      image.style.marginTop = "8px";
+      image.style.marginBottom = "8px";
+      image.style.marginLeft = "auto";
+      image.style.marginRight = "auto";
+      return;
+    }
+
+    image.style.setProperty("float", align);
+    image.style.display = "block";
+    image.style.clear = "none";
+    image.style.marginTop = "0";
+    image.style.marginBottom = "1rem";
+    image.style.marginLeft = align === "right" ? "1rem" : "0";
+    image.style.marginRight = align === "left" ? "1rem" : "0";
+  };
+
   const applyImageLayout = (
     size: "small" | "medium" | "full",
     align: "left" | "center" | "right",
@@ -478,9 +505,7 @@ export default function Editor({
     const nextImage = replaceElementUndoably(imageMenu.image, (image) => {
       image.style.width =
         size === "small" ? "33%" : size === "medium" ? "66%" : "100%";
-      image.style.display = "block";
-      image.style.marginLeft = align === "left" ? "0" : "auto";
-      image.style.marginRight = align === "right" ? "0" : "auto";
+      setImageAlignmentStyles(image, align);
     });
     if (!nextImage) return;
     setImageMenu((previous) =>
@@ -493,9 +518,7 @@ export default function Editor({
   const applyImageAlignment = (align: "left" | "center" | "right") => {
     if (!imageMenu?.image) return;
     const nextImage = replaceElementUndoably(imageMenu.image, (image) => {
-      image.style.display = "block";
-      image.style.marginLeft = align === "left" ? "0" : "auto";
-      image.style.marginRight = align === "right" ? "0" : "auto";
+      setImageAlignmentStyles(image, align);
     });
     if (!nextImage) return;
     setImageMenu((previous) =>
@@ -1070,8 +1093,8 @@ export default function Editor({
           </button>
           <button
             type="button"
-            title="Align image left"
-            aria-label="Align image left"
+            title="Wrap text left"
+            aria-label="Wrap text left"
             onClick={() => applyImageAlignment("left")}
           >
             <FormatAlignLeftIcon fontSize="small" />
@@ -1086,8 +1109,8 @@ export default function Editor({
           </button>
           <button
             type="button"
-            title="Align image right"
-            aria-label="Align image right"
+            title="Wrap text right"
+            aria-label="Wrap text right"
             onClick={() => applyImageAlignment("right")}
           >
             <FormatAlignRightIcon fontSize="small" />
