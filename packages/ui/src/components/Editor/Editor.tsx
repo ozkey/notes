@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useContext } from "react";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import CloseIcon from "@mui/icons-material/Close";
 import CodeIcon from "@mui/icons-material/Code";
@@ -23,6 +23,10 @@ import StrikethroughSIcon from "@mui/icons-material/StrikethroughS";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import UndoIcon from "@mui/icons-material/Undo";
 import WidthFullIcon from "@mui/icons-material/WidthFull";
+// import BorderColorIcon from "@mui/icons-material/BorderColor";
+import EditLocationIcon from "@mui/icons-material/EditLocation";
+import BibleContext from "../../contexts/BibleContext";
+import { HighlightBadge } from "../Highlighter";
 import "./Editor.css";
 
 type EditorProps = {
@@ -77,7 +81,8 @@ const escapeHtml = (value: string): string =>
     .replace(/'/g, "&#39;");
 
 const getBibleBooks = (): string[] =>
-  ((window as Window & { BIBLE_BOOKS?: string[] }).BIBLE_BOOKS || []) as string[];
+  ((window as Window & { BIBLE_BOOKS?: string[] }).BIBLE_BOOKS ||
+    []) as string[];
 
 const parseBibleBookmarkHash = (
   href: string,
@@ -90,7 +95,8 @@ const parseBibleBookmarkHash = (
     .replace(/[_-]/g, " ")
     .trim();
   const chapterNumber = Number.parseInt(match[2], 10);
-  if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1) return null;
+  if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1)
+    return null;
 
   return { book, chapterNumber };
 };
@@ -200,6 +206,42 @@ export default function Editor({
   const [bibleChapter, setBibleChapter] = useState("1");
   const [editingBibleAnchor, setEditingBibleAnchor] =
     useState<HTMLAnchorElement | null>(null);
+  const [showHighlightMenu, setShowHighlightMenu] = useState(false);
+  const [showHighlightDialog, setShowHighlightDialog] = useState(false);
+
+  const bibleContext = useContext(BibleContext);
+  const { tabs, currentTab } = bibleContext;
+  const currentTabState = tabs[currentTab];
+  const highlights =
+    currentTabState.mode === "bible"
+      ? bibleContext.getHighlights(
+          currentTabState.selectedBook,
+          currentTabState.chapterNumber,
+        )
+      : [];
+
+  // Get all verses in the current chapter
+  const getAllVersesInChapter = (): number[] => {
+    if (
+      currentTabState.mode !== "bible" ||
+      !currentTabState.selectedBook ||
+      !bibleContext.bibleText
+    ) {
+      return [];
+    }
+    const bibleData = bibleContext.bibleText as any;
+    const book = bibleData.books?.find(
+      (b: any) => b.name === currentTabState.selectedBook,
+    );
+    const chapter = book?.chapters?.find(
+      (c: any) => c.chapter === currentTabState.chapterNumber,
+    );
+    if (!chapter || !chapter.verses) return [];
+    return chapter.verses.map((v: any) => parseInt(v.verse, 10));
+  };
+
+  const highlightsByVerse = new Map(highlights.map((h) => [h.verse, h.color]));
+  const allVerses = getAllVersesInChapter();
 
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
@@ -314,7 +356,9 @@ export default function Editor({
   };
 
   const removeNodeUndoably = (node: Node): boolean => {
-    const deleted = withSelectedNode(node, () => document.execCommand("delete"));
+    const deleted = withSelectedNode(node, () =>
+      document.execCommand("delete"),
+    );
     if (deleted) return true;
     const parent = node.parentNode;
     if (parent) {
@@ -357,6 +401,25 @@ export default function Editor({
     syncFromEditor();
   };
 
+  const getColorForHighlight = (color: string): string => {
+    const colorMap: Record<string, string> = {
+      green: "#C8E6C9",
+      blue: "#BBDEFB",
+      pink: "#F8BBD0",
+      red: "#FFCDD2",
+      orange: "#FFE0B2",
+      purple: "#E1BEE7",
+    };
+    return colorMap[color] || "#FFFFFF";
+  };
+
+  const createHighlightBadgeHtml = (
+    verseNumber: number,
+    color: string,
+  ): string => {
+    return `<span class="editor-highlight-badge" data-color="${color}" contenteditable="false">${verseNumber}</span> Verse`;
+  };
+
   const handleHeadingChange = (next: string) => {
     setHeadingChoice(next);
     if (next === "h1" || next === "h2" || next === "h3" || next === "p") {
@@ -395,7 +458,9 @@ export default function Editor({
       ? parseBibleBookmarkHash(anchor.getAttribute("href") || "")
       : null;
     setEditingBibleAnchor(anchor || null);
-    setBibleBook(parsed?.book && books.includes(parsed.book) ? parsed.book : "");
+    setBibleBook(
+      parsed?.book && books.includes(parsed.book) ? parsed.book : "",
+    );
     setBibleChapter(String(parsed?.chapterNumber || 1));
     setShowBibleDialog(true);
   };
@@ -546,7 +611,8 @@ export default function Editor({
       const updated = replaceElementUndoably(editingBibleAnchor, (anchor) => {
         const wrapper = document.createElement("div");
         wrapper.innerHTML = createBibleBookmarkHtml(selection);
-        const replacement = wrapper.firstElementChild as HTMLAnchorElement | null;
+        const replacement =
+          wrapper.firstElementChild as HTMLAnchorElement | null;
         if (!replacement) return;
         anchor.setAttribute("href", replacement.getAttribute("href") || "#");
         anchor.textContent = replacement.textContent || "";
@@ -791,6 +857,16 @@ export default function Editor({
           >
             <BookmarkIcon fontSize="small" />
           </button>
+          <button
+            type="button"
+            className="editor-toolbar-btn"
+            title="Add highlighted verse"
+            aria-label="Add highlighted verse"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => setShowHighlightDialog(true)}
+          >
+            <EditLocationIcon fontSize="small" />
+          </button>
           <label className="editor-toolbar-btn editor-file-btn">
             <ImageIcon fontSize="small" />
             <input
@@ -917,6 +993,88 @@ export default function Editor({
         </div>
       )}
 
+      {showHighlightDialog && (
+        <div
+          className="editor-modal-overlay"
+          onClick={() => setShowHighlightDialog(false)}
+        >
+          <div
+            className="editor-modal"
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+            style={{ maxWidth: "500px", maxHeight: "600px", overflowY: "auto" }}
+          >
+            <h3>Select Verse to Insert</h3>
+            {allVerses.length === 0 ? (
+              <p style={{ color: "#666", marginTop: "20px" }}>
+                No verses available in this chapter.
+              </p>
+            ) : (
+              <div style={{ marginTop: "20px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(6, 1fr)",
+                    gap: "8px",
+                    marginBottom: "20px",
+                  }}
+                >
+                  {allVerses.map((verseNumber) => {
+                    const highlightColor = highlightsByVerse.get(verseNumber);
+                    const bgColor = highlightColor
+                      ? getColorForHighlight(highlightColor)
+                      : "#ffffff";
+                    const borderColor = highlightColor ? "#999" : "#ddd";
+
+                    return (
+                      <button
+                        key={verseNumber}
+                        type="button"
+                        onClick={() => {
+                          insertHtmlAtSelection(
+                            createHighlightBadgeHtml(
+                              verseNumber,
+                              highlightColor || "white",
+                            ),
+                          );
+                          setShowHighlightDialog(false);
+                        }}
+                        style={{
+                          padding: "8px",
+                          backgroundColor: bgColor,
+                          border: `2px solid ${borderColor}`,
+                          borderRadius: "4px",
+                          fontWeight: highlightColor ? "bold" : "normal",
+                          cursor: "pointer",
+                          fontSize: "0.9rem",
+                          textAlign: "center",
+                        }}
+                        title={
+                          highlightColor
+                            ? `Highlighted: ${highlightColor}`
+                            : "White badge"
+                        }
+                      >
+                        {verseNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <div className="editor-modal-actions">
+              <button
+                type="button"
+                onClick={() => setShowHighlightDialog(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showLinkDialog && (
         <div
           className="editor-modal-overlay"
@@ -973,7 +1131,9 @@ export default function Editor({
               event.stopPropagation();
             }}
           >
-            <h3>{editingBibleAnchor ? "Edit Bible Link" : "Insert Bible Link"}</h3>
+            <h3>
+              {editingBibleAnchor ? "Edit Bible Link" : "Insert Bible Link"}
+            </h3>
             <label className="editor-inline-label">
               Book
               <select
@@ -1182,7 +1342,11 @@ export default function Editor({
           onKeyDown={(event) => {
             if (event.key !== "Backspace" && event.key !== "Delete") return;
             const editor = editorRef.current;
-            if (!imageMenu?.image || !editor || !editor.contains(imageMenu.image)) {
+            if (
+              !imageMenu?.image ||
+              !editor ||
+              !editor.contains(imageMenu.image)
+            ) {
               return;
             }
             event.preventDefault();

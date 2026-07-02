@@ -1,4 +1,3 @@
-
 # Editor requirements
 
 The editor components is a WYSIWYG editor built with React and TypeScript.
@@ -28,7 +27,8 @@ It is designed to provide a rich text editing experience with support for variou
 - build completely in React and TypeScript
 
 ## Buttons
-buttons (using traditional icons) should be ordered as follows: 
+
+buttons (using traditional icons) should be ordered as follows:
 
 - undo, redo,
 - headings (dropdown: H1, H2, H3, p, quote , info, warning, error),
@@ -37,6 +37,7 @@ buttons (using traditional icons) should be ordered as follows:
 - indentation, outdentation,
 
 next row
+
 - links
 - Bible link
 - image

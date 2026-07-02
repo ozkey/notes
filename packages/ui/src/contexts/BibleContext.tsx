@@ -4,7 +4,13 @@ import {
   loadNotesFromFile as loadNotesFromFileImpl,
 } from "./notesFileIO";
 
-import { TabState, NoteEntry, ArticleEntry } from "./BibleTypes";
+import {
+  TabState,
+  NoteEntry,
+  ArticleEntry,
+  HighlightData,
+  HighlightColor,
+} from "./BibleTypes";
 import {
   parseHash as parseHashUtil,
   addTab as addTabUtil,
@@ -27,6 +33,9 @@ import {
   replaceAllNotes as replaceAllNotesUtil,
   setArticleById as setArticleByIdUtil,
   replaceAllArticles as replaceAllArticlesUtil,
+  setHighlight as setHighlightUtil,
+  removeHighlight as removeHighlightUtil,
+  getHighlights as getHighlightsUtil,
 } from "./notesUtils";
 
 // List of common 66 books of the Protestant Bible
@@ -67,6 +76,22 @@ export interface BibleContextType {
   // editor UI state (moved from component-local state into context)
   editorOpen: boolean;
   setEditorOpen: (open: boolean) => void;
+  // highlight methods
+  setHighlight: (
+    book: string | null,
+    chapterNumber: number,
+    verse: number,
+    color: HighlightColor,
+  ) => void;
+  removeHighlight: (
+    book: string | null,
+    chapterNumber: number,
+    verse: number,
+  ) => void;
+  getHighlights: (
+    book: string | null,
+    chapterNumber: number,
+  ) => HighlightData[];
 }
 
 export const BibleContext = createContext<BibleContextType>({
@@ -124,6 +149,12 @@ export const BibleContext = createContext<BibleContextType>({
   editorOpen: false,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setEditorOpen: () => {},
+  // highlight defaults
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  setHighlight: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  removeHighlight: () => {},
+  getHighlights: () => [],
 });
 
 export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -165,7 +196,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     try {
       setLoadingBibleText(true);
-      const { bibleText: text, bookNames } = await fetchBibleText(translationId);
+      const { bibleText: text, bookNames } =
+        await fetchBibleText(translationId);
       setSelectedBibleTranslation(translationId);
       setBibleText(text);
       if (bookNames.length > 0) {
@@ -203,10 +235,10 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
             : window.location.hash,
         ).trim();
 
-          if (rawHash) {
-            const matchedArticle = articles.find((article) =>
-              articleIdsMatch(article.id, rawHash),
-            );
+        if (rawHash) {
+          const matchedArticle = articles.find((article) =>
+            articleIdsMatch(article.id, rawHash),
+          );
 
           if (matchedArticle) {
             setTabs((previousTabs) => {
@@ -302,6 +334,22 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     setEditorOpen(true);
   };
 
+  const setHighlight = (
+    book: string | null,
+    chapterNumber: number,
+    verse: number,
+    color: any,
+  ) => setHighlightUtil(setNotes, book, chapterNumber, verse, color);
+
+  const removeHighlight = (
+    book: string | null,
+    chapterNumber: number,
+    verse: number,
+  ) => removeHighlightUtil(setNotes, book, chapterNumber, verse);
+
+  const getHighlights = (book: string | null, chapterNumber: number) =>
+    getHighlightsUtil(notes, book, chapterNumber);
+
   // Use the extracted functions from notesFileIO. Provide small local wrappers
   // so the context value can pass functions with the expected signatures.
   const saveNotesToFile = async () => {
@@ -350,6 +398,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         setSelectedBibleTranslation,
         saveNotesToFile,
         loadNotesFromFile,
+        setHighlight,
+        removeHighlight,
+        getHighlights,
       }}
     >
       {children}

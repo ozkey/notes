@@ -61,17 +61,16 @@ export const NotesAndEditorPanel: React.FC = () => {
   // editorOpen state moved to context
 
   useEffect(() => {
-    console.log(
-      "Current note text changed, opening editor if there are no notes",
-      currentNoteText.length,
-    );
+    // console.log(
+    //   "Current note text changed, opening editor if there are no notes",
+    //   currentNoteText.length,
+    // );
     // dont open editor if there is no text at all but open if length = 0
     if (refreshNotesDate && currentNoteText.length === 0) {
       setEditorOpen(true);
     }
   }, [refreshNotesDate]);
 
-  console.log("editorOpen", editorOpen);
   return (
     <Card>
       <CardActions>
@@ -117,7 +116,6 @@ export const NotesAndEditorPanel: React.FC = () => {
             <Editor
               value={currentNoteText}
               onChange={(html) => {
-                console.log("Saving notes to file", html);
                 if (currentTabState.mode === "article") {
                   if (currentTabState.articleId) {
                     setArticleById(currentTabState.articleId, html);

@@ -1,5 +1,10 @@
 import { Dispatch, SetStateAction } from "react";
-import { ArticleEntry, NoteEntry } from "./BibleTypes";
+import {
+  ArticleEntry,
+  NoteEntry,
+  HighlightColor,
+  HighlightData,
+} from "./BibleTypes";
 import { articleIdsMatch, normalizeArticleId } from "./BibleContextUtils";
 
 type SetNotes = Dispatch<SetStateAction<NoteEntry[]>>;
@@ -67,4 +72,76 @@ export const replaceAllArticles = (
 ) => {
   setArticles(entries ?? []);
   setRefreshNotesDate(new Date());
+};
+
+export const setHighlight = (
+  setNotes: SetNotes,
+  book: string | null,
+  chapterNumber: number,
+  verse: number,
+  color: HighlightColor,
+) => {
+  setNotes((previousEntries) => {
+    const existingIndex = previousEntries.findIndex(
+      (entry) => entry.book === book && entry.chapterNumber === chapterNumber,
+    );
+
+    const newHighlight: HighlightData = { verse, color };
+
+    if (existingIndex >= 0) {
+      const entry = previousEntries[existingIndex];
+      const highlights = entry.highlights ?? [];
+      const highlightIndex = highlights.findIndex((h) => h.verse === verse);
+
+      let updatedHighlights: HighlightData[];
+      if (highlightIndex >= 0) {
+        updatedHighlights = highlights.map((h, idx) =>
+          idx === highlightIndex ? newHighlight : h,
+        );
+      } else {
+        updatedHighlights = [...highlights, newHighlight];
+      }
+
+      return previousEntries.map((e, idx) =>
+        idx === existingIndex ? { ...e, highlights: updatedHighlights } : e,
+      );
+    }
+
+    return [
+      ...previousEntries,
+      { book, chapterNumber, text: "", highlights: [newHighlight] },
+    ];
+  });
+};
+
+export const removeHighlight = (
+  setNotes: SetNotes,
+  book: string | null,
+  chapterNumber: number,
+  verse: number,
+) => {
+  setNotes((previousEntries) => {
+    return previousEntries.map((entry) => {
+      if (entry.book === book && entry.chapterNumber === chapterNumber) {
+        const highlights =
+          entry.highlights?.filter((h) => h.verse !== verse) ?? [];
+        return {
+          ...entry,
+          highlights: highlights.length > 0 ? highlights : undefined,
+        };
+      }
+      return entry;
+    });
+  });
+};
+
+export const getHighlights = (
+  notes: NoteEntry[],
+  book: string | null,
+  chapterNumber: number,
+): HighlightData[] => {
+  const entry = notes.find(
+    (n) => n.book === book && n.chapterNumber === chapterNumber,
+  );
+  return entry?.highlights ?? [];
 };
