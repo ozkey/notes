@@ -95,13 +95,31 @@ export const BibleText: React.FC<{
         <BookActions />
       </CardActions>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom sx={{ fontFamily: "Georgia, Garamond, serif", color: "primary.dark" }}>
           {chapter.name}
         </Typography>
-        <Box>
+        <Box sx={{ fontFamily: "Georgia, Garamond, serif", lineHeight: 1.8 }}>
           {chapter.verses.map((v: any) => (
-            <Typography key={v.name} variant="body2" color="text.secondary">
-              <strong>{v.verse}. </strong>
+            <Typography
+              key={v.name}
+              variant="body2"
+              sx={{
+                fontFamily: "Georgia, Garamond, serif",
+                color: "text.primary",
+                marginBottom: "0.8em",
+                lineHeight: 1.8,
+              }}
+            >
+              <span
+                style={{
+                  fontWeight: "bold",
+                  color: "#8B6F47",
+                  marginRight: "0.3em",
+                  fontSize: "0.9em",
+                }}
+              >
+                {v.verse}
+              </span>
               {v.text}
             </Typography>
           ))}

@@ -4,7 +4,6 @@ import BibleContext from "../../contexts/BibleContext";
 import { articleIdsMatch } from "../../contexts/BibleContextUtils";
 import Editor from "../Editor/Editor";
 import { SaveOpen } from "../ActionBar/SaveOpen";
-import editorImage from "../Editor/editor.jpg";
 
 export const NotesAndEditorPanel: React.FC = () => {
   const {
@@ -47,8 +46,7 @@ export const NotesAndEditorPanel: React.FC = () => {
       return (
         articles.find((entry: any) =>
           articleIdsMatch(entry.id, String(currentTabState.articleId ?? "")),
-        )
-          ?.text ?? ""
+        )?.text ?? ""
       );
     }
     return (

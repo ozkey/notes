@@ -15,6 +15,7 @@ import { TabState } from "../../contexts/BibleTypes";
 import { ContainedButtons } from "../ActionBar/ActionBar";
 import { NotesPanel } from "../NotesPanel/NotesPanel";
 import { HomeTab } from "./HomeTab";
+import { MAX_TAB_LIMIT } from "../../contexts/BibleContextUtils";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -121,7 +122,7 @@ export const TabsPanel: React.FC = () => {
               {...a11yProps(i)}
             />
           ))}
-          {tabs.length < 4 && (
+          {tabs.length < MAX_TAB_LIMIT && (
             <Tab
               label={
                 <Box

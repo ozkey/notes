@@ -305,7 +305,7 @@ export const HomeTab: React.FC = () => {
         component="main"
         sx={{ flex: 1, padding: "0px 0 0 0", marginBottom: "1rem" }}
       >
-        <Card sx={{ bgcolor: "grey.50" }}>
+        <Card sx={{ padding: "1rem", marginBottom: "1rem" }}>
           <CardContent>
             <Stack spacing={1.25}>
               <Typography variant="subtitle1">Bookshelf</Typography>
@@ -400,7 +400,7 @@ export const HomeTab: React.FC = () => {
         component="main"
         sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
       >
-        <Card sx={{ bgcolor: "grey.50" }}>
+        <Card>
           <CardContent>
             <Stack direction="row" spacing={2}>
               <Typography variant="subtitle1">
