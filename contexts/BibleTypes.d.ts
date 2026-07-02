@@ -5,10 +5,16 @@ export interface TabState {
     chapterNumber: number;
     articleId?: string | null;
 }
+export type HighlightColor = "green" | "blue" | "pink" | "red" | "orange" | "purple";
+export interface HighlightData {
+    verse: number;
+    color: HighlightColor;
+}
 export interface NoteEntry {
     book: string | null;
     chapterNumber: number;
     text: string;
+    highlights?: HighlightData[];
 }
 export interface ArticleEntry {
     id: string;

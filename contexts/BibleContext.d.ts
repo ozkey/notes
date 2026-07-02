@@ -1,5 +1,5 @@
 import React from "react";
-import { TabState, NoteEntry, ArticleEntry } from "./BibleTypes";
+import { TabState, NoteEntry, ArticleEntry, HighlightData, HighlightColor } from "./BibleTypes";
 import { BibleTranslationId, BibleTranslationOption } from "./bibleTextLoader";
 export declare const BIBLE_BOOKS: string[];
 export interface BibleContextType {
@@ -31,6 +31,9 @@ export interface BibleContextType {
     loadNotesFromFile: () => Promise<void>;
     editorOpen: boolean;
     setEditorOpen: (open: boolean) => void;
+    setHighlight: (book: string | null, chapterNumber: number, verse: number, color: HighlightColor) => void;
+    removeHighlight: (book: string | null, chapterNumber: number, verse: number) => void;
+    getHighlights: (book: string | null, chapterNumber: number) => HighlightData[];
 }
 export declare const BibleContext: React.Context<BibleContextType>;
 export declare const BibleProvider: React.FC<{

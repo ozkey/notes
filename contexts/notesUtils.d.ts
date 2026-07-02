@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction } from "react";
-import { ArticleEntry, NoteEntry } from "./BibleTypes";
+import { ArticleEntry, NoteEntry, HighlightColor, HighlightData } from "./BibleTypes";
 type SetNotes = Dispatch<SetStateAction<NoteEntry[]>>;
 type SetArticles = Dispatch<SetStateAction<ArticleEntry[]>>;
 /**
@@ -12,5 +12,8 @@ export declare const setNoteForBookChapter: (setNotes: SetNotes, book: string | 
 export declare const replaceAllNotes: (setNotes: SetNotes, setRefreshNotesDate: (date: Date) => void, entries: NoteEntry[]) => void;
 export declare const setArticleById: (setArticles: SetArticles, id: string, text: string) => void;
 export declare const replaceAllArticles: (setArticles: SetArticles, setRefreshNotesDate: (date: Date) => void, entries: ArticleEntry[]) => void;
+export declare const setHighlight: (setNotes: SetNotes, book: string | null, chapterNumber: number, verse: number, color: HighlightColor) => void;
+export declare const removeHighlight: (setNotes: SetNotes, book: string | null, chapterNumber: number, verse: number) => void;
+export declare const getHighlights: (notes: NoteEntry[], book: string | null, chapterNumber: number) => HighlightData[];
 export {};
 //# sourceMappingURL=notesUtils.d.ts.map

@@ -1,1 +1,1 @@
-{"version":3,"file":"TabsPanel.d.ts","sourceRoot":"","sources":["../../../src/components/TabsPanel/TabsPanel.tsx"],"names":[],"mappings":"AAWA,OAAO,KAAqB,MAAM,OAAO,CAAC;AAoD1C,eAAO,MAAM,SAAS,EAAE,KAAK,CAAC,EAiG7B,CAAC"}
+{"version":3,"file":"TabsPanel.d.ts","sourceRoot":"","sources":["../../../src/components/TabsPanel/TabsPanel.tsx"],"names":[],"mappings":"AAWA,OAAO,KAAqB,MAAM,OAAO,CAAC;AAqD1C,eAAO,MAAM,SAAS,EAAE,KAAK,CAAC,EAiG7B,CAAC"}

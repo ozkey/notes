@@ -5,6 +5,8 @@ export declare const parseHash: (hash: string, books: string[], defaultBooks?: s
     book: string;
     chapter: number;
 } | null;
+export declare const normalizeArticleId: (raw: string) => string;
+export declare const articleIdsMatch: (left: string, right: string) => boolean;
 type SetTabs = Dispatch<SetStateAction<TabState[]>>;
 type SetCurrentTab = Dispatch<SetStateAction<number>>;
 export declare const addTab: (setTabs: SetTabs, setCurrentTab: SetCurrentTab, maxLimit?: number) => void;
