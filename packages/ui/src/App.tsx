@@ -19,7 +19,7 @@ const App: React.FC = () => {
       <Box
         component="header"
         sx={{
-          backgroundColor: "#1976d2",
+          backgroundColor: "primary.dark",
           color: "white",
           padding: "7px",
           display: "flex",
@@ -54,7 +54,7 @@ const App: React.FC = () => {
       <Box
         component="footer"
         sx={{
-          backgroundColor: "#1976d2",
+          backgroundColor: "primary.dark",
           color: "white",
           padding: "20px",
           textAlign: "center",

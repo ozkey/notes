@@ -62,7 +62,7 @@
 }
 
 .editor-content:focus {
-  outline: 2px solid #1976d2;
+  outline: 2px solid #8b6f47;
   outline-offset: 1px;
 }
 
@@ -105,7 +105,7 @@
   resize: both;
   overflow: auto;
   display: block;
-  margin: 8px auto;
+  margin: 8px 0;
 }
 
 .editor-table {
@@ -235,7 +235,7 @@
 .editor-image-resize-overlay {
   position: fixed;
   z-index: 21;
-  border: 2px solid #1976d2;
+  border: 2px solid #8b6f47;
   pointer-events: none;
   box-sizing: border-box;
 }
@@ -246,8 +246,8 @@
   bottom: -8px;
   width: 16px;
   height: 16px;
-  border: 1px solid #0d47a1;
-  background: #1976d2;
+  border: 1px solid #5c3d2e;
+  background: #8b6f47;
   cursor: nwse-resize;
   pointer-events: auto;
 }
@@ -262,4 +262,41 @@
   .editor-source {
     height: 50vh;
   }
+}
+
+.editor-highlight-badge {
+  background-color: #c8e6c9;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: bold;
+  border: 1px solid #999;
+  margin-right: 4px;
+  user-select: none;
+  cursor: default;
+  font-size: 0.75em;
+}
+
+.editor-highlight-badge[data-color="blue"] {
+  background-color: #bbdefb;
+}
+
+.editor-highlight-badge[data-color="pink"] {
+  background-color: #f8bbd0;
+}
+
+.editor-highlight-badge[data-color="red"] {
+  background-color: #ffcdd2;
+}
+
+.editor-highlight-badge[data-color="orange"] {
+  background-color: #ffe0b2;
+}
+
+.editor-highlight-badge[data-color="purple"] {
+  background-color: #e1bee7;
+}
+
+.editor-highlight-badge[data-color="white"] {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
 }

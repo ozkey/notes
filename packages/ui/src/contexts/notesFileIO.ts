@@ -14,6 +14,7 @@ const TEMPLATE_HTML = `<!doctype html>
         border: 1px solid #ccc;
         padding: 1em;
         margin: 1em;
+        display: flow-root;
       }
       #indexList {
         border: 1px solid #ccc;
@@ -65,57 +66,66 @@ const TEMPLATE_HTML = `<!doctype html>
            ...articleEntries.map((article) => ({ type: "article", value: article })),
          ];
 
-         combined.forEach((entry, index) => {
-           try {
-             const article = document.createElement("article");
-             article.className = "note";
-             article.dataset.index = index;
-             article.id = \`note-\${index}\`; // add id so links can target it
+        combined.forEach((entry, index) => {
+          try {
+            const article = document.createElement("article");
+            article.className = "note";
+            article.dataset.index = index;
 
-             const heading = document.createElement("h2");
-             if (entry.type === "article") {
-               heading.textContent = \`Article \${entry.value.id || "Unknown ID"}\`;
-             } else {
-               const book = entry.value.book || "Unknown Book";
-               const chapter =
-                 entry.value.chapterNumber !== undefined &&
-                 entry.value.chapterNumber !== null
-                   ? entry.value.chapterNumber
-                   : "Unknown Chapter";
-               heading.textContent = \`\${book} \${chapter}\`;
-             }
-             article.appendChild(heading);
+            const articleId =
+              entry.type === "article"
+                ? String(entry.value.id || "Unknown ID").replace(/^#/, "")
+                : \`\${entry.value.book || "Unknown Book"}:\${
+                    entry.value.chapterNumber !== undefined &&
+                    entry.value.chapterNumber !== null
+                      ? entry.value.chapterNumber
+                      : "Unknown Chapter"
+                  }\`;
+            article.id = articleId;
 
-             const content = document.createElement("div");
-             content.className = "note-content";
+            const heading = document.createElement("h2");
+            if (entry.type === "article") {
+              heading.textContent = \`Article \${articleId}\`;
+            } else {
+              const book = entry.value.book || "Unknown Book";
+              const chapter =
+                entry.value.chapterNumber !== undefined &&
+                entry.value.chapterNumber !== null
+                  ? entry.value.chapterNumber
+                  : "Unknown Chapter";
+              heading.textContent = \`\${book} \${chapter}\`;
+            }
+            article.appendChild(heading);
 
-             content.innerHTML = entry.value.text || "";
-             article.appendChild(content);
+            const content = document.createElement("div");
+            content.className = "note-content";
+
+            content.innerHTML = entry.value.text || "";
+            article.appendChild(content);
 
             container.appendChild(article);
 
             // Add to index list if present
-             if (indexListEl) {
-               const li = document.createElement("li");
-               const a = document.createElement("a");
-               a.href = \`#\${article.id}\`;
-               if (entry.type === "article") {
-                 const articleId = entry.value.id || "Unknown ID";
-                 a.textContent = \`Article \${articleId}\`;
-                 a.setAttribute("aria-label", \`Go to Article \${articleId}\`);
-               } else {
-                 const book = entry.value.book || "Unknown Book";
-                 const chapter =
-                   entry.value.chapterNumber !== undefined &&
-                   entry.value.chapterNumber !== null
-                     ? entry.value.chapterNumber
-                     : "Unknown Chapter";
-                 a.textContent = \`\${book} \${chapter}\`;
-                 a.setAttribute("aria-label", \`Go to \${book} \${chapter}\`);
-               }
-               li.appendChild(a);
-               indexListEl.appendChild(li);
-             }
+            if (indexListEl) {
+              const li = document.createElement("li");
+              const a = document.createElement("a");
+              a.href = \`#\${encodeURIComponent(article.id)}\`;
+              if (entry.type === "article") {
+                a.textContent = \`Article \${articleId}\`;
+                a.setAttribute("aria-label", \`Go to Article \${articleId}\`);
+              } else {
+                const book = entry.value.book || "Unknown Book";
+                const chapter =
+                  entry.value.chapterNumber !== undefined &&
+                  entry.value.chapterNumber !== null
+                    ? entry.value.chapterNumber
+                    : "Unknown Chapter";
+                a.textContent = \`\${book} \${chapter}\`;
+                a.setAttribute("aria-label", \`Go to \${book} \${chapter}\`);
+              }
+              li.appendChild(a);
+              indexListEl.appendChild(li);
+            }
           } catch (err) {
             console.error("Failed to render note at index", index, err);
           }

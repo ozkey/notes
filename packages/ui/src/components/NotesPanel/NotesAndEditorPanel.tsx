@@ -1,9 +1,9 @@
 import { Button, Card, CardActions, CardContent } from "@mui/material";
 import React, { useContext, useEffect } from "react";
 import BibleContext from "../../contexts/BibleContext";
+import { articleIdsMatch } from "../../contexts/BibleContextUtils";
 import Editor from "../Editor/Editor";
 import { SaveOpen } from "../ActionBar/SaveOpen";
-import editorImage from "../Editor/editor.jpg";
 
 export const NotesAndEditorPanel: React.FC = () => {
   const {
@@ -44,8 +44,9 @@ export const NotesAndEditorPanel: React.FC = () => {
   const currentNoteText = (() => {
     if (currentTabState.mode === "article") {
       return (
-        articles.find((entry: any) => entry.id === currentTabState.articleId)
-          ?.text ?? ""
+        articles.find((entry: any) =>
+          articleIdsMatch(entry.id, String(currentTabState.articleId ?? "")),
+        )?.text ?? ""
       );
     }
     return (
@@ -60,17 +61,16 @@ export const NotesAndEditorPanel: React.FC = () => {
   // editorOpen state moved to context
 
   useEffect(() => {
-    console.log(
-      "Current note text changed, opening editor if there are no notes",
-      currentNoteText.length,
-    );
+    // console.log(
+    //   "Current note text changed, opening editor if there are no notes",
+    //   currentNoteText.length,
+    // );
     // dont open editor if there is no text at all but open if length = 0
     if (refreshNotesDate && currentNoteText.length === 0) {
       setEditorOpen(true);
     }
   }, [refreshNotesDate]);
 
-  console.log("editorOpen", editorOpen);
   return (
     <Card>
       <CardActions>
@@ -116,7 +116,6 @@ export const NotesAndEditorPanel: React.FC = () => {
             <Editor
               value={currentNoteText}
               onChange={(html) => {
-                console.log("Saving notes to file", html);
                 if (currentTabState.mode === "article") {
                   if (currentTabState.articleId) {
                     setArticleById(currentTabState.articleId, html);
