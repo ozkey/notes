@@ -3,7 +3,7 @@ import React, { useContext, useState } from "react";
 import { BookActions } from "./BookActions";
 import BibleContext from "../../../contexts/BibleContext";
 import { HighlighterMenu, HIGHLIGHT_COLORS } from "../../Highlighter";
-import { HighlightColor, HighlightData } from "../../../contexts/BibleTypes";
+import { HighlightColor } from "../../../contexts/BibleTypes";
 
 export const BibleText: React.FC<{
   selectedBook: string | null;

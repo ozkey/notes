@@ -23,10 +23,8 @@ import StrikethroughSIcon from "@mui/icons-material/StrikethroughS";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import UndoIcon from "@mui/icons-material/Undo";
 import WidthFullIcon from "@mui/icons-material/WidthFull";
-// import BorderColorIcon from "@mui/icons-material/BorderColor";
 import EditLocationIcon from "@mui/icons-material/EditLocation";
 import BibleContext from "../../contexts/BibleContext";
-import { HighlightBadge } from "../Highlighter";
 import "./Editor.css";
 
 type EditorProps = {
@@ -206,7 +204,6 @@ export default function Editor({
   const [bibleChapter, setBibleChapter] = useState("1");
   const [editingBibleAnchor, setEditingBibleAnchor] =
     useState<HTMLAnchorElement | null>(null);
-  const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const [showHighlightDialog, setShowHighlightDialog] = useState(false);
 
   const bibleContext = useContext(BibleContext);
@@ -266,6 +263,36 @@ export default function Editor({
       editorRef.current.innerHTML = content;
     }
   }, [content, sourceMode]);
+
+  // Update verse badge colors when highlights change
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    // Update data-color attributes of verse badges based on current highlights
+    const badges = editorRef.current.querySelectorAll(
+      ".editor-highlight-badge",
+    );
+    let updated = false;
+
+    badges.forEach((badge) => {
+      const verseNumberText = badge.textContent || "";
+      const verseNumber = parseInt(verseNumberText, 10);
+      if (Number.isNaN(verseNumber)) return;
+
+      const currentColor = badge.getAttribute("data-color") || "white";
+      const newColor = highlightsByVerse.get(verseNumber) || "white";
+
+      if (currentColor !== newColor) {
+        badge.setAttribute("data-color", newColor);
+        updated = true;
+      }
+    });
+
+    // Emit updated content if any badges were changed
+    if (updated) {
+      syncFromEditor();
+    }
+  }, [highlights.map((h) => `${h.verse}-${h.color}`).join(",")]);
 
   const emitContent = (nextHtml: string) => {
     setContent((prev) => (prev === nextHtml ? prev : nextHtml));
@@ -417,7 +444,7 @@ export default function Editor({
     verseNumber: number,
     color: string,
   ): string => {
-    return `<span class="editor-highlight-badge" data-color="${color}" contenteditable="false">${verseNumber}</span> Verse`;
+    return `<span class="editor-highlight-badge" data-color="${color}" contenteditable="false">${verseNumber}</span> - `;
   };
 
   const handleHeadingChange = (next: string) => {
