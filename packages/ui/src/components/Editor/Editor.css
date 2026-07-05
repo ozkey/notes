@@ -273,7 +273,7 @@
   margin-right: 4px;
   user-select: none;
   cursor: default;
-  font-size: 0.75em;
+  font-size: 1em;
 }
 
 .editor-highlight-badge[data-color="blue"] {
