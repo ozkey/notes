@@ -20,7 +20,17 @@ export default {
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        oneOf: [
+          {
+            // Import CSS as raw string when using ?raw query
+            resourceQuery: /raw/,
+            use: 'raw-loader',
+          },
+          {
+            // Normal CSS imports (injected into DOM)
+            use: ['style-loader', 'css-loader'],
+          },
+        ],
       },
       {
         test: /\.(png|jpg|jpeg|gif|svg)$/i,

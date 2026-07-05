@@ -141,24 +141,24 @@
   margin: 0.25em 0;
 }
 
-.editor-content blockquote {
+blockquote {
   border-left: 4px solid #607d8b;
   padding: 8px 12px;
   margin: 8px 0;
   background: #eceff1;
 }
 
-.editor-content blockquote.editor-alert-info {
+blockquote.editor-alert-info {
   border-left-color: #0277bd;
   background: #e1f5fe;
 }
 
-.editor-content blockquote.editor-alert-warning {
+blockquote.editor-alert-warning {
   border-left-color: #ef6c00;
   background: #fff3e0;
 }
 
-.editor-content blockquote.editor-alert-error {
+blockquote.editor-alert-error {
   border-left-color: #c62828;
   background: #ffebee;
 }
