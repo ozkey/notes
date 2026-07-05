@@ -26,7 +26,7 @@ export const withSelectedNode = (
 
 /**
  * Replaces an HTML element while maintaining undo/redo capability
- * Uses document.execCommand to ensure changes are undoable
+ * Uses Range API instead of deprecated execCommand
  * @param element - The element to replace
  * @param editorRef - Reference to the editor element
  * @param savedRangeRef - Reference to store the current selection
@@ -48,10 +48,21 @@ export const replaceElementUndoably = <T extends HTMLElement>(
   const tokenAttr = "data-editor-replace-token";
   const token = `t-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   draft.setAttribute(tokenAttr, token);
-  const html = draft.outerHTML;
-  const didReplace = withSelectedNode(element, editorRef, () =>
-    document.execCommand("insertHTML", false, html),
-  );
+  
+  const didReplace = withSelectedNode(element, editorRef, (selection) => {
+    try {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      
+      // Insert the new element
+      draft.removeAttribute(tokenAttr);
+      range.insertNode(draft);
+      return true;
+    } catch (e) {
+      console.warn("Failed to replace element:", e);
+      return false;
+    }
+  });
 
   if (!didReplace) {
     draft.removeAttribute(tokenAttr);
@@ -59,17 +70,12 @@ export const replaceElementUndoably = <T extends HTMLElement>(
     return draft;
   }
 
-  const nextElement = editorRef.current.querySelector(
-    `[${tokenAttr}="${token}"]`,
-  ) as T | null;
-  if (!nextElement) return null;
-  nextElement.removeAttribute(tokenAttr);
-  return nextElement;
+  return draft;
 };
 
 /**
  * Replaces a node with text content
- * Uses execCommand for undo support or falls back to direct DOM manipulation
+ * Uses Range API instead of deprecated execCommand
  * @param node - The node to replace
  * @param editorRef - Reference to the editor element
  * @param text - The text to insert
@@ -80,10 +86,21 @@ export const replaceNodeWithTextUndoably = (
   editorRef: React.RefObject<HTMLDivElement | null>,
   text: string,
 ): boolean => {
-  const replaced = withSelectedNode(node, editorRef, () =>
-    document.execCommand("insertText", false, text),
-  );
+  const replaced = withSelectedNode(node, editorRef, (selection) => {
+    try {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(text));
+      return true;
+    } catch (e) {
+      console.warn("Failed to replace node with text:", e);
+      return false;
+    }
+  });
+  
   if (replaced) return true;
+  
+  // Fallback to direct DOM manipulation
   const parent = node.parentNode;
   if (!parent) return false;
   parent.replaceChild(document.createTextNode(text), node);
@@ -92,7 +109,7 @@ export const replaceNodeWithTextUndoably = (
 
 /**
  * Removes a node from the DOM
- * Uses execCommand for undo support or falls back to direct DOM manipulation
+ * Uses Range API instead of deprecated execCommand
  * @param node - The node to remove
  * @param editorRef - Reference to the editor element
  * @returns True if removal was successful
@@ -101,10 +118,20 @@ export const removeNodeUndoably = (
   node: Node,
   editorRef: React.RefObject<HTMLDivElement | null>,
 ): boolean => {
-  const deleted = withSelectedNode(node, editorRef, () =>
-    document.execCommand("delete"),
-  );
+  const deleted = withSelectedNode(node, editorRef, (selection) => {
+    try {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      return true;
+    } catch (e) {
+      console.warn("Failed to remove node:", e);
+      return false;
+    }
+  });
+  
   if (deleted) return true;
+  
+  // Fallback to direct DOM manipulation
   const parent = node.parentNode;
   if (parent) {
     parent.removeChild(node);

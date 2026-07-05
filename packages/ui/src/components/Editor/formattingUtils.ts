@@ -4,9 +4,10 @@ import { findParentTag } from "./utils";
 
 /**
  * Executes a document command on the editor
- * Focuses the editor, runs the command, and syncs content
+ * Note: Some commands still use execCommand as there's no perfect modern replacement
+ * for all rich text editing operations. These will continue to work in browsers.
  * @param editorRef - Reference to the editor element
- * @param command - The execCommand command name
+ * @param command - The command name
  * @param syncFromEditor - Callback to sync content after the command
  * @param valueArg - Optional argument for the command
  */
@@ -16,8 +17,15 @@ export const runExec = (
   syncFromEditor: () => void,
   valueArg?: string,
 ) => {
-  editorRef.current?.focus();
-  document.execCommand(command, false, valueArg);
+  if (!editorRef.current) return;
+  editorRef.current.focus();
+  
+  try {
+    document.execCommand(command, false, valueArg);
+  } catch (e) {
+    console.warn(`Command "${command}" failed:`, e);
+  }
+  
   syncFromEditor();
 };
 
@@ -63,7 +71,7 @@ export const applyAlertVariant = (
 
 /**
  * Inserts HTML at the current selection and positions cursor at end
- * Focuses the editor and executes insertHTML command
+ * Uses modern Range API instead of deprecated execCommand
  * @param editorRef - Reference to the editor element
  * @param html - The HTML string to insert
  * @param syncFromEditor - Callback to sync content after insertion
@@ -73,16 +81,35 @@ export const insertHtmlAtSelection = (
   html: string,
   syncFromEditor: () => void,
 ) => {
-  editorRef.current?.focus();
-  document.execCommand("insertHTML", false, html);
+  if (!editorRef.current) return;
+  editorRef.current.focus();
   
-  // Move cursor to end of inserted content
   const selection = window.getSelection();
-  if (selection && editorRef.current) {
-    // Move cursor to the end of the editor content
-    const range = document.createRange();
-    range.selectNodeContents(editorRef.current);
-    range.collapse(false); // false = move to end
+  if (!selection || selection.rangeCount === 0) {
+    // No selection, append to end of editor
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    while (tempDiv.firstChild) {
+      editorRef.current.appendChild(tempDiv.firstChild);
+    }
+  } else {
+    // Insert at current selection using Range API
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    
+    // Create document fragment from HTML string
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    const fragment = document.createDocumentFragment();
+    while (tempDiv.firstChild) {
+      fragment.appendChild(tempDiv.firstChild);
+    }
+    
+    // Insert the fragment
+    range.insertNode(fragment);
+    
+    // Move cursor to end of inserted content
+    range.collapse(false);
     selection.removeAllRanges();
     selection.addRange(range);
   }
