@@ -62,7 +62,7 @@ export const applyAlertVariant = (
 };
 
 /**
- * Inserts HTML at the current selection
+ * Inserts HTML at the current selection and positions cursor at end
  * Focuses the editor and executes insertHTML command
  * @param editorRef - Reference to the editor element
  * @param html - The HTML string to insert
@@ -75,6 +75,18 @@ export const insertHtmlAtSelection = (
 ) => {
   editorRef.current?.focus();
   document.execCommand("insertHTML", false, html);
+  
+  // Move cursor to end of inserted content
+  const selection = window.getSelection();
+  if (selection && editorRef.current) {
+    // Move cursor to the end of the editor content
+    const range = document.createRange();
+    range.selectNodeContents(editorRef.current);
+    range.collapse(false); // false = move to end
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+  
   syncFromEditor();
 };
 
