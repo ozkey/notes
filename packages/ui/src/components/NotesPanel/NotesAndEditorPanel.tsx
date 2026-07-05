@@ -74,23 +74,19 @@ export const NotesAndEditorPanel: React.FC = () => {
   return (
     <Card>
       <CardActions>
-        {/*{!refreshNotesDate && (*/}
-        {/*  <div>*/}
-        {/*    /!*Please load or create a new personal file for your notes*!/*/}
-        {/*    <SaveOpen />*/}
-        {/*  </div>*/}
-        {/*)}*/}
         {refreshNotesDate && !editorOpen && (
-          <Button variant="outlined" onClick={() => setEditorOpen(true)}>
+          <Button variant="contained" onClick={() => setEditorOpen(true)}>
             Open Editor
           </Button>
         )}
         {refreshNotesDate && editorOpen && (
-          <Button variant="outlined" onClick={() => setEditorOpen(false)}>
+          <Button variant="contained" onClick={() => setEditorOpen(false)}>
             Close Editor
           </Button>
         )}
-        <SaveOpen />
+        <div style={{ marginLeft: "auto" }}>
+          <SaveOpen />
+        </div>
       </CardActions>
       <hr />
       <CardContent>

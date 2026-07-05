@@ -404,7 +404,7 @@ export const HomeTab: React.FC = () => {
           <CardContent>
             <Stack direction="row" spacing={2}>
               <Typography variant="subtitle1">
-                Would you like top open your notes or start a new
+                Would you like to open your notes or start a new
               </Typography>
               <SaveOpen />
             </Stack>
