@@ -312,6 +312,8 @@ export default function Editor({
     }
   }, [content, sourceMode]);
 
+
+
   /**
    * Effect: Update highlight badge colors when Bible highlights change
    * Keeps verse badges in sync with external highlight state
@@ -861,7 +863,11 @@ export default function Editor({
           className="editor-content"
           contentEditable
           suppressContentEditableWarning
-          onFocus={() => setIsEditing(true)}
+          onFocus={() => {
+            setIsEditing(true);
+            // Configure browser to always create <p> tags, not <div>
+            document.execCommand('defaultParagraphSeparator', false, 'p');
+          }}
           onBlur={() => {
             setIsEditing(false);
             syncFromEditor();
