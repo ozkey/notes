@@ -209,6 +209,54 @@ export default function Editor({
     emitContent(html);
   };
 
+  const isEditorHtmlEffectivelyEmpty = (html: string) => {
+    const normalized = html
+      .toLowerCase()
+      .replace(/&nbsp;/g, "")
+      .replace(/\u200b/g, "")
+      .replace(/\s+/g, "");
+    return (
+      normalized === "" ||
+      normalized === "<br>" ||
+      normalized === "<p><br></p>" ||
+      normalized === "<p></p>"
+    );
+  };
+
+  const moveCaretToParagraphStart = (paragraph: HTMLParagraphElement) => {
+    const selection = window.getSelection();
+    if (!selection) return;
+    const range = document.createRange();
+    range.selectNodeContents(paragraph);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  const ensureParagraphStructure = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    if (isEditorHtmlEffectivelyEmpty(editor.innerHTML)) {
+      editor.innerHTML = "<p><br></p>";
+      const paragraph = editor.querySelector("p");
+      if (paragraph instanceof HTMLParagraphElement) {
+        moveCaretToParagraphStart(paragraph);
+      }
+      return;
+    }
+
+    const topLevelDivs = Array.from(editor.children).filter(
+      (element): element is HTMLDivElement => element instanceof HTMLDivElement,
+    );
+
+    topLevelDivs.forEach((div) => {
+      const paragraph = document.createElement("p");
+      paragraph.innerHTML = div.innerHTML || "<br>";
+      div.replaceWith(paragraph);
+    });
+  };
+
   // ============================================================================
   // SELECTION MANAGEMENT
   // ============================================================================
@@ -865,14 +913,19 @@ export default function Editor({
           suppressContentEditableWarning
           onFocus={() => {
             setIsEditing(true);
-            // Configure browser to always create <p> tags, not <div>
-            document.execCommand('defaultParagraphSeparator', false, 'p');
+            ensureParagraphStructure();
           }}
           onBlur={() => {
             setIsEditing(false);
             syncFromEditor();
           }}
-          onInput={syncFromEditor}
+          onBeforeInput={() => {
+            ensureParagraphStructure();
+          }}
+          onInput={() => {
+            ensureParagraphStructure();
+            syncFromEditor();
+          }}
           onKeyDown={(event) => {
             // Delete image when pressing Backspace or Delete with image selected
             if (event.key !== "Backspace" && event.key !== "Delete") return;
