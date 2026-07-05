@@ -137,6 +137,9 @@ export default function Editor({
   // Highlight dialog state
   const [showHighlightDialog, setShowHighlightDialog] = useState(false);
 
+  // Tag breadcrumb state
+  const [tagBreadcrumb, setTagBreadcrumb] = useState<string[]>([]);
+
   // ============================================================================
   // REFS - Persistent references across renders
   // ============================================================================
@@ -144,6 +147,39 @@ export default function Editor({
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
   const activeResizeRef = useRef<ActiveResizeState | null>(null);
+
+  /**
+   * Updates the tag breadcrumb based on current cursor position
+   */
+  const updateTagBreadcrumb = () => {
+    const selection = window.getSelection();
+    if (!selection || !editorRef.current) {
+      setTagBreadcrumb([]);
+      return;
+    }
+
+    const node = selection.anchorNode;
+    if (!node) {
+      setTagBreadcrumb([]);
+      return;
+    }
+
+    const tags: string[] = [];
+    let current: Node | null = node.nodeType === 3 ? node.parentNode : node;
+
+    while (current && current !== editorRef.current) {
+      if (current.nodeType === 1) {
+        const element = current as HTMLElement;
+        const tagName = element.tagName.toLowerCase();
+        if (tagName !== "div" || element.className) {
+          tags.unshift(tagName);
+        }
+      }
+      current = current.parentNode;
+    }
+
+    setTagBreadcrumb(tags);
+  };
 
   // ============================================================================
   // BIBLE CONTEXT
@@ -918,11 +954,13 @@ export default function Editor({
           onBlur={() => {
             setIsEditing(false);
             syncFromEditor();
+            setTagBreadcrumb([]);
           }}
           onBeforeInput={() => {
             ensureParagraphStructure();
           }}
           onInput={() => {
+            updateTagBreadcrumb();
             ensureParagraphStructure();
             syncFromEditor();
           }}
@@ -940,9 +978,16 @@ export default function Editor({
             event.preventDefault();
             handleRemoveImage();
           }}
-          onKeyUp={saveSelection}
-          onMouseUp={saveSelection}
+          onKeyUp={() => {
+            saveSelection();
+            updateTagBreadcrumb();
+          }}
+          onMouseUp={() => {
+            saveSelection();
+            updateTagBreadcrumb();
+          }}
           onClick={(event) => {
+            updateTagBreadcrumb();
             const element = event.target as HTMLElement;
 
             // Handle image click
@@ -989,6 +1034,20 @@ export default function Editor({
             void handleInsertImages(event.dataTransfer.files);
           }}
         />
+      )}
+
+      {/* Tag breadcrumb indicator */}
+      {isEditing && tagBreadcrumb.length > 0 && (
+        <div className="editor-tag-breadcrumb">
+          {tagBreadcrumb.map((tag, index) => (
+            <React.Fragment key={index}>
+              <span className="editor-tag-name">{tag}</span>
+              {index < tagBreadcrumb.length - 1 && (
+                <span className="editor-tag-separator">&gt;</span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       )}
     </div>
   );
