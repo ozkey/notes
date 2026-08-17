@@ -44,10 +44,6 @@ const GROUP_SPINE_COLORS: Record<string, string> = {
   Other: "#e5e7eb",
 };
 
-const BOOK_ALIASES: Record<string, string[]> = {
-  "Song of Solomon": ["Song of Songs", "Canticles"],
-};
-
 const bookSpineSx = {
   textTransform: "none",
   minWidth: 44,
@@ -144,13 +140,12 @@ export const HomeTab: React.FC = () => {
     const picked = new Set<string>();
     const groups = BOOK_GROUPS.map((group) => {
       const resolvedBooks = group.books
-        .map((baseBook) => {
+        .map((bookAliases) => {
           const candidates = Array.from(
             new Set([
-              baseBook,
-              toArabicOrdinalBook(baseBook),
-              toRomanOrdinalBook(baseBook),
-              ...(BOOK_ALIASES[baseBook] ?? []),
+              ...bookAliases,
+              ...bookAliases.map((book) => toArabicOrdinalBook(book)),
+              ...bookAliases.map((book) => toRomanOrdinalBook(book)),
             ]),
           );
           const match = candidates
