@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import { BibleText } from "../BiblePanel/BibleText";
-import { NotesAndEditorPanel } from "../StudyPanel/NotesPanel/NotesAndEditorPanel";
 import React from "react";
+import { StudyPanel } from "../StudyPanel/StudyPanel";
 
 interface NotesPanelProps {
   mode: "bible" | "article";
@@ -36,7 +36,7 @@ export const MainTabBox: React.FC<NotesPanelProps> = ({
             chapterNumber={chapterNumber}
           />
         )}
-        <NotesAndEditorPanel />
+        <StudyPanel />
       </Box>
     </>
   );
