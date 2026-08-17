@@ -144,3 +144,56 @@ export const BOOK_GROUPS: BookGroup[] = [
     books: [["Revelation of John", "Revelation", "Apocalypse", "Rev"]],
   },
 ];
+
+export const normalizeBookAlias = (book: string) =>
+  toArabicOrdinalBook(book).replace(/[^A-Za-z0-9]/g, "").toLowerCase();
+
+export const extractCrossReferenceBookToken = (reference: string) => {
+  const match = reference.match(/^([^.]+)\./);
+  return match ? match[1] : null;
+};
+
+export const extractCrossReferenceChapterKeys = (reference: string) => {
+  const chapterKeys: string[] = [];
+  const matches = reference.matchAll(/([1-3]?[A-Za-z]+)\.(\d+)\.\d+/g);
+  for (const [, book, chapter] of matches) {
+    chapterKeys.push(`${book}.${chapter}`);
+  }
+  return chapterKeys;
+};
+
+export const buildCrossReferenceBookTokenByAlias = (
+  entries: { from: string; to: string }[],
+) => {
+  const tokens = new Set<string>();
+  for (const entry of entries) {
+    const fromToken = extractCrossReferenceBookToken(entry.from);
+    const toToken = extractCrossReferenceBookToken(entry.to);
+    if (fromToken) tokens.add(fromToken);
+    if (toToken) tokens.add(toToken);
+  }
+
+  const map = new Map<string, string>();
+  for (const token of tokens) {
+    map.set(normalizeBookAlias(token), token);
+  }
+
+  for (const group of BOOK_GROUPS) {
+    for (const aliases of group.books) {
+      const match = aliases
+        .map((alias) => map.get(normalizeBookAlias(alias)))
+        .find(Boolean);
+      if (!match) continue;
+      for (const alias of aliases) {
+        map.set(normalizeBookAlias(alias), match);
+      }
+    }
+  }
+
+  return map;
+};
+
+export const crossReferenceHasChapter = (
+  reference: string,
+  chapterKey: string,
+) => extractCrossReferenceChapterKeys(reference).includes(chapterKey);
