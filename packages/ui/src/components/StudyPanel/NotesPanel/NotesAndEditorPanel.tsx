@@ -1,9 +1,9 @@
 import { Button, Card, CardActions, CardContent } from "@mui/material";
 import React, { useContext, useEffect } from "react";
-import BibleContext from "../../contexts/BibleContext";
-import { articleIdsMatch } from "../../contexts/BibleContextUtils";
-import Editor from "../Editor/Editor";
-import { SaveOpen } from "../ActionBar/SaveOpen";
+import BibleContext from "../../../contexts/BibleContext";
+import { articleIdsMatch } from "../../../contexts/BibleContextUtils";
+import Editor from "../../Editor/Editor";
+import { SaveOpen } from "../../ActionBar/SaveOpen";
 
 export const NotesAndEditorPanel: React.FC = () => {
   const {

@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { BibleText } from "../BiblePanel/BibleText";
-import { NotesAndEditorPanel } from "../NotesPanel/NotesAndEditorPanel";
+import { NotesAndEditorPanel } from "../StudyPanel/NotesPanel/NotesAndEditorPanel";
 import React from "react";
 
 interface NotesPanelProps {
