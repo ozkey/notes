@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Autocomplete, TextField, Button } from "@mui/material";
-import BibleContext from "../../../contexts/BibleContext";
+import BibleContext from "../../contexts/BibleContext";
 
 export const BookActions: React.FC = () => {
   const { tabs, currentTab, updateTab, books } = useContext(

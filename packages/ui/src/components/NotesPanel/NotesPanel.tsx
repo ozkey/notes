@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { BibleText } from "./BiblePanel/BibleText";
+import { BibleText } from "../BiblePanel/BibleText";
 import { NotesAndEditorPanel } from "./NotesAndEditorPanel";
 import React from "react";
 
