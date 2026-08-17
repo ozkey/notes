@@ -62,7 +62,7 @@ function getCustomTabPanel(i: number, currentTab: number, t: TabState) {
   );
 }
 
-export const TabsPanel: React.FC = () => {
+export const MainPanel: React.FC = () => {
   const { tabs, currentTab, setCurrentTab, addTab, closeTab } =
     useContext(BibleContext);
 
