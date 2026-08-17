@@ -13,8 +13,8 @@ import React, { useContext } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import { TabState } from "../../contexts/BibleTypes";
 import { ContainedButtons } from "../ActionBar/ActionBar";
-import { NotesPanel } from "../NotesPanel/NotesPanel";
-import { HomeTab } from "./HomeTab";
+import { MainTabBox } from "./MainTabBox";
+import { HomeTab } from "../Tabs/HomeTab";
 import { MAX_TAB_LIMIT } from "../../contexts/BibleContextUtils";
 
 interface TabPanelProps {
@@ -52,7 +52,7 @@ function getCustomTabPanel(i: number, currentTab: number, t: TabState) {
       {t.mode === "home" ? (
         <HomeTab />
       ) : (
-        <NotesPanel
+        <MainTabBox
           mode={t.mode}
           selectedBook={t.selectedBook}
           chapterNumber={t.chapterNumber}
@@ -62,7 +62,7 @@ function getCustomTabPanel(i: number, currentTab: number, t: TabState) {
   );
 }
 
-export const MainPanel: React.FC = () => {
+export const MainTab: React.FC = () => {
   const { tabs, currentTab, setCurrentTab, addTab, closeTab } =
     useContext(BibleContext);
 

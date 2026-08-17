@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { BibleText } from "../BiblePanel/BibleText";
-import { NotesAndEditorPanel } from "./NotesAndEditorPanel";
+import { NotesAndEditorPanel } from "../NotesPanel/NotesAndEditorPanel";
 import React from "react";
 
 interface NotesPanelProps {
@@ -9,7 +9,7 @@ interface NotesPanelProps {
   chapterNumber: number;
 }
 
-export const NotesPanel: React.FC<NotesPanelProps> = ({
+export const MainTabBox: React.FC<NotesPanelProps> = ({
   mode,
   selectedBook,
   chapterNumber,

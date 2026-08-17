@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { BibleProvider } from "./contexts/BibleContext";
-import { MainPanel } from "./components/TabsPanel/MainPanel";
+import { MainTab } from "./components/MainTab/MainTab";
 import appLogo from "./public/BibleNotesApp.png";
 
 const App: React.FC = () => {
@@ -47,7 +47,7 @@ const App: React.FC = () => {
 
       {/* Toolbar (select bible book) + Main Content */}
       <BibleProvider>
-        <MainPanel />
+        <MainTab />
       </BibleProvider>
 
       {/* Footer */}
