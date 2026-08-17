@@ -8,6 +8,7 @@ export const StudyPanel = ({}) => {
     <Card>
       <CardContent>
         <NotesAndEditorPanel />
+        <h1>Reference Data</h1>
       </CardContent>
     </Card>
   );
