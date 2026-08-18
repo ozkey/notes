@@ -76,7 +76,8 @@ export const RefPanel = () => {
     return crossReferenceEntries
       .filter(
         (entry) =>
-          crossReferenceHasChapter(entry.from, chapterKey) && entry.votes > VOTE_THRESHOLD,
+          crossReferenceHasChapter(entry.from, chapterKey) &&
+          entry.votes > VOTE_THRESHOLD,
       )
       .sort((a, b) => b.votes - a.votes);
   }, [chapterKey, crossReferenceEntries]);
@@ -86,7 +87,8 @@ export const RefPanel = () => {
     return crossReferenceEntries
       .filter(
         (entry) =>
-          crossReferenceHasChapter(entry.to, chapterKey) && entry.votes > VOTE_THRESHOLD,
+          crossReferenceHasChapter(entry.to, chapterKey) &&
+          entry.votes > VOTE_THRESHOLD,
       )
       .sort((a, b) => b.votes - a.votes);
   }, [chapterKey, crossReferenceEntries]);
@@ -121,7 +123,7 @@ export const RefPanel = () => {
                     {linkedFromChapter.map((entry, index) => (
                       <ListItem key={`${entry.from}-${entry.to}-${index}`}>
                         <ListItemText
-                          primary={`${entry.from} ${entry.to}`}
+                          primary={`${entry.from} => ${entry.to}`}
                           secondary={`v: ${entry.votes}`}
                         />
                       </ListItem>
@@ -145,7 +147,7 @@ export const RefPanel = () => {
                         disableGutters
                       >
                         <ListItemText
-                          primary={`${entry.from} ${entry.to}`}
+                          primary={`${entry.from} => ${entry.to}`}
                           secondary={`v: ${entry.votes}`}
                         />
                       </ListItem>
