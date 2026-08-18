@@ -20,6 +20,8 @@ type CrossReferenceEntry = {
   votes: number;
 };
 
+const VOTE_THRESHOLD = 0;
+
 export const RefPanel = () => {
   const { tabs, currentTab } = useContext(BibleContext as React.Context<any>);
   const [crossReferenceEntries, setCrossReferenceEntries] = useState<
@@ -72,14 +74,20 @@ export const RefPanel = () => {
   const linkedFromChapter = useMemo(() => {
     if (!chapterKey) return [];
     return crossReferenceEntries
-      .filter((entry) => crossReferenceHasChapter(entry.from, chapterKey))
+      .filter(
+        (entry) =>
+          crossReferenceHasChapter(entry.from, chapterKey) && entry.votes > VOTE_THRESHOLD,
+      )
       .sort((a, b) => b.votes - a.votes);
   }, [chapterKey, crossReferenceEntries]);
 
   const linkedToChapter = useMemo(() => {
     if (!chapterKey) return [];
     return crossReferenceEntries
-      .filter((entry) => crossReferenceHasChapter(entry.to, chapterKey))
+      .filter(
+        (entry) =>
+          crossReferenceHasChapter(entry.to, chapterKey) && entry.votes > VOTE_THRESHOLD,
+      )
       .sort((a, b) => b.votes - a.votes);
   }, [chapterKey, crossReferenceEntries]);
 
@@ -111,13 +119,10 @@ export const RefPanel = () => {
                 {linkedFromChapter.length > 0 && (
                   <List dense>
                     {linkedFromChapter.map((entry, index) => (
-                      <ListItem
-                        key={`${entry.from}-${entry.to}-${index}`}
-                        disableGutters
-                      >
+                      <ListItem key={`${entry.from}-${entry.to}-${index}`}>
                         <ListItemText
-                          primary={entry.to}
-                          secondary={`From ${entry.from} - votes: ${entry.votes}`}
+                          primary={`${entry.from} ${entry.to}`}
+                          secondary={`v: ${entry.votes}`}
                         />
                       </ListItem>
                     ))}
@@ -140,8 +145,8 @@ export const RefPanel = () => {
                         disableGutters
                       >
                         <ListItemText
-                          primary={entry.from}
-                          secondary={`To ${entry.to} - votes: ${entry.votes}`}
+                          primary={`${entry.from} ${entry.to}`}
+                          secondary={`v: ${entry.votes}`}
                         />
                       </ListItem>
                     ))}
