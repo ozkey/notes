@@ -1,4 +1,11 @@
-import { Card, CardContent, List, ListItem, ListItemText } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  List,
+  ListItem,
+  ListItemText,
+} from "@mui/material";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import {
@@ -60,25 +67,20 @@ export const RefPanel = () => {
     const token = bookTokenByAlias.get(normalizeBookAlias(selectedBook));
     if (!token) return null;
     return `${token}.${chapterNumber}`;
-  }, [
-    bookTokenByAlias,
-    chapterNumber,
-    currentTabState.mode,
-    selectedBook,
-  ]);
+  }, [bookTokenByAlias, chapterNumber, currentTabState.mode, selectedBook]);
 
   const linkedFromChapter = useMemo(() => {
     if (!chapterKey) return [];
-    return crossReferenceEntries.filter((entry) =>
-      crossReferenceHasChapter(entry.from, chapterKey),
-    ).sort((a, b) => b.votes - a.votes);
+    return crossReferenceEntries
+      .filter((entry) => crossReferenceHasChapter(entry.from, chapterKey))
+      .sort((a, b) => b.votes - a.votes);
   }, [chapterKey, crossReferenceEntries]);
 
   const linkedToChapter = useMemo(() => {
     if (!chapterKey) return [];
-    return crossReferenceEntries.filter((entry) =>
-      crossReferenceHasChapter(entry.to, chapterKey),
-    ).sort((a, b) => b.votes - a.votes);
+    return crossReferenceEntries
+      .filter((entry) => crossReferenceHasChapter(entry.to, chapterKey))
+      .sort((a, b) => b.votes - a.votes);
   }, [chapterKey, crossReferenceEntries]);
 
   return (
@@ -92,37 +94,62 @@ export const RefPanel = () => {
         )}
 
         {chapterKey && !loadingReferences && !loadError && (
-          <>
-            <h3>Linked from {selectedBook} {chapterNumber}</h3>
-            {linkedFromChapter.length === 0 && <p>No references found.</p>}
-            {linkedFromChapter.length > 0 && (
-              <List dense>
-                {linkedFromChapter.map((entry, index) => (
-                  <ListItem key={`${entry.from}-${entry.to}-${index}`} disableGutters>
-                    <ListItemText
-                      primary={entry.to}
-                      secondary={`From ${entry.from} - votes: ${entry.votes}`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: 2,
+              alignItems: "stretch",
+            }}
+          >
+            <Card variant="outlined">
+              <CardContent>
+                <h3>
+                  Linked from {selectedBook} {chapterNumber}
+                </h3>
+                {linkedFromChapter.length === 0 && <p>No references found.</p>}
+                {linkedFromChapter.length > 0 && (
+                  <List dense>
+                    {linkedFromChapter.map((entry, index) => (
+                      <ListItem
+                        key={`${entry.from}-${entry.to}-${index}`}
+                        disableGutters
+                      >
+                        <ListItemText
+                          primary={entry.to}
+                          secondary={`From ${entry.from} - votes: ${entry.votes}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+              </CardContent>
+            </Card>
 
-            <h3>Linking to {selectedBook} {chapterNumber}</h3>
-            {linkedToChapter.length === 0 && <p>No references found.</p>}
-            {linkedToChapter.length > 0 && (
-              <List dense>
-                {linkedToChapter.map((entry, index) => (
-                  <ListItem key={`${entry.from}-${entry.to}-${index}`} disableGutters>
-                    <ListItemText
-                      primary={entry.from}
-                      secondary={`To ${entry.to} - votes: ${entry.votes}`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </>
+            <Card variant="outlined">
+              <CardContent>
+                <h3>
+                  Linking to {selectedBook} {chapterNumber}
+                </h3>
+                {linkedToChapter.length === 0 && <p>No references found.</p>}
+                {linkedToChapter.length > 0 && (
+                  <List dense>
+                    {linkedToChapter.map((entry, index) => (
+                      <ListItem
+                        key={`${entry.from}-${entry.to}-${index}`}
+                        disableGutters
+                      >
+                        <ListItemText
+                          primary={entry.from}
+                          secondary={`To ${entry.to} - votes: ${entry.votes}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
         )}
       </CardContent>
     </Card>
