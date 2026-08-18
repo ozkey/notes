@@ -227,7 +227,18 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Listen for URL hash changes and open/switch tabs when a valid #book:chapter is present.
   useEffect(() => {
+    const clearLocationHash = () => {
+      if (!window.location.hash) return;
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}`,
+      );
+    };
+
     const handleHash = () => {
+      if (!window.location.hash) return;
+
       try {
         const rawHash = decodeURIComponent(
           window.location.hash.startsWith("#")
@@ -235,32 +246,42 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
             : window.location.hash,
         ).trim();
 
-        if (rawHash) {
-          const matchedArticle = articles.find((article) =>
-            articleIdsMatch(article.id, rawHash),
-          );
-
-          if (matchedArticle) {
-            setTabs((previousTabs) => {
-              if (previousTabs.length >= MAX_TAB_LIMIT) return previousTabs;
-              const nextTabs: TabState[] = [
-                ...previousTabs,
-                {
-                  mode: "article",
-                  selectedBook: null,
-                  chapterNumber: 1,
-                  articleId: matchedArticle.id,
-                },
-              ];
-              setCurrentTab(nextTabs.length - 1);
-              return nextTabs;
-            });
-            setEditorOpen(true);
-            return;
-          }
+        if (!rawHash) {
+          clearLocationHash();
+          return;
         }
 
-        const parsed = parseHashUtil(window.location.hash, books, BIBLE_BOOKS);
+        const matchedArticle = articles.find((article) =>
+          articleIdsMatch(article.id, rawHash),
+        );
+
+        if (matchedArticle) {
+          setTabs((previousTabs) => {
+            if (previousTabs.length >= MAX_TAB_LIMIT) return previousTabs;
+            const nextTabs: TabState[] = [
+              ...previousTabs,
+              {
+                mode: "article",
+                selectedBook: null,
+                chapterNumber: 1,
+                articleId: matchedArticle.id,
+              },
+            ];
+            setCurrentTab(nextTabs.length - 1);
+            return nextTabs;
+          });
+          setEditorOpen(true);
+          clearLocationHash();
+          return;
+        }
+
+        const parsed = parseHashUtil(
+          window.location.hash,
+          books.length > 0
+            ? books
+            : (((window as Window & { BIBLE_BOOKS?: string[] }).BIBLE_BOOKS ||
+                []) as string[]),
+        );
         if (parsed)
           openTabForBookChapterUtil(
             setTabs,
@@ -269,11 +290,10 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
             parsed.chapter,
             MAX_TAB_LIMIT,
           );
+        if (parsed) clearLocationHash();
       } catch (e) {
         // ignore malformed hashes
       }
-      // remove window hash
-      window.location.hash = "";
     };
 
     // check initial hash on mount
