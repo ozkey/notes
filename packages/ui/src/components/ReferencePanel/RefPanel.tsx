@@ -2,6 +2,7 @@ import {
   Box,
   Card,
   CardContent,
+  Link,
   List,
   ListItem,
   ListItemText,
@@ -29,7 +30,9 @@ const resolveBookNameFromReferenceToken = (bookToken: string) => {
 
   for (const group of BOOK_GROUPS) {
     for (const aliases of group.books) {
-      if (aliases.some((alias) => normalizeBookAlias(alias) === normalizedToken)) {
+      if (
+        aliases.some((alias) => normalizeBookAlias(alias) === normalizedToken)
+      ) {
         return aliases[0];
       }
     }
@@ -50,7 +53,8 @@ const getReferenceVerseText = (reference: string, bibleText: any) => {
     resolveBookNameFromReferenceToken(bookToken) ?? bookToken;
   const book = bibleText.books.find(
     (candidate: any) =>
-      normalizeBookAlias(candidate.name) === normalizeBookAlias(canonicalBookName),
+      normalizeBookAlias(candidate.name) ===
+      normalizeBookAlias(canonicalBookName),
   );
 
   if (!book) return null;
@@ -63,6 +67,37 @@ const getReferenceVerseText = (reference: string, bibleText: any) => {
   );
 
   return verse?.text ?? null;
+};
+
+const buildReferenceHash = (reference: string) => {
+  const normalizedReference = normalizeReferenceRange(reference);
+  const match = normalizedReference.match(/^([^.]+)\.(\d+)\.(\d+)$/);
+  if (!match) return null;
+
+  const [, bookToken, chapterText] = match;
+  const canonicalBookName =
+    resolveBookNameFromReferenceToken(bookToken) ?? bookToken;
+  const bookName = canonicalBookName.trim();
+  return `#${encodeURIComponent(bookName)}:${chapterText}`;
+};
+
+const renderReferenceLink = (reference: string) => {
+  const refHash = buildReferenceHash(reference);
+  if (!refHash) return reference;
+
+  return (
+    <Link
+      href={refHash}
+
+      sx={{
+        color: "primary.main",
+        textDecoration: "underline",
+        fontWeight: 500,
+      }}
+    >
+      {reference}
+    </Link>
+  );
 };
 
 export const RefPanel = () => {
@@ -177,8 +212,16 @@ export const RefPanel = () => {
                     {linkedFromChapter.map((entry, index) => (
                       <ListItem key={`${entry.from}-${entry.to}-${index}`}>
                         <ListItemText
-                          primary={`${entry.from} => ${entry.to}`}
-                          secondary={getReferenceSecondaryText(entry.to, entry.votes)}
+                          primary={
+                            <>
+                              {renderReferenceLink(entry.from)} {" => "}{" "}
+                              {renderReferenceLink(entry.to)}
+                            </>
+                          }
+                          secondary={getReferenceSecondaryText(
+                            entry.to,
+                            entry.votes,
+                          )}
                         />
                       </ListItem>
                     ))}
@@ -201,8 +244,16 @@ export const RefPanel = () => {
                         disableGutters
                       >
                         <ListItemText
-                          primary={`${entry.from} => ${entry.to}`}
-                          secondary={getReferenceSecondaryText(entry.from, entry.votes)}
+                          primary={
+                            <>
+                              {renderReferenceLink(entry.from)} {" => "}{" "}
+                              {renderReferenceLink(entry.to)}
+                            </>
+                          }
+                          secondary={getReferenceSecondaryText(
+                            entry.from,
+                            entry.votes,
+                          )}
                         />
                       </ListItem>
                     ))}
