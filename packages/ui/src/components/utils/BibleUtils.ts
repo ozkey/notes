@@ -148,14 +148,20 @@ export const BOOK_GROUPS: BookGroup[] = [
 export const normalizeBookAlias = (book: string) =>
   toArabicOrdinalBook(book).replace(/[^A-Za-z0-9]/g, "").toLowerCase();
 
+export const normalizeReferenceRange = (reference: string) => {
+  return reference.split("-")[0].trim();
+};
+
 export const extractCrossReferenceBookToken = (reference: string) => {
-  const match = reference.match(/^([^.]+)\./);
+  const normalizedReference = normalizeReferenceRange(reference);
+  const match = normalizedReference.match(/^([^.]+)\./);
   return match ? match[1] : null;
 };
 
 export const extractCrossReferenceChapterKeys = (reference: string) => {
+  const normalizedReference = normalizeReferenceRange(reference);
   const chapterKeys: string[] = [];
-  const matches = reference.matchAll(/([1-3]?[A-Za-z]+)\.(\d+)\.\d+/g);
+  const matches = normalizedReference.matchAll(/([1-3]?[A-Za-z]+)\.(\d+)\.\d+/g);
   for (const [, book, chapter] of matches) {
     chapterKeys.push(`${book}.${chapter}`);
   }

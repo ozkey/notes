@@ -9,9 +9,11 @@ import {
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import {
+  BOOK_GROUPS,
   buildCrossReferenceBookTokenByAlias,
   crossReferenceHasChapter,
   normalizeBookAlias,
+  normalizeReferenceRange,
 } from "../utils/BibleUtils";
 
 type CrossReferenceEntry = {
@@ -22,8 +24,51 @@ type CrossReferenceEntry = {
 
 const VOTE_THRESHOLD = 0;
 
+const resolveBookNameFromReferenceToken = (bookToken: string) => {
+  const normalizedToken = normalizeBookAlias(bookToken);
+
+  for (const group of BOOK_GROUPS) {
+    for (const aliases of group.books) {
+      if (aliases.some((alias) => normalizeBookAlias(alias) === normalizedToken)) {
+        return aliases[0];
+      }
+    }
+  }
+
+  return null;
+};
+
+const getReferenceVerseText = (reference: string, bibleText: any) => {
+  if (!bibleText?.books) return null;
+
+  const normalizedReference = normalizeReferenceRange(reference);
+  const match = normalizedReference.match(/^([^.]+)\.(\d+)\.(\d+)$/);
+  if (!match) return null;
+
+  const [, bookToken, chapterText, verseText] = match;
+  const canonicalBookName =
+    resolveBookNameFromReferenceToken(bookToken) ?? bookToken;
+  const book = bibleText.books.find(
+    (candidate: any) =>
+      normalizeBookAlias(candidate.name) === normalizeBookAlias(canonicalBookName),
+  );
+
+  if (!book) return null;
+
+  const chapter = book.chapters?.find(
+    (candidate: any) => Number(candidate.chapter) === Number(chapterText),
+  );
+  const verse = chapter?.verses?.find(
+    (candidate: any) => Number(candidate.verse) === Number(verseText),
+  );
+
+  return verse?.text ?? null;
+};
+
 export const RefPanel = () => {
-  const { tabs, currentTab } = useContext(BibleContext as React.Context<any>);
+  const { tabs, currentTab, bibleText } = useContext(
+    BibleContext as React.Context<any>,
+  );
   const [crossReferenceEntries, setCrossReferenceEntries] = useState<
     CrossReferenceEntry[]
   >([]);
@@ -93,6 +138,15 @@ export const RefPanel = () => {
       .sort((a, b) => b.votes - a.votes);
   }, [chapterKey, crossReferenceEntries]);
 
+  const getReferenceSecondaryText = (reference: string, votes: number) => {
+    const verseText = getReferenceVerseText(reference, bibleText);
+    if (!verseText) return `v: ${votes}`;
+
+    const trimmedText =
+      verseText.length > 120 ? `${verseText.slice(0, 117)}...` : verseText;
+    return `${trimmedText} — v: ${votes}`;
+  };
+
   return (
     <Card>
       <CardContent>
@@ -124,7 +178,7 @@ export const RefPanel = () => {
                       <ListItem key={`${entry.from}-${entry.to}-${index}`}>
                         <ListItemText
                           primary={`${entry.from} => ${entry.to}`}
-                          secondary={`v: ${entry.votes}`}
+                          secondary={getReferenceSecondaryText(entry.to, entry.votes)}
                         />
                       </ListItem>
                     ))}
@@ -148,7 +202,7 @@ export const RefPanel = () => {
                       >
                         <ListItemText
                           primary={`${entry.from} => ${entry.to}`}
-                          secondary={`v: ${entry.votes}`}
+                          secondary={getReferenceSecondaryText(entry.from, entry.votes)}
                         />
                       </ListItem>
                     ))}
