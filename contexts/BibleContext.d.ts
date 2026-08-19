@@ -19,7 +19,7 @@ export interface BibleContextType {
     replaceAllNotes: (entries: NoteEntry[]) => void;
     replaceAllArticles: (entries: ArticleEntry[]) => void;
     openHomeInCurrentTab: () => void;
-    openBibleInCurrentTab: (book: string, chapterNumber: number) => void;
+    openBibleInCurrentTab: (book: string, chapterNumber: number, verseNumber?: number | null) => void;
     openArticleInCurrentTab: (articleId: string) => void;
     bibleText: any | null;
     loadingBibleText: boolean;

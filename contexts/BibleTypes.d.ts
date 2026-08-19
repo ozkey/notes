@@ -3,6 +3,7 @@ export interface TabState {
     mode: TabMode;
     selectedBook: string | null;
     chapterNumber: number;
+    verseNumber?: number | null;
     articleId?: string | null;
 }
 export type HighlightColor = "green" | "blue" | "pink" | "red" | "orange" | "purple";

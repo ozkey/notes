@@ -1,0 +1,1 @@
+{"version":3,"file":"toolbarConfig.d.ts","sourceRoot":"","sources":["../../../src/components/Editor/toolbarConfig.ts"],"names":[],"mappings":"AAGA,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,SAAS,CAAC;AAa7C;;;;;GAKG;AACH,eAAO,MAAM,mBAAmB,GAC9B,SAAS,CAAC,OAAO,EAAE,MAAM,KAAK,IAAI,KACjC;IAAE,GAAG,EAAE,aAAa,EAAE,CAAC;IAAC,UAAU,EAAE,aAAa,EAAE,CAAA;CAiEpD,CAAC"}
