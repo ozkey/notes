@@ -105,7 +105,7 @@ Auto-opens the editor when `refreshNotesDate` is set and `currentNoteText` is em
 ---
 
 #### `RefPanel` — `src/components/ReferencePanel/RefPanel.tsx`
-Lazily loads `./data/cross_references.json` on mount (dynamic `import()`). Displays two MUI `List`s:
+Loads `./public/Refdata/cross_references.json` only when the Bible panel is active, then indexes it for fast chapter lookups. Displays two MUI `List`s:
 - **Linked from** this chapter — other references that cite the current chapter.
 - **Linking to** this chapter — references from the current chapter to elsewhere.
 

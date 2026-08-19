@@ -12,7 +12,7 @@ import BibleContext from "../../contexts/BibleContext";
 import {
   BOOK_GROUPS,
   buildCrossReferenceBookTokenByAlias,
-  crossReferenceHasChapter,
+  extractCrossReferenceChapterKeys,
   normalizeBookAlias,
   normalizeReferenceRange,
 } from "../utils/BibleUtils";
@@ -23,24 +23,49 @@ import {
 
 const VOTE_THRESHOLD = 0;
 
-const resolveBookNameFromReferenceToken = (bookToken: string) => {
-  const normalizedToken = normalizeBookAlias(bookToken);
+const REFERENCE_BOOK_NAME_BY_TOKEN = (() => {
+  const lookup = new Map<string, string>();
 
   for (const group of BOOK_GROUPS) {
     for (const aliases of group.books) {
-      if (
-        aliases.some((alias) => normalizeBookAlias(alias) === normalizedToken)
-      ) {
-        return aliases[0];
+      for (const alias of aliases) {
+        lookup.set(normalizeBookAlias(alias), aliases[0]);
       }
     }
   }
 
-  return null;
+  return lookup;
+})();
+
+const resolveBookNameFromReferenceToken = (bookToken: string) => {
+  return REFERENCE_BOOK_NAME_BY_TOKEN.get(normalizeBookAlias(bookToken)) ?? null;
 };
 
-const getReferenceVerseText = (reference: string, bibleText: any) => {
+const buildBibleVerseLookup = (bibleText: any) => {
   if (!bibleText?.books) return null;
+
+  const lookup = new Map<string, string>();
+  for (const book of bibleText.books) {
+    const normalizedBookName = normalizeBookAlias(book.name);
+
+    for (const chapter of book.chapters ?? []) {
+      for (const verse of chapter.verses ?? []) {
+        lookup.set(
+          `${normalizedBookName}.${Number(chapter.chapter)}.${Number(verse.verse)}`,
+          verse.text,
+        );
+      }
+    }
+  }
+
+  return lookup;
+};
+
+const getReferenceVerseText = (
+  reference: string,
+  bibleVerseLookup: Map<string, string> | null,
+) => {
+  if (!bibleVerseLookup) return null;
 
   const normalizedReference = normalizeReferenceRange(reference);
   const match = normalizedReference.match(/^([^.]+)\.(\d+)\.(\d+)$/);
@@ -49,22 +74,51 @@ const getReferenceVerseText = (reference: string, bibleText: any) => {
   const [, bookToken, chapterText, verseText] = match;
   const canonicalBookName =
     resolveBookNameFromReferenceToken(bookToken) ?? bookToken;
-  const book = bibleText.books.find(
-    (candidate: any) =>
-      normalizeBookAlias(candidate.name) ===
-      normalizeBookAlias(canonicalBookName),
-  );
+  const verseKey = `${normalizeBookAlias(canonicalBookName)}.${Number(
+    chapterText,
+  )}.${Number(verseText)}`;
 
-  if (!book) return null;
+  return bibleVerseLookup.get(verseKey) ?? null;
+};
 
-  const chapter = book.chapters?.find(
-    (candidate: any) => Number(candidate.chapter) === Number(chapterText),
-  );
-  const verse = chapter?.verses?.find(
-    (candidate: any) => Number(candidate.verse) === Number(verseText),
-  );
+const buildChapterReferenceIndex = (entries: CrossReferenceEntry[]) => {
+  const linkedFrom = new Map<string, CrossReferenceEntry[]>();
+  const linkedTo = new Map<string, CrossReferenceEntry[]>();
 
-  return verse?.text ?? null;
+  for (const entry of entries) {
+    if (entry.votes <= VOTE_THRESHOLD) continue;
+
+    for (const chapterKey of extractCrossReferenceChapterKeys(entry.from)) {
+      const existingEntries = linkedFrom.get(chapterKey);
+      if (existingEntries) {
+        existingEntries.push(entry);
+      } else {
+        linkedFrom.set(chapterKey, [entry]);
+      }
+    }
+
+    for (const chapterKey of extractCrossReferenceChapterKeys(entry.to)) {
+      const existingEntries = linkedTo.get(chapterKey);
+      if (existingEntries) {
+        existingEntries.push(entry);
+      } else {
+        linkedTo.set(chapterKey, [entry]);
+      }
+    }
+  }
+
+  const sortByVotes = (left: CrossReferenceEntry, right: CrossReferenceEntry) =>
+    right.votes - left.votes;
+
+  for (const entriesForChapter of linkedFrom.values()) {
+    entriesForChapter.sort(sortByVotes);
+  }
+
+  for (const entriesForChapter of linkedTo.values()) {
+    entriesForChapter.sort(sortByVotes);
+  }
+
+  return { linkedFrom, linkedTo };
 };
 
 const buildReferenceHash = (reference: string) => {
@@ -86,7 +140,6 @@ const renderReferenceLink = (reference: string) => {
   return (
     <Link
       href={refHash}
-
       sx={{
         color: "primary.main",
         textDecoration: "underline",
@@ -105,16 +158,28 @@ export const RefPanel = () => {
   const [crossReferenceEntries, setCrossReferenceEntries] = useState<
     CrossReferenceEntry[]
   >([]);
-  const [loadingReferences, setLoadingReferences] = useState(true);
+  const [loadingReferences, setLoadingReferences] = useState(
+   () => tabs[currentTab]?.mode === "bible",
+  );
   const [loadError, setLoadError] = useState<string | null>(null);
   const currentTabState = tabs[currentTab] ?? {
-    mode: "home",
+   mode: "home",
     selectedBook: null,
     chapterNumber: 1,
   };
 
+  const selectedBook = currentTabState.selectedBook as string | null;
+  const chapterNumber = currentTabState.chapterNumber as number;
+
   useEffect(() => {
+    if (currentTabState.mode !== "bible") {
+      setLoadingReferences(false);
+      setLoadError(null);
+      return;
+    }
+
     let mounted = true;
+    setLoadingReferences(true);
     fetchCrossReferences()
       .then((entries) => {
         if (!mounted) return;
@@ -133,13 +198,21 @@ export const RefPanel = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [currentTabState.mode]);
 
-  const selectedBook = currentTabState.selectedBook as string | null;
-  const chapterNumber = currentTabState.chapterNumber as number;
   const bookTokenByAlias = useMemo(
     () => buildCrossReferenceBookTokenByAlias(crossReferenceEntries),
     [crossReferenceEntries],
+  );
+
+  const referenceIndex = useMemo(
+    () => buildChapterReferenceIndex(crossReferenceEntries),
+    [crossReferenceEntries],
+  );
+
+  const bibleVerseLookup = useMemo(
+    () => buildBibleVerseLookup(bibleText),
+    [bibleText],
   );
 
   const chapterKey = useMemo(() => {
@@ -151,28 +224,16 @@ export const RefPanel = () => {
 
   const linkedFromChapter = useMemo(() => {
     if (!chapterKey) return [];
-    return crossReferenceEntries
-      .filter(
-        (entry) =>
-          crossReferenceHasChapter(entry.from, chapterKey) &&
-          entry.votes > VOTE_THRESHOLD,
-      )
-      .sort((a, b) => b.votes - a.votes);
-  }, [chapterKey, crossReferenceEntries]);
+    return referenceIndex.linkedFrom.get(chapterKey) ?? [];
+  }, [chapterKey, referenceIndex]);
 
   const linkedToChapter = useMemo(() => {
     if (!chapterKey) return [];
-    return crossReferenceEntries
-      .filter(
-        (entry) =>
-          crossReferenceHasChapter(entry.to, chapterKey) &&
-          entry.votes > VOTE_THRESHOLD,
-      )
-      .sort((a, b) => b.votes - a.votes);
-  }, [chapterKey, crossReferenceEntries]);
+    return referenceIndex.linkedTo.get(chapterKey) ?? [];
+  }, [chapterKey, referenceIndex]);
 
   const getReferenceSecondaryText = (reference: string, votes: number) => {
-    const verseText = getReferenceVerseText(reference, bibleText);
+    const verseText = getReferenceVerseText(reference, bibleVerseLookup);
     if (!verseText) return `v: ${votes}`;
 
     const trimmedText =
