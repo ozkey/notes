@@ -11,14 +11,7 @@ module.exports = {
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: {
-        moduleResolution: 'node',
-        jsx: 'react-jsx',
-        strict: true,
-        esModuleInterop: true,
-        skipLibCheck: true,
-        types: ['jest', 'node'],
-      }
+      tsconfig: '<rootDir>/tsconfig.test.json',
     }]
   },
   collectCoverageFrom: [
