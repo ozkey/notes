@@ -1,4 +1,6 @@
 import React from "react";
+// Use webpack inline loader syntax to import CSS as raw string
+import editorCss from "!!raw-loader!../components/Editor/Editor.css";
 
 // Small helper file to handle saving/loading notes via File System Access API
 // or fallback download/input elements.
@@ -21,6 +23,9 @@ const TEMPLATE_HTML = `<!doctype html>
         padding: 1em;
         margin: 1em;
       }
+      
+      /* Editor styles - imported from Editor.css */
+      ${editorCss || "/* Editor CSS failed to load */"}
     </style>
   </head>
   <body>

@@ -1,217 +1,196 @@
-import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState, useContext } from "react";
-import BookmarkIcon from "@mui/icons-material/Bookmark";
-import CloseIcon from "@mui/icons-material/Close";
+import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
 import CodeIcon from "@mui/icons-material/Code";
-import DeleteIcon from "@mui/icons-material/Delete";
-import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
-import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
-import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
-import FormatBoldIcon from "@mui/icons-material/FormatBold";
-import FormatIndentDecreaseIcon from "@mui/icons-material/FormatIndentDecrease";
-import FormatIndentIncreaseIcon from "@mui/icons-material/FormatIndentIncrease";
-import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
-import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 import ImageIcon from "@mui/icons-material/Image";
-import LinkIcon from "@mui/icons-material/Link";
-import PhotoSizeSelectLargeIcon from "@mui/icons-material/PhotoSizeSelectLarge";
-import PhotoSizeSelectSmallIcon from "@mui/icons-material/PhotoSizeSelectSmall";
-import RedoIcon from "@mui/icons-material/Redo";
-import StrikethroughSIcon from "@mui/icons-material/StrikethroughS";
 import TableChartIcon from "@mui/icons-material/TableChart";
-import UndoIcon from "@mui/icons-material/Undo";
-import WidthFullIcon from "@mui/icons-material/WidthFull";
-// import BorderColorIcon from "@mui/icons-material/BorderColor";
 import EditLocationIcon from "@mui/icons-material/EditLocation";
+import LinkIcon from "@mui/icons-material/Link";
 import BibleContext from "../../contexts/BibleContext";
-import { HighlightBadge } from "../Highlighter";
+
+// Import types
+import type {
+  EditorProps,
+  LinkMenuState,
+  ImageMenuState,
+  ResizeOverlayState,
+  ActiveResizeState,
+} from "./types";
+
+// Import utilities
+import {
+  escapeHtml,
+  getBibleBooks,
+  parseBibleBookmarkHash,
+  createBibleBookmarkHtml,
+  findParentTag,
+} from "./utils";
+import {
+  withSelectedNode,
+  replaceElementUndoably,
+  replaceNodeWithTextUndoably,
+  removeNodeUndoably,
+} from "./selectionUtils";
+import {
+  runExec,
+  runFormatBlock,
+  applyAlertVariant,
+  insertHtmlAtSelection,
+  getColorForHighlight,
+  createHighlightBadgeHtml,
+} from "./formattingUtils";
+import {
+  updateResizeOverlayFromImage,
+  setImageLayoutStyles,
+  setImageAlignmentStyles,
+  applyImageLayout,
+  applyImageAlignment,
+  removeImage as removeImageUtil,
+  insertImages,
+} from "./imageUtils";
+import {
+  submitLink,
+  removeLink as removeLinkUtil,
+  openLink,
+  submitBibleBookmark,
+} from "./linkUtils";
+import {
+  withCurrentCell,
+  insertTable,
+  addTableRow,
+  deleteTableRow,
+  addTableColumn,
+  deleteTableColumn,
+  deleteTable,
+} from "./tableUtils";
+import { buildToolbarButtons } from "./toolbarConfig";
+import { LinkDialog, BibleDialog, HighlightDialog } from "./dialogs";
+import { LinkContextMenu, ImageContextMenu, ImageResizeOverlay } from "./menus";
+
 import "./Editor.css";
 
-type EditorProps = {
-  value?: string;
-  refreshNotesDate?: Date;
-  onChange?: (html: string) => void;
-};
-
-type LinkMenuState = {
-  x: number;
-  y: number;
-  anchor: HTMLAnchorElement;
-  isBibleLink: boolean;
-};
-
-type ImageMenuState = {
-  x: number;
-  y: number;
-  image: HTMLImageElement;
-};
-
-type ResizeOverlayState = {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-};
-
-type ActiveResizeState = {
-  startX: number;
-  startWidth: number;
-};
-
-type ToolbarButton = {
-  key: string;
-  label: string;
-  icon: ReactNode;
-  action: () => void;
-};
-
-type BibleBookmarkSelection = {
-  book: string;
-  chapterNumber: number;
-};
-
-const escapeHtml = (value: string): string =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-
-const getBibleBooks = (): string[] =>
-  ((window as Window & { BIBLE_BOOKS?: string[] }).BIBLE_BOOKS ||
-    []) as string[];
-
-const parseBibleBookmarkHash = (
-  href: string,
-): BibleBookmarkSelection | null => {
-  const match = href.trim().match(/^#([^:]+):(\d+)$/);
-  if (!match) return null;
-
-  const book = decodeURIComponent(match[1])
-    .replace(/\+/g, " ")
-    .replace(/[_-]/g, " ")
-    .trim();
-  const chapterNumber = Number.parseInt(match[2], 10);
-  if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1)
-    return null;
-
-  return { book, chapterNumber };
-};
-
-const createBibleBookmarkHtml = (selection: BibleBookmarkSelection): string => {
-  const bookHash = selection.book.trim().replace(/\s+/g, "-");
-  const hash = `#${bookHash}:${selection.chapterNumber}`;
-  const linkText = `${selection.book.trim()} ${selection.chapterNumber}`;
-  return `<a href="${escapeHtml(hash)}">${escapeHtml(linkText)}</a>`;
-};
-
-const canOpenLinkHref = (href: string): boolean => {
-  const value = href.trim();
-  if (!value) return false;
-  if (/^(javascript:|data:|vbscript:)/i.test(value)) return false;
-  return /^(https?:|mailto:|tel:|#|\/|\?)/i.test(value);
-};
-
-const readFileAsDataUrl = (file: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Failed to read image"));
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.readAsDataURL(file);
-  });
-
-const loadImage = (blob: Blob): Promise<HTMLImageElement> =>
-  new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(image);
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image"));
-    };
-    image.src = url;
-  });
-
-const compressToWebPSmall = async (file: File): Promise<string> => {
-  const image = await loadImage(file);
-  const maxDimension = 1200;
-  const scale = Math.min(
-    maxDimension / image.width,
-    maxDimension / image.height,
-    1,
-  );
-  const targetWidth = Math.max(1, Math.round(image.width * scale));
-  const targetHeight = Math.max(1, Math.round(image.height * scale));
-
-  const canvas = document.createElement("canvas");
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-  const context = canvas.getContext("2d");
-  if (!context) return readFileAsDataUrl(file);
-
-  context.drawImage(image, 0, 0, targetWidth, targetHeight);
-
-  const webpBlob = await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), "image/webp", 0.7);
-  });
-
-  if (!webpBlob) return readFileAsDataUrl(file);
-  return readFileAsDataUrl(webpBlob);
-};
-
-const findParentTag = (node: Node | null, editor: HTMLElement, tag: string) => {
-  let current: Node | null = node;
-  while (current && current !== editor) {
-    if (
-      current.nodeType === Node.ELEMENT_NODE &&
-      (current as Element).tagName === tag
-    ) {
-      return current as HTMLElement;
-    }
-    current = current.parentNode;
-  }
-  return null;
-};
-
+/**
+ * The Editor component is a comprehensive rich text editor with support for:
+ * - Text formatting (bold, italic, underline, strikethrough)
+ * - Lists (ordered and unordered)
+ * - Headings and block styles
+ * - Links (regular and Bible bookmarks)
+ * - Images (with resizing and alignment)
+ * - Tables (with row/column operations)
+ * - Source code editing
+ * - Verse highlighting (Bible mode)
+ *
+ * The component is refactored into utility modules for better maintainability:
+ * - types.ts: Type definitions
+ * - utils.ts: General utilities (HTML, image processing, DOM)
+ * - selectionUtils.ts: Selection and undo/redo management
+ * - formattingUtils.ts: Content formatting (headings, blocks)
+ * - imageUtils.ts: Image handling and resizing
+ * - linkUtils.ts: Link and Bible bookmark operations
+ * - tableUtils.ts: Table operations
+ * - toolbarConfig.ts: Toolbar button configuration
+ * - dialogs.tsx: Dialog sub-components
+ * - menus.tsx: Context menu sub-components
+ */
 export default function Editor({
   value = "",
   refreshNotesDate: _refreshNotesDate,
   onChange,
 }: EditorProps) {
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+
+  // Content state
   const [content, setContent] = useState(value || "");
   const [sourceMode, setSourceMode] = useState(false);
   const [sourceDraft, setSourceDraft] = useState(value || "");
+
+  // Block formatting state
   const [headingChoice, setHeadingChoice] = useState("p");
+
+  // Menu state
   const [showTableMenu, setShowTableMenu] = useState(false);
   const [linkMenu, setLinkMenu] = useState<LinkMenuState | null>(null);
   const [imageMenu, setImageMenu] = useState<ImageMenuState | null>(null);
   const [resizeOverlay, setResizeOverlay] = useState<ResizeOverlayState | null>(
     null,
   );
+
+  // Editor focus state
   const [isEditing, setIsEditing] = useState(false);
+
+  // Link dialog state
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkText, setLinkText] = useState("");
   const [linkOpenNewTab, setLinkOpenNewTab] = useState(false);
   const [editingLinkAnchor, setEditingLinkAnchor] =
     useState<HTMLAnchorElement | null>(null);
+
+  // Bible bookmark dialog state
   const [showBibleDialog, setShowBibleDialog] = useState(false);
   const [bibleBook, setBibleBook] = useState("");
   const [bibleChapter, setBibleChapter] = useState("1");
+  const [bibleVerse, setBibleVerse] = useState("");
   const [editingBibleAnchor, setEditingBibleAnchor] =
     useState<HTMLAnchorElement | null>(null);
-  const [showHighlightMenu, setShowHighlightMenu] = useState(false);
+
+  // Highlight dialog state
   const [showHighlightDialog, setShowHighlightDialog] = useState(false);
+
+  // Tag breadcrumb state
+  const [tagBreadcrumb, setTagBreadcrumb] = useState<string[]>([]);
+
+  // ============================================================================
+  // REFS - Persistent references across renders
+  // ============================================================================
+
+  const editorRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+  const activeResizeRef = useRef<ActiveResizeState | null>(null);
+
+  /**
+   * Updates the tag breadcrumb based on current cursor position
+   */
+  const updateTagBreadcrumb = () => {
+    const selection = window.getSelection();
+    if (!selection || !editorRef.current) {
+      setTagBreadcrumb([]);
+      return;
+    }
+
+    const node = selection.anchorNode;
+    if (!node) {
+      setTagBreadcrumb([]);
+      return;
+    }
+
+    const tags: string[] = [];
+    let current: Node | null = node.nodeType === 3 ? node.parentNode : node;
+
+    while (current && current !== editorRef.current) {
+      if (current.nodeType === 1) {
+        const element = current as HTMLElement;
+        const tagName = element.tagName.toLowerCase();
+        if (tagName !== "div" || element.className) {
+          tags.unshift(tagName);
+        }
+      }
+      current = current.parentNode;
+    }
+
+    setTagBreadcrumb(tags);
+  };
+
+  // ============================================================================
+  // BIBLE CONTEXT
+  // ============================================================================
 
   const bibleContext = useContext(BibleContext);
   const { tabs, currentTab } = bibleContext;
   const currentTabState = tabs[currentTab];
+
+  // Get highlights for the current Bible chapter
   const highlights =
     currentTabState.mode === "bible"
       ? bibleContext.getHighlights(
@@ -220,7 +199,10 @@ export default function Editor({
         )
       : [];
 
-  // Get all verses in the current chapter
+  /**
+   * Retrieves all verse numbers in the current chapter
+   * Used for verse selection dialogs
+   */
   const getAllVersesInChapter = (): number[] => {
     if (
       currentTabState.mode !== "bible" ||
@@ -243,10 +225,154 @@ export default function Editor({
   const highlightsByVerse = new Map(highlights.map((h) => [h.verse, h.color]));
   const allVerses = getAllVersesInChapter();
 
-  const editorRef = useRef<HTMLDivElement>(null);
-  const savedRangeRef = useRef<Range | null>(null);
-  const activeResizeRef = useRef<ActiveResizeState | null>(null);
+  // ============================================================================
+  // CORE CONTENT MANAGEMENT
+  // ============================================================================
 
+  /**
+   * Emits content changes to the parent component
+   */
+  const emitContent = (nextHtml: string) => {
+    setContent((prev) => (prev === nextHtml ? prev : nextHtml));
+    onChange?.(nextHtml);
+  };
+
+  /**
+   * Syncs content from editor to state
+   * Called after any editor modification
+   */
+  const syncFromEditor = () => {
+    const html = editorRef.current?.innerHTML || "";
+    emitContent(html);
+  };
+
+  const isEditorHtmlEffectivelyEmpty = (html: string) => {
+    const normalized = html
+      .toLowerCase()
+      .replace(/&nbsp;/g, "")
+      .replace(/\u200b/g, "")
+      .replace(/\s+/g, "");
+    return (
+      normalized === "" ||
+      normalized === "<br>" ||
+      normalized === "<p><br></p>" ||
+      normalized === "<p></p>"
+    );
+  };
+
+  const moveCaretToParagraphStart = (paragraph: HTMLParagraphElement) => {
+    const selection = window.getSelection();
+    if (!selection) return;
+    const range = document.createRange();
+    range.selectNodeContents(paragraph);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  const ensureParagraphStructure = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    if (isEditorHtmlEffectivelyEmpty(editor.innerHTML)) {
+      editor.innerHTML = "<p><br></p>";
+      const paragraph = editor.querySelector("p");
+      if (paragraph instanceof HTMLParagraphElement) {
+        moveCaretToParagraphStart(paragraph);
+      }
+      return;
+    }
+
+    const topLevelDivs = Array.from(editor.children).filter(
+      (element): element is HTMLDivElement => element instanceof HTMLDivElement,
+    );
+
+    topLevelDivs.forEach((div) => {
+      const paragraph = document.createElement("p");
+      paragraph.innerHTML = div.innerHTML || "<br>";
+      div.replaceWith(paragraph);
+    });
+  };
+
+  // ============================================================================
+  // SELECTION MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Saves the current text selection for later restoration
+   * Called on input changes to preserve cursor position
+   */
+  const saveSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || !editorRef.current) return;
+    const range = selection.getRangeAt(0);
+    if (!editorRef.current.contains(range.commonAncestorContainer)) return;
+    savedRangeRef.current = range.cloneRange();
+  };
+
+  /**
+   * Restores a previously saved text selection
+   */
+  const restoreSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || !savedRangeRef.current) return;
+    selection.removeAllRanges();
+    selection.addRange(savedRangeRef.current);
+  };
+
+  /**
+   * Focuses the editor and restores previous selection
+   */
+  const focusEditor = () => {
+    editorRef.current?.focus();
+    restoreSelection();
+  };
+
+  // ============================================================================
+  // WRAPPER FUNCTIONS - Bind utilities to component state
+  // ============================================================================
+
+  /**
+   * Wrapper for replaceElementUndoably that includes all required refs
+   */
+  const replaceElement = <T extends HTMLElement>(
+    element: T,
+    mutate: (draft: T) => void,
+  ): T | null => {
+    return replaceElementUndoably(element, editorRef, savedRangeRef, mutate);
+  };
+
+  /**
+   * Wrapper for insertHtmlAtSelection that includes all required refs
+   */
+  const insertHtml = (html: string) => {
+    insertHtmlAtSelection(editorRef, html, syncFromEditor);
+  };
+
+  /**
+   * Wrapper for runExec that includes required refs and callbacks
+   */
+  const execCommand = (command: string, valueArg?: string) => {
+    runExec(editorRef, command, syncFromEditor, valueArg);
+  };
+
+  /**
+   * Wrapper for image utility functions
+   */
+  const updateResizeOverlay = () => {
+    if (imageMenu?.image) {
+      updateResizeOverlayFromImage(imageMenu.image, setResizeOverlay);
+    }
+  };
+
+  // ============================================================================
+  // EFFECTS - Setup and cleanup
+  // ============================================================================
+
+  /**
+   * Effect: Synchronize external value prop to editor content
+   * Prevents overwriting user edits while typing
+   */
   useEffect(() => {
     if (isEditing || sourceMode) return;
     const next = value || "";
@@ -257,6 +383,10 @@ export default function Editor({
     }
   }, [value, isEditing, sourceMode]);
 
+  /**
+   * Effect: Update editor DOM when content state changes
+   * Used when switching between source and visual modes
+   */
   useEffect(() => {
     if (
       !sourceMode &&
@@ -267,374 +397,51 @@ export default function Editor({
     }
   }, [content, sourceMode]);
 
-  const emitContent = (nextHtml: string) => {
-    setContent((prev) => (prev === nextHtml ? prev : nextHtml));
-    onChange?.(nextHtml);
-  };
 
-  const syncFromEditor = () => {
-    const html = editorRef.current?.innerHTML || "";
-    emitContent(html);
-  };
 
-  const saveSelection = () => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || !editorRef.current) return;
-    const range = selection.getRangeAt(0);
-    if (!editorRef.current.contains(range.commonAncestorContainer)) return;
-    savedRangeRef.current = range.cloneRange();
-  };
-
-  const restoreSelection = () => {
-    const selection = window.getSelection();
-    if (!selection || !savedRangeRef.current) return;
-    selection.removeAllRanges();
-    selection.addRange(savedRangeRef.current);
-  };
-
-  const focusEditor = () => {
-    editorRef.current?.focus();
-    restoreSelection();
-  };
-
-  const withSelectedNode = (
-    node: Node,
-    apply: (selection: Selection) => boolean,
-  ): boolean => {
-    if (!editorRef.current) return false;
-    const selection = window.getSelection();
-    if (!selection) return false;
-    editorRef.current.focus();
-    const range = document.createRange();
-    range.selectNode(node);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    return apply(selection);
-  };
-
-  const replaceElementUndoably = <T extends HTMLElement>(
-    element: T,
-    mutate: (draft: T) => void,
-  ): T | null => {
-    if (!editorRef.current || !element.isConnected) return null;
-    const draft = element.cloneNode(true) as T;
-    const before = draft.outerHTML;
-    mutate(draft);
-    if (draft.outerHTML === before) return null;
-
-    const tokenAttr = "data-editor-replace-token";
-    const token = `t-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    draft.setAttribute(tokenAttr, token);
-    const html = draft.outerHTML;
-    const didReplace = withSelectedNode(element, () =>
-      document.execCommand("insertHTML", false, html),
-    );
-
-    if (!didReplace) {
-      draft.removeAttribute(tokenAttr);
-      element.replaceWith(draft);
-      return draft;
-    }
-
-    const nextElement = editorRef.current.querySelector(
-      `[${tokenAttr}="${token}"]`,
-    ) as T | null;
-    if (!nextElement) return null;
-    nextElement.removeAttribute(tokenAttr);
-    return nextElement;
-  };
-
-  const replaceNodeWithTextUndoably = (node: Node, text: string): boolean => {
-    const replaced = withSelectedNode(node, () =>
-      document.execCommand("insertText", false, text),
-    );
-    if (replaced) return true;
-    const parent = node.parentNode;
-    if (!parent) return false;
-    parent.replaceChild(document.createTextNode(text), node);
-    return true;
-  };
-
-  const removeNodeUndoably = (node: Node): boolean => {
-    const deleted = withSelectedNode(node, () =>
-      document.execCommand("delete"),
-    );
-    if (deleted) return true;
-    const parent = node.parentNode;
-    if (parent) {
-      parent.removeChild(node);
-      return true;
-    }
-    return false;
-  };
-
-  const runExec = (command: string, valueArg?: string) => {
-    focusEditor();
-    document.execCommand(command, false, valueArg);
-    syncFromEditor();
-  };
-
-  const runFormatBlock = (blockTag: string) => {
-    runExec("formatBlock", blockTag);
-  };
-
-  const applyAlertVariant = (
-    variant: "quote" | "info" | "warning" | "error",
-  ) => {
-    runFormatBlock("blockquote");
-    const selection = window.getSelection();
-    const anchorNode = selection?.anchorNode || null;
+  /**
+   * Effect: Update highlight badge colors when Bible highlights change
+   * Keeps verse badges in sync with external highlight state
+   */
+  useEffect(() => {
     if (!editorRef.current) return;
-    const blockquote = findParentTag(
-      anchorNode,
-      editorRef.current,
-      "BLOCKQUOTE",
+
+    const badges = editorRef.current.querySelectorAll(
+      ".editor-highlight-badge",
     );
-    if (!blockquote) return;
-    blockquote.className = variant === "quote" ? "" : `editor-alert-${variant}`;
-    syncFromEditor();
-  };
+    let updated = false;
 
-  const insertHtmlAtSelection = (html: string) => {
-    focusEditor();
-    document.execCommand("insertHTML", false, html);
-    syncFromEditor();
-  };
+    badges.forEach((badge) => {
+      const verseNumberText = badge.textContent || "";
+      const verseNumber = parseInt(verseNumberText, 10);
+      if (Number.isNaN(verseNumber)) return;
 
-  const getColorForHighlight = (color: string): string => {
-    const colorMap: Record<string, string> = {
-      green: "#C8E6C9",
-      blue: "#BBDEFB",
-      pink: "#F8BBD0",
-      red: "#FFCDD2",
-      orange: "#FFE0B2",
-      purple: "#E1BEE7",
-    };
-    return colorMap[color] || "#FFFFFF";
-  };
+      const currentColor = badge.getAttribute("data-color") || "white";
+      const newColor = highlightsByVerse.get(verseNumber) || "white";
 
-  const createHighlightBadgeHtml = (
-    verseNumber: number,
-    color: string,
-  ): string => {
-    return `<span class="editor-highlight-badge" data-color="${color}" contenteditable="false">${verseNumber}</span> Verse`;
-  };
-
-  const handleHeadingChange = (next: string) => {
-    setHeadingChoice(next);
-    if (next === "h1" || next === "h2" || next === "h3" || next === "p") {
-      runFormatBlock(next);
-      return;
-    }
-    if (next === "code") {
-      runFormatBlock("pre");
-      return;
-    }
-    if (
-      next === "quote" ||
-      next === "info" ||
-      next === "warning" ||
-      next === "error"
-    ) {
-      applyAlertVariant(next);
-    }
-  };
-
-  const handleInsertLink = () => {
-    saveSelection();
-    const selection = window.getSelection();
-    const text = selection?.toString() || "";
-    setEditingLinkAnchor(null);
-    setLinkText(text);
-    setLinkUrl("");
-    setLinkOpenNewTab(false);
-    setShowLinkDialog(true);
-  };
-
-  const openBibleDialog = (anchor?: HTMLAnchorElement) => {
-    saveSelection();
-    const books = getBibleBooks();
-    const parsed = anchor
-      ? parseBibleBookmarkHash(anchor.getAttribute("href") || "")
-      : null;
-    setEditingBibleAnchor(anchor || null);
-    setBibleBook(
-      parsed?.book && books.includes(parsed.book) ? parsed.book : "",
-    );
-    setBibleChapter(String(parsed?.chapterNumber || 1));
-    setShowBibleDialog(true);
-  };
-
-  const submitLink = () => {
-    const href = linkUrl.trim();
-    if (!href) return;
-
-    const text = linkText.trim() || href;
-    const safeHref = href.replace(/"/g, "&quot;");
-    if (editingLinkAnchor) {
-      const updated = replaceElementUndoably(editingLinkAnchor, (anchor) => {
-        anchor.setAttribute("href", safeHref);
-        if (linkOpenNewTab) {
-          anchor.setAttribute("target", "_blank");
-          anchor.setAttribute("rel", "noopener noreferrer");
-        } else {
-          anchor.removeAttribute("target");
-          anchor.removeAttribute("rel");
-        }
-        anchor.textContent = text;
-      });
-      if (updated) syncFromEditor();
-    } else {
-      const target = linkOpenNewTab
-        ? ' target="_blank" rel="noopener noreferrer"'
-        : "";
-      const html = `<a href="${safeHref}"${target}>${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</a>`;
-      insertHtmlAtSelection(html);
-    }
-    setEditingLinkAnchor(null);
-    setShowLinkDialog(false);
-  };
-
-  const insertBibleBookmark = () => {
-    openBibleDialog();
-  };
-
-  const openLink = (href: string) => {
-    if (!canOpenLinkHref(href)) return;
-    if (href.startsWith("#")) {
-      window.location.hash = href.slice(1);
-      return;
-    }
-    window.open(href, "_blank", "noopener,noreferrer");
-  };
-
-  const editBibleLink = (anchor: HTMLAnchorElement) => {
-    openBibleDialog(anchor);
-  };
-
-  const editLink = (anchor: HTMLAnchorElement) => {
-    setEditingLinkAnchor(anchor);
-    setLinkUrl(anchor.getAttribute("href") || "");
-    setLinkText(anchor.textContent || "");
-    setLinkOpenNewTab(anchor.getAttribute("target") === "_blank");
-    setShowLinkDialog(true);
-  };
-
-  const removeLink = () => {
-    if (!linkMenu?.anchor) return;
-    const anchor = linkMenu.anchor;
-    replaceNodeWithTextUndoably(anchor, anchor.textContent || "");
-    setLinkMenu(null);
-    syncFromEditor();
-  };
-
-  const updateResizeOverlayFromImage = (image: HTMLImageElement) => {
-    const rect = image.getBoundingClientRect();
-    setResizeOverlay({
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
+      if (currentColor !== newColor) {
+        badge.setAttribute("data-color", newColor);
+        updated = true;
+      }
     });
-  };
 
-  const setImageAlignmentStyles = (
-    image: HTMLImageElement,
-    align: "left" | "center" | "right",
-  ) => {
-    if (align === "center") {
-      image.style.setProperty("float", "none");
-      image.style.display = "block";
-      image.style.clear = "both";
-      image.style.marginTop = "8px";
-      image.style.marginBottom = "8px";
-      image.style.marginLeft = "auto";
-      image.style.marginRight = "auto";
-      return;
+    if (updated) {
+      syncFromEditor();
     }
+  }, [highlights.map((h) => `${h.verse}-${h.color}`).join(",")]);
 
-    image.style.setProperty("float", align);
-    image.style.display = "block";
-    image.style.clear = "none";
-    image.style.marginTop = "0";
-    image.style.marginBottom = "1rem";
-    image.style.marginLeft = align === "right" ? "1rem" : "0";
-    image.style.marginRight = align === "left" ? "1rem" : "0";
-  };
-
-  const applyImageLayout = (
-    size: "small" | "medium" | "full",
-    align: "left" | "center" | "right",
-  ) => {
-    if (!imageMenu?.image) return;
-    const nextImage = replaceElementUndoably(imageMenu.image, (image) => {
-      image.style.width =
-        size === "small" ? "33%" : size === "medium" ? "66%" : "100%";
-      setImageAlignmentStyles(image, align);
-    });
-    if (!nextImage) return;
-    setImageMenu((previous) =>
-      previous ? { ...previous, image: nextImage } : previous,
-    );
-    updateResizeOverlayFromImage(nextImage);
-    syncFromEditor();
-  };
-
-  const applyImageAlignment = (align: "left" | "center" | "right") => {
-    if (!imageMenu?.image) return;
-    const nextImage = replaceElementUndoably(imageMenu.image, (image) => {
-      setImageAlignmentStyles(image, align);
-    });
-    if (!nextImage) return;
-    setImageMenu((previous) =>
-      previous ? { ...previous, image: nextImage } : previous,
-    );
-    updateResizeOverlayFromImage(nextImage);
-    syncFromEditor();
-  };
-
-  const removeImage = () => {
-    if (!imageMenu?.image) return;
-    removeNodeUndoably(imageMenu.image);
-    setImageMenu(null);
-    setResizeOverlay(null);
-    syncFromEditor();
-  };
-
-  const submitBibleBookmark = () => {
-    const book = bibleBook.trim();
-    const chapterNumber = Number.parseInt(bibleChapter, 10);
-    if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1) return;
-
-    const selection = { book, chapterNumber };
-    if (editingBibleAnchor) {
-      const updated = replaceElementUndoably(editingBibleAnchor, (anchor) => {
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = createBibleBookmarkHtml(selection);
-        const replacement =
-          wrapper.firstElementChild as HTMLAnchorElement | null;
-        if (!replacement) return;
-        anchor.setAttribute("href", replacement.getAttribute("href") || "#");
-        anchor.textContent = replacement.textContent || "";
-      });
-      if (updated) syncFromEditor();
-    } else {
-      insertHtmlAtSelection(createBibleBookmarkHtml(selection));
-    }
-
-    setEditingBibleAnchor(null);
-    setShowBibleDialog(false);
-  };
-
+  /**
+   * Effect: Update image resize overlay on scroll/resize
+   * Keeps the overlay positioned correctly as page layout changes
+   */
   useEffect(() => {
     if (!imageMenu?.image) {
       setResizeOverlay(null);
       return;
     }
 
-    updateResizeOverlayFromImage(imageMenu.image);
-    const handleWindowChange = () =>
-      updateResizeOverlayFromImage(imageMenu.image);
+    updateResizeOverlay();
+    const handleWindowChange = () => updateResizeOverlay();
     window.addEventListener("scroll", handleWindowChange, true);
     window.addEventListener("resize", handleWindowChange);
     return () => {
@@ -643,6 +450,10 @@ export default function Editor({
     };
   }, [imageMenu]);
 
+  /**
+   * Effect: Handle image resizing with mouse drag
+   * Updates image width as user drags the resize handle
+   */
   useEffect(() => {
     const onMouseMove = (event: MouseEvent) => {
       if (!activeResizeRef.current || !imageMenu?.image) return;
@@ -653,7 +464,7 @@ export default function Editor({
       );
       imageMenu.image.style.width = `${Math.round(nextWidth)}px`;
       imageMenu.image.style.height = "auto";
-      updateResizeOverlayFromImage(imageMenu.image);
+      updateResizeOverlay();
     };
 
     const onMouseUp = () => {
@@ -670,124 +481,233 @@ export default function Editor({
     };
   }, [imageMenu]);
 
-  const insertImages = async (files: FileList | File[]) => {
-    const imageFiles = Array.from(files).filter((file) =>
-      file.type.toLowerCase().startsWith("image/"),
-    );
-    for (const file of imageFiles) {
-      const dataUrl = await compressToWebPSmall(file);
-      insertHtmlAtSelection(
-        `<img src="${dataUrl}" alt="${file.name.replace(/"/g, "&quot;")}" class="editor-image" data-original-format="${file.type.replace(/"/g, "&quot;")}" />`,
-      );
-    }
+  // ============================================================================
+  // LINK OPERATIONS
+  // ============================================================================
+
+  const handleInsertLink = () => {
+    saveSelection();
+    const selection = window.getSelection();
+    const text = selection?.toString() || "";
+    setEditingLinkAnchor(null);
+    setLinkText(text);
+    setLinkUrl("");
+    setLinkOpenNewTab(false);
+    setShowLinkDialog(true);
   };
 
-  const withCurrentCell = (
-    callback: (
-      table: HTMLTableElement,
-      row: HTMLTableRowElement,
-      cellIndex: number,
-    ) => void,
-  ) => {
-    const selection = window.getSelection();
-    const node = selection?.anchorNode || null;
-    if (!editorRef.current) return;
-    const cell =
-      findParentTag(node, editorRef.current, "TD") ||
-      findParentTag(node, editorRef.current, "TH");
-    if (!cell) return;
-    const row = cell.parentElement;
-    const table = row?.closest("table");
+  const handleSubmitLink = () => {
+    submitLink(
+      linkUrl,
+      linkText,
+      linkOpenNewTab,
+      editingLinkAnchor,
+      editorRef,
+      savedRangeRef,
+      insertHtml,
+      replaceElement,
+      syncFromEditor,
+    );
+    setEditingLinkAnchor(null);
+    setShowLinkDialog(false);
+  };
+
+  const handleEditLink = (anchor: HTMLAnchorElement) => {
+    setEditingLinkAnchor(anchor);
+    setLinkUrl(anchor.getAttribute("href") || "");
+    setLinkText(anchor.textContent || "");
+    setLinkOpenNewTab(anchor.getAttribute("target") === "_blank");
+    setShowLinkDialog(true);
+  };
+
+  const handleRemoveLink = () => {
+    if (!linkMenu?.anchor) return;
+    removeLinkUtil(
+      linkMenu.anchor,
+      editorRef,
+      savedRangeRef,
+      setLinkMenu,
+      syncFromEditor,
+    );
+  };
+
+  // ============================================================================
+  // BIBLE BOOKMARK OPERATIONS
+  // ============================================================================
+
+  const openBibleDialog = (anchor?: HTMLAnchorElement) => {
+    saveSelection();
+    const books = getBibleBooks();
+    const parsed = anchor
+      ? parseBibleBookmarkHash(anchor.getAttribute("href") || "")
+      : null;
+    setEditingBibleAnchor(anchor || null);
+    setBibleBook(
+      parsed?.book && books.includes(parsed.book) ? parsed.book : "",
+    );
+    setBibleChapter(String(parsed?.chapterNumber || 1));
+    setBibleVerse(parsed?.verseNumber ? String(parsed.verseNumber) : "");
+    setShowBibleDialog(true);
+  };
+
+  const insertBibleBookmark = () => {
+    openBibleDialog();
+  };
+
+  const handleSubmitBibleBookmark = () => {
+    const book = bibleBook.trim();
+    const chapterNumber = Number.parseInt(bibleChapter, 10);
+    const trimmedVerse = bibleVerse.trim();
+    const verseNumber = trimmedVerse ? Number.parseInt(trimmedVerse, 10) : null;
+    if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1) return;
     if (
-      !(row instanceof HTMLTableRowElement) ||
-      !(table instanceof HTMLTableElement) ||
-      !(cell instanceof HTMLTableCellElement)
-    ) {
+      verseNumber !== null &&
+      (!Number.isFinite(verseNumber) || verseNumber < 1)
+    )
+      return;
+
+    submitBibleBookmark(
+      book,
+      chapterNumber,
+      verseNumber,
+      editingBibleAnchor,
+      editorRef,
+      savedRangeRef,
+      insertHtml,
+      replaceElement,
+      syncFromEditor,
+    );
+
+    setEditingBibleAnchor(null);
+    setShowBibleDialog(false);
+  };
+
+  const editBibleLink = (anchor: HTMLAnchorElement) => {
+    openBibleDialog(anchor);
+  };
+
+  // ============================================================================
+  // IMAGE OPERATIONS
+  // ============================================================================
+
+  const handleInsertImages = async (files: FileList | File[]) => {
+    await insertImages(files, editorRef, insertHtml);
+  };
+
+  const handleApplyImageLayout = (
+    size: "small" | "medium" | "full",
+    align: "left" | "center" | "right",
+  ) => {
+    if (!imageMenu?.image) return;
+    applyImageLayout(
+      imageMenu.image,
+      size,
+      align,
+      editorRef,
+      savedRangeRef,
+      setImageMenu,
+      updateResizeOverlay,
+      syncFromEditor,
+    );
+  };
+
+  const handleApplyImageAlignment = (align: "left" | "center" | "right") => {
+    if (!imageMenu?.image) return;
+    applyImageAlignment(
+      imageMenu.image,
+      align,
+      editorRef,
+      savedRangeRef,
+      setImageMenu,
+      updateResizeOverlay,
+      syncFromEditor,
+    );
+  };
+
+  const handleRemoveImage = () => {
+    if (!imageMenu?.image) return;
+    removeImageUtil(
+      imageMenu.image,
+      editorRef,
+      savedRangeRef,
+      setImageMenu,
+      setResizeOverlay,
+      syncFromEditor,
+    );
+  };
+
+  // ============================================================================
+  // TABLE OPERATIONS
+  // ============================================================================
+
+  const handleInsertTable = () => {
+    insertTable(editorRef, insertHtml);
+  };
+
+  const handleAddTableRow = () => {
+    addTableRow(editorRef, savedRangeRef, syncFromEditor);
+  };
+
+  const handleDeleteTableRow = () => {
+    deleteTableRow(editorRef, savedRangeRef, syncFromEditor);
+  };
+
+  const handleAddTableColumn = () => {
+    addTableColumn(editorRef, savedRangeRef, syncFromEditor);
+  };
+
+  const handleDeleteTableColumn = () => {
+    deleteTableColumn(editorRef, savedRangeRef, syncFromEditor);
+  };
+
+  const handleDeleteTable = () => {
+    deleteTable(editorRef, savedRangeRef, syncFromEditor);
+  };
+
+  // ============================================================================
+  // TEXT FORMATTING OPERATIONS
+  // ============================================================================
+
+  const handleHeadingChange = (next: string) => {
+    setHeadingChoice(next);
+    if (next === "h1" || next === "h2" || next === "h3" || next === "p") {
+      runFormatBlock(editorRef, next, syncFromEditor);
       return;
     }
-    const nextTable = replaceElementUndoably(table, (draftTable) => {
-      const draftRow = draftTable.rows[row.rowIndex];
-      if (!(draftRow instanceof HTMLTableRowElement)) return;
-      callback(draftTable, draftRow, cell.cellIndex);
-    });
-    if (nextTable) syncFromEditor();
+    if (next === "code") {
+      runFormatBlock(editorRef, "pre", syncFromEditor);
+      return;
+    }
+    if (
+      next === "quote" ||
+      next === "info" ||
+      next === "warning" ||
+      next === "error"
+    ) {
+      applyAlertVariant(editorRef, next, syncFromEditor);
+    }
   };
 
+  // ============================================================================
+  // TOOLBAR BUTTONS
+  // ============================================================================
+
   const toolbarButtons = useMemo(
-    () => ({
-      top: [
-        {
-          key: "undo",
-          label: "Undo",
-          icon: <UndoIcon fontSize="small" />,
-          action: () => runExec("undo"),
-        },
-        {
-          key: "redo",
-          label: "Redo",
-          icon: <RedoIcon fontSize="small" />,
-          action: () => runExec("redo"),
-        },
-      ] as ToolbarButton[],
-      formatting: [
-        {
-          key: "bold",
-          label: "Bold",
-          icon: <FormatBoldIcon fontSize="small" />,
-          action: () => runExec("bold"),
-        },
-        {
-          key: "italic",
-          label: "Italic",
-          icon: <FormatItalicIcon fontSize="small" />,
-          action: () => runExec("italic"),
-        },
-        {
-          key: "underline",
-          label: "Underline",
-          icon: <FormatUnderlinedIcon fontSize="small" />,
-          action: () => runExec("underline"),
-        },
-        {
-          key: "strike",
-          label: "Strikethrough",
-          icon: <StrikethroughSIcon fontSize="small" />,
-          action: () => runExec("strikeThrough"),
-        },
-        {
-          key: "ordered",
-          label: "Ordered list",
-          icon: <FormatListNumberedIcon fontSize="small" />,
-          action: () => runExec("insertOrderedList"),
-        },
-        {
-          key: "unordered",
-          label: "Unordered list",
-          icon: <FormatListBulletedIcon fontSize="small" />,
-          action: () => runExec("insertUnorderedList"),
-        },
-        {
-          key: "indent",
-          label: "Indent",
-          icon: <FormatIndentIncreaseIcon fontSize="small" />,
-          action: () => runExec("indent"),
-        },
-        {
-          key: "outdent",
-          label: "Outdent",
-          icon: <FormatIndentDecreaseIcon fontSize="small" />,
-          action: () => runExec("outdent"),
-        },
-      ] as ToolbarButton[],
-    }),
+    () => buildToolbarButtons(execCommand),
     [],
   );
 
   const bibleBooks = getBibleBooks();
 
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
   return (
     <div className="custom-editor">
+      {/* Main toolbar */}
       <div className="editor-toolbar">
+        {/* Top row: undo, redo, heading select, text formatting */}
         <div className="editor-toolbar-row">
           {toolbarButtons.top.map((item) => (
             <button
@@ -836,6 +756,7 @@ export default function Editor({
           ))}
         </div>
 
+        {/* Bottom row: links, images, tables, source code */}
         <div className="editor-toolbar-row">
           <button
             type="button"
@@ -874,7 +795,7 @@ export default function Editor({
               accept="image/*"
               onChange={(event) => {
                 if (!event.target.files?.length) return;
-                void insertImages(event.target.files);
+                void handleInsertImages(event.target.files);
                 event.currentTarget.value = "";
               }}
             />
@@ -915,412 +836,117 @@ export default function Editor({
         </div>
       </div>
 
+      {/* Table menu */}
       {showTableMenu && (
         <div className="editor-menu">
-          <button
-            type="button"
-            onClick={() =>
-              insertHtmlAtSelection(
-                `<table class="editor-table"><tbody><tr><td><br /></td><td><br /></td></tr><tr><td><br /></td><td><br /></td></tr></tbody></table><p><br /></p>`,
-              )
-            }
-          >
+          <button type="button" onClick={handleInsertTable}>
             Insert Table
           </button>
-          <button
-            type="button"
-            onClick={() =>
-              withCurrentCell((table, row) => {
-                const newRow = table.insertRow(row.rowIndex + 1);
-                const columns = row.cells.length || 1;
-                for (let index = 0; index < columns; index += 1) {
-                  const cell = newRow.insertCell();
-                  cell.innerHTML = "<br />";
-                }
-              })
-            }
-          >
+          <button type="button" onClick={handleAddTableRow}>
             Add Row
           </button>
-          <button
-            type="button"
-            onClick={() =>
-              withCurrentCell((_table, row) => {
-                if (row.parentElement?.children.length === 1) return;
-                row.remove();
-              })
-            }
-          >
+          <button type="button" onClick={handleDeleteTableRow}>
             Delete Row
           </button>
-          <button
-            type="button"
-            onClick={() =>
-              withCurrentCell((table, _row, cellIndex) => {
-                for (const row of Array.from(table.rows)) {
-                  const cell = row.insertCell(cellIndex + 1);
-                  cell.innerHTML = "<br />";
-                }
-              })
-            }
-          >
+          <button type="button" onClick={handleAddTableColumn}>
             Add Column
           </button>
-          <button
-            type="button"
-            onClick={() =>
-              withCurrentCell((table, _row, cellIndex) => {
-                if (!table.rows.length || table.rows[0].cells.length <= 1)
-                  return;
-                for (const row of Array.from(table.rows)) {
-                  if (row.cells[cellIndex]) row.deleteCell(cellIndex);
-                }
-              })
-            }
-          >
+          <button type="button" onClick={handleDeleteTableColumn}>
             Delete Column
           </button>
-          <button
-            type="button"
-            onClick={() =>
-              withCurrentCell((table) => {
-                table.remove();
-              })
-            }
-          >
+          <button type="button" onClick={handleDeleteTable}>
             Delete Table
           </button>
         </div>
       )}
 
-      {showHighlightDialog && (
-        <div
-          className="editor-modal-overlay"
-          onClick={() => setShowHighlightDialog(false)}
-        >
-          <div
-            className="editor-modal"
-            onClick={(event) => {
-              event.stopPropagation();
-            }}
-            style={{ maxWidth: "500px", maxHeight: "600px", overflowY: "auto" }}
-          >
-            <h3>Select Verse to Insert</h3>
-            {allVerses.length === 0 ? (
-              <p style={{ color: "#666", marginTop: "20px" }}>
-                No verses available in this chapter.
-              </p>
-            ) : (
-              <div style={{ marginTop: "20px" }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(6, 1fr)",
-                    gap: "8px",
-                    marginBottom: "20px",
-                  }}
-                >
-                  {allVerses.map((verseNumber) => {
-                    const highlightColor = highlightsByVerse.get(verseNumber);
-                    const bgColor = highlightColor
-                      ? getColorForHighlight(highlightColor)
-                      : "#ffffff";
-                    const borderColor = highlightColor ? "#999" : "#ddd";
+      {/* Dialogs */}
+      <HighlightDialog
+        show={showHighlightDialog}
+        verses={allVerses}
+        highlightsByVerse={highlightsByVerse}
+        onSelectVerse={(verseNumber, color) => {
+          insertHtml(createHighlightBadgeHtml(verseNumber, color));
+        }}
+        onClose={() => setShowHighlightDialog(false)}
+        getColorForHighlight={getColorForHighlight}
+      />
 
-                    return (
-                      <button
-                        key={verseNumber}
-                        type="button"
-                        onClick={() => {
-                          insertHtmlAtSelection(
-                            createHighlightBadgeHtml(
-                              verseNumber,
-                              highlightColor || "white",
-                            ),
-                          );
-                          setShowHighlightDialog(false);
-                        }}
-                        style={{
-                          padding: "8px",
-                          backgroundColor: bgColor,
-                          border: `2px solid ${borderColor}`,
-                          borderRadius: "4px",
-                          fontWeight: highlightColor ? "bold" : "normal",
-                          cursor: "pointer",
-                          fontSize: "0.9rem",
-                          textAlign: "center",
-                        }}
-                        title={
-                          highlightColor
-                            ? `Highlighted: ${highlightColor}`
-                            : "White badge"
-                        }
-                      >
-                        {verseNumber}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            <div className="editor-modal-actions">
-              <button
-                type="button"
-                onClick={() => setShowHighlightDialog(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <LinkDialog
+        show={showLinkDialog}
+        isEditing={!!editingLinkAnchor}
+        url={linkUrl}
+        text={linkText}
+        openNewTab={linkOpenNewTab}
+        onUrlChange={setLinkUrl}
+        onTextChange={setLinkText}
+        onOpenNewTabChange={setLinkOpenNewTab}
+        onSubmit={handleSubmitLink}
+        onCancel={() => {
+          setShowLinkDialog(false);
+          setEditingLinkAnchor(null);
+        }}
+      />
 
-      {showLinkDialog && (
-        <div
-          className="editor-modal-overlay"
-          onClick={() => setShowLinkDialog(false)}
-        >
-          <div
-            className="editor-modal"
-            onClick={(event) => {
-              event.stopPropagation();
-            }}
-          >
-            <h3>{editingLinkAnchor ? "Edit Link" : "Insert Link"}</h3>
-            <input
-              value={linkUrl}
-              onChange={(event) => setLinkUrl(event.target.value)}
-              placeholder="https:// or #hash"
-            />
-            <input
-              value={linkText}
-              onChange={(event) => setLinkText(event.target.value)}
-              placeholder="Link text"
-            />
-            <label className="editor-inline-checkbox">
-              <input
-                type="checkbox"
-                checked={linkOpenNewTab}
-                onChange={(event) => setLinkOpenNewTab(event.target.checked)}
-              />
-              Open in new tab
-            </label>
-            <div className="editor-modal-actions">
-              <button type="button" onClick={() => setShowLinkDialog(false)}>
-                Cancel
-              </button>
-              <button type="button" onClick={submitLink}>
-                {editingLinkAnchor ? "Save" : "Insert"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <BibleDialog
+        show={showBibleDialog}
+        isEditing={!!editingBibleAnchor}
+        book={bibleBook}
+        chapter={bibleChapter}
+        verse={bibleVerse}
+        onBookChange={setBibleBook}
+        onChapterChange={setBibleChapter}
+        onVerseChange={setBibleVerse}
+        onSubmit={handleSubmitBibleBookmark}
+        onCancel={() => {
+          setShowBibleDialog(false);
+          setEditingBibleAnchor(null);
+        }}
+      />
 
-      {showBibleDialog && (
-        <div
-          className="editor-modal-overlay"
-          onClick={() => {
-            setShowBibleDialog(false);
-            setEditingBibleAnchor(null);
-          }}
-        >
-          <div
-            className="editor-modal"
-            onClick={(event) => {
-              event.stopPropagation();
-            }}
-          >
-            <h3>
-              {editingBibleAnchor ? "Edit Bible Link" : "Insert Bible Link"}
-            </h3>
-            <label className="editor-inline-label">
-              Book
-              <select
-                value={bibleBook}
-                onChange={(event) => setBibleBook(event.target.value)}
-              >
-                {bibleBooks.length === 0 ? (
-                  <option value="">No books available</option>
-                ) : (
-                  <>
-                    <option value="">Select a book...</option>
-                    {bibleBooks.map((book) => (
-                      <option key={book} value={book}>
-                        {book}
-                      </option>
-                    ))}
-                  </>
-                )}
-              </select>
-            </label>
-            <label className="editor-inline-label">
-              Chapter
-              <input
-                type="number"
-                min="1"
-                value={bibleChapter}
-                onChange={(event) => setBibleChapter(event.target.value)}
-                placeholder="1"
-              />
-            </label>
-            <div className="editor-modal-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowBibleDialog(false);
-                  setEditingBibleAnchor(null);
-                }}
-              >
-                Cancel
-              </button>
-              <button type="button" onClick={submitBibleBookmark}>
-                {editingBibleAnchor ? "Save" : "Insert"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Context Menus */}
+      <LinkContextMenu
+        menu={linkMenu}
+        onOpen={() => {
+          openLink(linkMenu?.anchor.getAttribute("href") || "");
+          setLinkMenu(null);
+        }}
+        onEdit={() => {
+          handleEditLink(linkMenu!.anchor);
+          setLinkMenu(null);
+        }}
+        onEditBible={() => {
+          editBibleLink(linkMenu!.anchor);
+          setLinkMenu(null);
+        }}
+        onRemove={handleRemoveLink}
+      />
 
-      {linkMenu && (
-        <div
-          className="editor-floating-menu"
-          style={{ left: linkMenu.x, top: linkMenu.y }}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              openLink(linkMenu.anchor.getAttribute("href") || "");
-              setLinkMenu(null);
-            }}
-          >
-            Open
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              editLink(linkMenu.anchor);
-              setLinkMenu(null);
-            }}
-          >
-            Edit Link
-          </button>
-          {linkMenu.isBibleLink && (
-            <button
-              type="button"
-              onClick={() => {
-                editBibleLink(linkMenu.anchor);
-                setLinkMenu(null);
-              }}
-            >
-              Edit Bible
-            </button>
-          )}
-          <button type="button" onClick={removeLink}>
-            Remove
-          </button>
-        </div>
-      )}
+      <ImageContextMenu
+        menu={imageMenu}
+        onLayoutSmall={() => handleApplyImageLayout("small", "left")}
+        onLayoutMedium={() => handleApplyImageLayout("medium", "center")}
+        onLayoutFull={() => handleApplyImageLayout("full", "center")}
+        onAlignLeft={() => handleApplyImageAlignment("left")}
+        onAlignCenter={() => handleApplyImageAlignment("center")}
+        onAlignRight={() => handleApplyImageAlignment("right")}
+        onDelete={handleRemoveImage}
+        onClose={() => setImageMenu(null)}
+      />
 
-      {imageMenu && (
-        <div
-          className="editor-floating-menu"
-          style={{ left: imageMenu.x, top: imageMenu.y }}
-        >
-          <button
-            type="button"
-            title="Small image size"
-            aria-label="Small image size"
-            onClick={() => applyImageLayout("small", "left")}
-          >
-            <PhotoSizeSelectSmallIcon fontSize="small" />
-          </button>
-          <button
-            type="button"
-            title="Medium image size"
-            aria-label="Medium image size"
-            onClick={() => applyImageLayout("medium", "center")}
-          >
-            <PhotoSizeSelectLargeIcon fontSize="small" />
-          </button>
-          <button
-            type="button"
-            title="Full width image"
-            aria-label="Full width image"
-            onClick={() => applyImageLayout("full", "center")}
-          >
-            <WidthFullIcon fontSize="small" />
-          </button>
-          <button
-            type="button"
-            title="Wrap text left"
-            aria-label="Wrap text left"
-            onClick={() => applyImageAlignment("left")}
-          >
-            <FormatAlignLeftIcon fontSize="small" />
-          </button>
-          <button
-            type="button"
-            title="Align image center"
-            aria-label="Align image center"
-            onClick={() => applyImageAlignment("center")}
-          >
-            <FormatAlignCenterIcon fontSize="small" />
-          </button>
-          <button
-            type="button"
-            title="Wrap text right"
-            aria-label="Wrap text right"
-            onClick={() => applyImageAlignment("right")}
-          >
-            <FormatAlignRightIcon fontSize="small" />
-          </button>
-          <button
-            type="button"
-            title="Delete image"
-            aria-label="Delete image"
-            onClick={removeImage}
-          >
-            <DeleteIcon fontSize="small" />
-          </button>
-          <button
-            type="button"
-            title="Close image menu"
-            aria-label="Close image menu"
-            onClick={() => setImageMenu(null)}
-          >
-            <CloseIcon fontSize="small" />
-          </button>
-        </div>
-      )}
+      <ImageResizeOverlay
+        overlay={resizeOverlay}
+        onResizeStart={(event) => {
+          event.preventDefault();
+          if (!imageMenu?.image) return;
+          activeResizeRef.current = {
+            startX: event.clientX,
+            startWidth: imageMenu.image.getBoundingClientRect().width,
+          };
+        }}
+      />
 
-      {imageMenu && resizeOverlay && (
-        <div
-          className="editor-image-resize-overlay"
-          style={{
-            left: resizeOverlay.left,
-            top: resizeOverlay.top,
-            width: resizeOverlay.width,
-            height: resizeOverlay.height,
-          }}
-        >
-          <button
-            type="button"
-            className="editor-image-resize-handle"
-            title="Drag to resize image"
-            aria-label="Drag to resize image"
-            onMouseDown={(event) => {
-              event.preventDefault();
-              if (!imageMenu.image) return;
-              activeResizeRef.current = {
-                startX: event.clientX,
-                startWidth: imageMenu.image.getBoundingClientRect().width,
-              };
-            }}
-          />
-        </div>
-      )}
-
+      {/* Editor content area */}
       {sourceMode ? (
         <textarea
           className="editor-source"
@@ -1333,13 +959,25 @@ export default function Editor({
           className="editor-content"
           contentEditable
           suppressContentEditableWarning
-          onFocus={() => setIsEditing(true)}
+          onFocus={() => {
+            setIsEditing(true);
+            ensureParagraphStructure();
+          }}
           onBlur={() => {
             setIsEditing(false);
             syncFromEditor();
+            setTagBreadcrumb([]);
           }}
-          onInput={syncFromEditor}
+          onBeforeInput={() => {
+            ensureParagraphStructure();
+          }}
+          onInput={() => {
+            updateTagBreadcrumb();
+            ensureParagraphStructure();
+            syncFromEditor();
+          }}
           onKeyDown={(event) => {
+            // Delete image when pressing Backspace or Delete with image selected
             if (event.key !== "Backspace" && event.key !== "Delete") return;
             const editor = editorRef.current;
             if (
@@ -1350,12 +988,21 @@ export default function Editor({
               return;
             }
             event.preventDefault();
-            removeImage();
+            handleRemoveImage();
           }}
-          onKeyUp={saveSelection}
-          onMouseUp={saveSelection}
+          onKeyUp={() => {
+            saveSelection();
+            updateTagBreadcrumb();
+          }}
+          onMouseUp={() => {
+            saveSelection();
+            updateTagBreadcrumb();
+          }}
           onClick={(event) => {
+            updateTagBreadcrumb();
             const element = event.target as HTMLElement;
+
+            // Handle image click
             const image = element.closest("img");
             if (image instanceof HTMLImageElement) {
               const rect = image.getBoundingClientRect();
@@ -1364,11 +1011,12 @@ export default function Editor({
                 x: rect.left,
                 y: rect.bottom + 6,
               });
-              updateResizeOverlayFromImage(image);
+              updateResizeOverlay();
               setLinkMenu(null);
               return;
             }
 
+            // Handle link click
             setImageMenu(null);
             setResizeOverlay(null);
             const anchor = element.closest("a");
@@ -1390,14 +1038,28 @@ export default function Editor({
           onPaste={(event) => {
             if (!event.clipboardData?.files?.length) return;
             event.preventDefault();
-            void insertImages(event.clipboardData.files);
+            void handleInsertImages(event.clipboardData.files);
           }}
           onDrop={(event) => {
             if (!event.dataTransfer?.files?.length) return;
             event.preventDefault();
-            void insertImages(event.dataTransfer.files);
+            void handleInsertImages(event.dataTransfer.files);
           }}
         />
+      )}
+
+      {/* Tag breadcrumb indicator */}
+      {isEditing && tagBreadcrumb.length > 0 && (
+        <div className="editor-tag-breadcrumb">
+          {tagBreadcrumb.map((tag, index) => (
+            <React.Fragment key={index}>
+              <span className="editor-tag-name">{tag}</span>
+              {index < tagBreadcrumb.length - 1 && (
+                <span className="editor-tag-separator">&gt;</span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       )}
     </div>
   );

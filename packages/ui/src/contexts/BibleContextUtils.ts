@@ -4,7 +4,7 @@ import { TabState } from "./BibleTypes";
 // Maximum number of tabs allowed
 export const MAX_TAB_LIMIT = 10;
 
-// Parse a hash of the form #book:chapter and return normalized book and chapter
+// Parse a hash of the form #book:chapter[:verse] and return normalized values
 // Accepts a list of candidate books and an optional default list to fall back to
 export const parseHash = (
   hash: string,
@@ -14,7 +14,7 @@ export const parseHash = (
   if (!hash) return null;
   const raw = hash.startsWith("#") ? hash.slice(1) : hash;
   const parts = raw.split(":");
-  if (parts.length < 1) return null;
+  if (parts.length < 1 || parts.length > 3) return null;
   // decode URI components (allow %20 for spaces) and replace +, _ and - with space
   // allow users to use +, underscore or hyphen as space separators in the book name
   const bookRaw = decodeURIComponent(
@@ -23,6 +23,13 @@ export const parseHash = (
   const chapterRaw = (parts[1] || "1").trim();
   const chapter = parseInt(chapterRaw, 10);
   if (Number.isNaN(chapter) || chapter < 1) return null;
+  const verseRaw = (parts[2] || "").trim();
+  let verse: number | null = null;
+  if (verseRaw) {
+    const parsedVerse = parseInt(verseRaw, 10);
+    if (Number.isNaN(parsedVerse) || parsedVerse < 1) return null;
+    verse = parsedVerse;
+  }
 
   const searchBooks = books && books.length ? books : defaultBooks;
   const match = searchBooks.find(
@@ -30,7 +37,11 @@ export const parseHash = (
       b && typeof b === "string" && b.toLowerCase() === bookRaw.toLowerCase(),
   );
   if (!match) return null;
-  return { book: match, chapter } as { book: string; chapter: number };
+  return {
+    book: match,
+    chapter,
+    verseNumber: verse,
+  } as { book: string; chapter: number; verseNumber: number | null };
 };
 
 export const normalizeArticleId = (raw: string) => {
@@ -80,6 +91,7 @@ export const closeTab = (
           mode: "home",
           selectedBook: null,
           chapterNumber: 1,
+          verseNumber: null,
           articleId: null,
         },
       ];
@@ -112,6 +124,7 @@ export const openTabForBookChapter = (
   setCurrentTab: SetCurrentTab,
   book: string,
   chapterNumber: number,
+  verseNumber: number | null = null,
   maxLimit = MAX_TAB_LIMIT,
 ) => {
   setTabs((prev) => {
@@ -123,12 +136,20 @@ export const openTabForBookChapter = (
     );
     if (existingIndex >= 0) {
       setCurrentTab(existingIndex);
-      return prev;
+      return prev.map((tab, index) =>
+        index === existingIndex ? { ...tab, verseNumber } : tab,
+      );
     }
     if (prev.length >= maxLimit) return prev;
     const next: TabState[] = [
       ...prev,
-      { mode: "bible", selectedBook: book, chapterNumber, articleId: null },
+      {
+        mode: "bible",
+        selectedBook: book,
+        chapterNumber,
+        verseNumber,
+        articleId: null,
+      },
     ];
     setCurrentTab(next.length - 1);
     return next;

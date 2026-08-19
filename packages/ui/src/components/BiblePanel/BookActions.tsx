@@ -1,0 +1,78 @@
+import React, { useContext, useEffect, useState } from "react";
+import { Autocomplete, TextField, Button } from "@mui/material";
+import BibleContext from "../../contexts/BibleContext";
+
+export const BookActions: React.FC = () => {
+  const { tabs, currentTab, updateTab, books } = useContext(
+    BibleContext as React.Context<any>,
+  );
+
+  const current = tabs[currentTab] ?? {
+    selectedBook: null,
+    chapterNumber: 1,
+    verseNumber: null,
+  };
+
+  const [chapterInput, setChapterInput] = useState<string>(
+    String(current.chapterNumber ?? 1),
+  );
+
+  useEffect(() => {
+    setChapterInput(String(current.chapterNumber ?? 1));
+  }, [currentTab, current.chapterNumber]);
+
+  const commitChapter = () => {
+    const parsed = parseInt(chapterInput, 10);
+    if (!Number.isNaN(parsed) && parsed >= 1) {
+      updateTab(currentTab, { chapterNumber: parsed, verseNumber: null });
+      setChapterInput(String(parsed));
+    } else {
+      // revert to last valid
+      setChapterInput(String(current.chapterNumber ?? 1));
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", gap: "0.2em", padding: "0.2em" }}>
+      <Autocomplete
+        freeSolo={false}
+        options={books}
+        value={current.selectedBook}
+        onChange={(_, value) =>
+          updateTab(currentTab, { selectedBook: value, verseNumber: null })
+        }
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Select Bible Book"
+            variant="outlined"
+            size="small"
+          />
+        )}
+        sx={{ width: 180 }}
+      />
+
+      <TextField
+        label="Chapter"
+        variant="outlined"
+        size="small"
+        type="number"
+        value={chapterInput}
+        onChange={(e) => {
+          setChapterInput(e.target.value);
+        }}
+        onBlur={commitChapter}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            commitChapter();
+          }
+        }}
+        sx={{ width: 70, marginLeft: 0 }}
+      />
+      <Button variant="contained" onClick={commitChapter}>
+        {/*&gt;*/}
+        Open
+      </Button>
+    </div>
+  );
+};
