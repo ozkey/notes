@@ -16,12 +16,10 @@ import {
   normalizeBookAlias,
   normalizeReferenceRange,
 } from "../utils/BibleUtils";
-
-type CrossReferenceEntry = {
-  from: string;
-  to: string;
-  votes: number;
-};
+import {
+  CrossReferenceEntry,
+  fetchCrossReferences,
+} from "../../contexts/crossReferenceLoader";
 
 const VOTE_THRESHOLD = 0;
 
@@ -117,10 +115,10 @@ export const RefPanel = () => {
 
   useEffect(() => {
     let mounted = true;
-    import("./data/cross_references.json")
-      .then((module) => {
+    fetchCrossReferences()
+      .then((entries) => {
         if (!mounted) return;
-        setCrossReferenceEntries(module.default as CrossReferenceEntry[]);
+        setCrossReferenceEntries(entries);
         setLoadError(null);
       })
       .catch((error) => {
