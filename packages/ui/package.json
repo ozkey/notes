@@ -7,7 +7,9 @@
     "start": "webpack serve --mode development",
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
-    "prettier": "npx prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\""
+    "prettier": "npx prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -22,6 +24,10 @@
     "@babel/preset-env": "^7.29.5",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.5",
+    "@types/jest": "^30.0.0",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
@@ -29,8 +35,11 @@
     "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^7.1.1",
     "html-webpack-plugin": "^5.6.7",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "raw-loader": "^4.0.2",
     "style-loader": "^4.0.0",
+    "ts-jest": "^29.4.12",
     "ts-loader": "^9.5.7",
     "typescript": "^6.0.3",
     "webpack": "^5.107.0",
