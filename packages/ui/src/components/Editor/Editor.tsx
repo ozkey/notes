@@ -131,6 +131,7 @@ export default function Editor({
   const [showBibleDialog, setShowBibleDialog] = useState(false);
   const [bibleBook, setBibleBook] = useState("");
   const [bibleChapter, setBibleChapter] = useState("1");
+  const [bibleVerse, setBibleVerse] = useState("");
   const [editingBibleAnchor, setEditingBibleAnchor] =
     useState<HTMLAnchorElement | null>(null);
 
@@ -545,6 +546,7 @@ export default function Editor({
       parsed?.book && books.includes(parsed.book) ? parsed.book : "",
     );
     setBibleChapter(String(parsed?.chapterNumber || 1));
+    setBibleVerse(parsed?.verseNumber ? String(parsed.verseNumber) : "");
     setShowBibleDialog(true);
   };
 
@@ -555,11 +557,19 @@ export default function Editor({
   const handleSubmitBibleBookmark = () => {
     const book = bibleBook.trim();
     const chapterNumber = Number.parseInt(bibleChapter, 10);
+    const trimmedVerse = bibleVerse.trim();
+    const verseNumber = trimmedVerse ? Number.parseInt(trimmedVerse, 10) : null;
     if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1) return;
+    if (
+      verseNumber !== null &&
+      (!Number.isFinite(verseNumber) || verseNumber < 1)
+    )
+      return;
 
     submitBibleBookmark(
       book,
       chapterNumber,
+      verseNumber,
       editingBibleAnchor,
       editorRef,
       savedRangeRef,
@@ -883,8 +893,10 @@ export default function Editor({
         isEditing={!!editingBibleAnchor}
         book={bibleBook}
         chapter={bibleChapter}
+        verse={bibleVerse}
         onBookChange={setBibleBook}
         onChapterChange={setBibleChapter}
+        onVerseChange={setBibleVerse}
         onSubmit={handleSubmitBibleBookmark}
         onCancel={() => {
           setShowBibleDialog(false);

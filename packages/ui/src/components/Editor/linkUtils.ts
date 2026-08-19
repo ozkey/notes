@@ -102,6 +102,7 @@ export const openLink = (href: string) => {
 export const submitBibleBookmark = (
   book: string,
   chapterNumber: number,
+  verseNumber: number | null,
   editingAnchor: HTMLAnchorElement | null,
   editorRef: React.RefObject<HTMLDivElement | null>,
   savedRangeRef: React.RefObject<Range | null>,
@@ -112,7 +113,7 @@ export const submitBibleBookmark = (
   ) => T | null,
   syncFromEditor: () => void,
 ) => {
-  const selection = { book, chapterNumber };
+  const selection = { book, chapterNumber, verseNumber };
 
   if (editingAnchor) {
     const updated = replaceElement(editingAnchor, (anchor) => {

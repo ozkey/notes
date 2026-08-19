@@ -84,8 +84,10 @@ interface BibleDialogProps {
   isEditing: boolean;
   book: string;
   chapter: string;
+  verse: string;
   onBookChange: (book: string) => void;
   onChapterChange: (chapter: string) => void;
+  onVerseChange: (verse: string) => void;
   onSubmit: () => void;
   onCancel: () => void;
 }
@@ -95,8 +97,10 @@ export const BibleDialog: React.FC<BibleDialogProps> = ({
   isEditing,
   book,
   chapter,
+  verse,
   onBookChange,
   onChapterChange,
+  onVerseChange,
   onSubmit,
   onCancel,
 }) => {
@@ -141,6 +145,16 @@ export const BibleDialog: React.FC<BibleDialogProps> = ({
             value={chapter}
             onChange={(event) => onChapterChange(event.target.value)}
             placeholder="1"
+          />
+        </label>
+        <label className="editor-inline-label">
+          Verse
+          <input
+            type="number"
+            min="1"
+            value={verse}
+            onChange={(event) => onVerseChange(event.target.value)}
+            placeholder="Optional"
           />
         </label>
         <div className="editor-modal-actions">

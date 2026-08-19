@@ -5,6 +5,7 @@ export interface TabState {
   mode: TabMode;
   selectedBook: string | null;
   chapterNumber: number;
+  verseNumber?: number | null;
   articleId?: string | null;
 }
 

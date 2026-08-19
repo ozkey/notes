@@ -7,12 +7,14 @@ interface NotesPanelProps {
   mode: "bible" | "article";
   selectedBook: string | null;
   chapterNumber: number;
+  verseNumber?: number | null;
 }
 
 export const MainTabBox: React.FC<NotesPanelProps> = ({
   mode,
   selectedBook,
   chapterNumber,
+  verseNumber,
 }) => {
   const isBibleTab = mode === "bible";
   return (
@@ -34,6 +36,7 @@ export const MainTabBox: React.FC<NotesPanelProps> = ({
           <BibleText
             selectedBook={selectedBook}
             chapterNumber={chapterNumber}
+            verseNumber={verseNumber ?? null}
           />
         )}
         <StudyPanel />

@@ -74,11 +74,11 @@ const buildReferenceHash = (reference: string) => {
   const match = normalizedReference.match(/^([^.]+)\.(\d+)\.(\d+)$/);
   if (!match) return null;
 
-  const [, bookToken, chapterText] = match;
+  const [, bookToken, chapterText, verseText] = match;
   const canonicalBookName =
     resolveBookNameFromReferenceToken(bookToken) ?? bookToken;
   const bookName = canonicalBookName.trim();
-  return `#${encodeURIComponent(bookName)}:${chapterText}`;
+  return `#${encodeURIComponent(bookName)}:${chapterText}:${verseText}`;
 };
 
 const renderReferenceLink = (reference: string) => {

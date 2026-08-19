@@ -1,5 +1,5 @@
 import { Box, Card, CardActions, CardContent, Typography } from "@mui/material";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { BookActions } from "./BookActions";
 import BibleContext from "../../contexts/BibleContext";
 import { HighlighterMenu, HIGHLIGHT_COLORS } from "../Highlighter";
@@ -8,7 +8,8 @@ import { HighlightColor } from "../../contexts/BibleTypes";
 export const BibleText: React.FC<{
   selectedBook: string | null;
   chapterNumber: number;
-}> = ({ selectedBook, chapterNumber }) => {
+  verseNumber?: number | null;
+}> = ({ selectedBook, chapterNumber, verseNumber = null }) => {
   const {
     bibleText,
     loadingBibleText,
@@ -19,9 +20,18 @@ export const BibleText: React.FC<{
   const [highlighterAnchorEl, setHighlighterAnchorEl] =
     useState<null | HTMLElement>(null);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
+  const chapterContainerRef = useRef<HTMLDivElement | null>(null);
 
   const highlights = getHighlights(selectedBook, chapterNumber);
   const highlightsByVerse = new Map(highlights.map((h) => [h.verse, h.color]));
+
+  useEffect(() => {
+    if (!verseNumber) return;
+    const verseElement = chapterContainerRef.current?.querySelector(
+      `[data-verse="${verseNumber}"]`,
+    ) as HTMLElement | null;
+    verseElement?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [chapterNumber, selectedBook, verseNumber]);
 
   const handleTextSelection = () => {
     const selection = window.getSelection();
@@ -153,12 +163,13 @@ export const BibleText: React.FC<{
           {chapter.name}
         </Typography>
         <Box
+          ref={chapterContainerRef}
           sx={{ fontFamily: "Georgia, Garamond, serif", lineHeight: 1.8 }}
           onMouseUp={handleTextSelection}
         >
           {chapter.verses.map((v: any) => {
-            const verseNumber = parseInt(v.verse, 10);
-            const highlightColor = highlightsByVerse.get(verseNumber);
+            const currentVerseNumber = parseInt(v.verse, 10);
+            const highlightColor = highlightsByVerse.get(currentVerseNumber);
             const bgColor = highlightColor
               ? HIGHLIGHT_COLORS.find(
                   (c: {
@@ -173,7 +184,7 @@ export const BibleText: React.FC<{
               <Typography
                 key={v.name}
                 variant="body2"
-                data-verse={verseNumber}
+                data-verse={currentVerseNumber}
                 sx={{
                   fontFamily: "Georgia, Garamond, serif",
                   color: "text.primary",
@@ -183,6 +194,14 @@ export const BibleText: React.FC<{
                   padding: bgColor !== "transparent" ? "0.2em 0.4em" : "0",
                   borderRadius: "2px",
                   cursor: "text",
+                  textDecorationLine:
+                    currentVerseNumber === verseNumber ? "underline" : "none",
+                  textDecorationColor:
+                    currentVerseNumber === verseNumber ? "#c62828" : undefined,
+                  textDecorationThickness:
+                    currentVerseNumber === verseNumber ? "2px" : undefined,
+                  textUnderlineOffset:
+                    currentVerseNumber === verseNumber ? "0.18em" : undefined,
                 }}
               >
                 <span

@@ -56,6 +56,7 @@ function getCustomTabPanel(i: number, currentTab: number, t: TabState) {
           mode={t.mode}
           selectedBook={t.selectedBook}
           chapterNumber={t.chapterNumber}
+          verseNumber={t.verseNumber}
         />
       )}
     </CustomTabPanel>

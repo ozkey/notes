@@ -62,7 +62,11 @@ export interface BibleContextType {
   replaceAllNotes: (entries: NoteEntry[]) => void;
   replaceAllArticles: (entries: ArticleEntry[]) => void;
   openHomeInCurrentTab: () => void;
-  openBibleInCurrentTab: (book: string, chapterNumber: number) => void;
+  openBibleInCurrentTab: (
+    book: string,
+    chapterNumber: number,
+    verseNumber?: number | null,
+  ) => void;
   openArticleInCurrentTab: (articleId: string) => void;
   // parsed bible text loaded from public/Douay-Rheims.json
   bibleText: any | null;
@@ -100,6 +104,7 @@ export const BibleContext = createContext<BibleContextType>({
       mode: "home",
       selectedBook: null,
       chapterNumber: 1,
+      verseNumber: null,
       articleId: null,
     },
   ],
@@ -165,6 +170,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       mode: "home",
       selectedBook: null,
       chapterNumber: 1,
+      verseNumber: null,
       articleId: null,
     },
   ]);
@@ -264,6 +270,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
                 mode: "article",
                 selectedBook: null,
                 chapterNumber: 1,
+                verseNumber: null,
                 articleId: matchedArticle.id,
               },
             ];
@@ -288,6 +295,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
             setCurrentTab,
             parsed.book,
             parsed.chapter,
+            parsed.verseNumber,
             MAX_TAB_LIMIT,
           );
         if (parsed) clearLocationHash();
@@ -324,14 +332,20 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       mode: "home",
       selectedBook: null,
       chapterNumber: 1,
+      verseNumber: null,
       articleId: null,
     });
 
-  const openBibleInCurrentTab = (book: string, chapterNumber: number) =>
+  const openBibleInCurrentTab = (
+    book: string,
+    chapterNumber: number,
+    verseNumber: number | null = null,
+  ) =>
     updateTab(currentTab, {
       mode: "bible",
       selectedBook: book,
       chapterNumber,
+      verseNumber,
       articleId: null,
     });
 
@@ -349,6 +363,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       mode: "article",
       selectedBook: null,
       chapterNumber: 1,
+      verseNumber: null,
       articleId: normalizedId,
     });
     setEditorOpen(true);

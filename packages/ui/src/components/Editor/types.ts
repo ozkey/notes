@@ -73,4 +73,5 @@ export type ToolbarButton = {
 export type BibleBookmarkSelection = {
   book: string;
   chapterNumber: number;
+  verseNumber?: number | null;
 };

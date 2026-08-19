@@ -25,14 +25,14 @@ export const getBibleBooks = (): string[] =>
     []) as string[];
 
 /**
- * Parses a Bible bookmark hash (e.g., "#Genesis:3")
+ * Parses a Bible bookmark hash (e.g., "#Genesis:3" or "#Genesis:3:16")
  * @param href - The href value to parse
  * @returns Parsed Bible selection or null if invalid
  */
 export const parseBibleBookmarkHash = (
   href: string,
 ): BibleBookmarkSelection | null => {
-  const match = href.trim().match(/^#([^:]+):(\d+)$/);
+  const match = href.trim().match(/^#([^:]+):(\d+)(?::(\d+))?$/);
   if (!match) return null;
 
   const book = decodeURIComponent(match[1])
@@ -40,10 +40,13 @@ export const parseBibleBookmarkHash = (
     .replace(/[_-]/g, " ")
     .trim();
   const chapterNumber = Number.parseInt(match[2], 10);
+  const verseNumber = match[3] ? Number.parseInt(match[3], 10) : null;
   if (!book || !Number.isFinite(chapterNumber) || chapterNumber < 1)
     return null;
+  if (verseNumber !== null && (!Number.isFinite(verseNumber) || verseNumber < 1))
+    return null;
 
-  return { book, chapterNumber };
+  return { book, chapterNumber, verseNumber };
 };
 
 /**
@@ -53,8 +56,12 @@ export const parseBibleBookmarkHash = (
  */
 export const createBibleBookmarkHtml = (selection: BibleBookmarkSelection): string => {
   const bookHash = selection.book.trim().replace(/\s+/g, "-");
-  const hash = `#${bookHash}:${selection.chapterNumber}`;
-  const linkText = `${selection.book.trim()} ${selection.chapterNumber}`;
+  const verseSuffix =
+    selection.verseNumber && selection.verseNumber > 0
+      ? `:${selection.verseNumber}`
+      : "";
+  const hash = `#${bookHash}:${selection.chapterNumber}${verseSuffix}`;
+  const linkText = `${selection.book.trim()} ${selection.chapterNumber}${verseSuffix}`;
   return `<a href="${escapeHtml(hash)}">${escapeHtml(linkText)}</a>`;
 };
 

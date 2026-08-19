@@ -10,6 +10,7 @@ export const BookActions: React.FC = () => {
   const current = tabs[currentTab] ?? {
     selectedBook: null,
     chapterNumber: 1,
+    verseNumber: null,
   };
 
   const [chapterInput, setChapterInput] = useState<string>(
@@ -23,7 +24,7 @@ export const BookActions: React.FC = () => {
   const commitChapter = () => {
     const parsed = parseInt(chapterInput, 10);
     if (!Number.isNaN(parsed) && parsed >= 1) {
-      updateTab(currentTab, { chapterNumber: parsed });
+      updateTab(currentTab, { chapterNumber: parsed, verseNumber: null });
       setChapterInput(String(parsed));
     } else {
       // revert to last valid
@@ -37,7 +38,9 @@ export const BookActions: React.FC = () => {
         freeSolo={false}
         options={books}
         value={current.selectedBook}
-        onChange={(_, value) => updateTab(currentTab, { selectedBook: value })}
+        onChange={(_, value) =>
+          updateTab(currentTab, { selectedBook: value, verseNumber: null })
+        }
         renderInput={(params) => (
           <TextField
             {...params}
