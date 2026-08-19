@@ -9,3 +9,18 @@ if (typeof Blob !== 'undefined' && !Blob.prototype.text) {
     });
   };
 }
+
+// Mock window.matchMedia for MUI components that use responsive breakpoints
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }),
+});
