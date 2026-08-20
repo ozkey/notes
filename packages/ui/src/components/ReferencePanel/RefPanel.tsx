@@ -22,7 +22,16 @@ import {
   fetchCrossReferences,
 } from "../../contexts/crossReferenceLoader";
 
-const VOTE_THRESHOLD = 50;
+export const getAverageVoteThreshold = (entries: CrossReferenceEntry[]) => {
+  const validVotes = entries
+    .map((entry) => entry.votes)
+    .filter((votes) => Number.isFinite(votes) && votes >= 0);
+
+  if (validVotes.length === 0) return 0;
+
+  const totalVotes = validVotes.reduce((sum, votes) => sum + votes, 0);
+  return totalVotes / validVotes.length;
+};
 
 const REFERENCE_BOOK_NAME_BY_TOKEN = (() => {
   const lookup = new Map<string, string>();
@@ -87,12 +96,13 @@ const getReferenceVerseText = (
 const buildChapterReferenceIndex = (
   entries: CrossReferenceEntry[],
   ignoreVoteThreshold: boolean,
+  voteThreshold: number,
 ) => {
   const linkedFrom = new Map<string, CrossReferenceEntry[]>();
   const linkedTo = new Map<string, CrossReferenceEntry[]>();
 
   for (const entry of entries) {
-    if (!ignoreVoteThreshold && entry.votes <= VOTE_THRESHOLD) continue;
+    if (!ignoreVoteThreshold && entry.votes <= voteThreshold) continue;
 
     for (const chapterKey of extractCrossReferenceChapterKeys(entry.from)) {
       const existingEntries = linkedFrom.get(chapterKey);
@@ -216,9 +226,19 @@ export const RefPanel = React.memo(() => {
     [crossReferenceEntries],
   );
 
+  const voteThreshold = useMemo(
+    () => getAverageVoteThreshold(crossReferenceEntries),
+    [crossReferenceEntries],
+  );
+
   const referenceIndex = useMemo(
-    () => buildChapterReferenceIndex(crossReferenceEntries, ignoreVoteThreshold),
-    [crossReferenceEntries, ignoreVoteThreshold],
+    () =>
+      buildChapterReferenceIndex(
+        crossReferenceEntries,
+        ignoreVoteThreshold,
+        voteThreshold,
+      ),
+    [crossReferenceEntries, ignoreVoteThreshold, voteThreshold],
   );
 
   const bibleVerseLookup = useMemo(
