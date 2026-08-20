@@ -46,12 +46,12 @@ const GROUP_SPINE_COLORS: Record<string, string> = {
 
 const bookSpineSx = {
   textTransform: "none",
-  minWidth: 44,
-  height: 130,
+  minWidth: 40,
+  height: 155,
   px: 0.75,
   py: 1,
   borderRadius: "4px 10px 10px 4px",
-  borderLeftWidth: 5,
+  borderLeftWidth: 8,
   borderLeftStyle: "solid",
   borderLeftColor: "primary.dark",
   justifyContent: "center",
