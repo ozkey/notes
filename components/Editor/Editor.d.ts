@@ -24,5 +24,5 @@ import "./Editor.css";
  * - dialogs.tsx: Dialog sub-components
  * - menus.tsx: Context menu sub-components
  */
-export default function Editor({ value, refreshNotesDate: _refreshNotesDate, onChange, }: EditorProps): React.JSX.Element;
+export default function Editor({ value, lastFileSyncDate: _lastFileSyncDate, onChange, }: EditorProps): React.JSX.Element;
 //# sourceMappingURL=Editor.d.ts.map

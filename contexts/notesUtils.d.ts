@@ -9,9 +9,9 @@ export declare const setNoteForBookChapter: (setNotes: SetNotes, book: string | 
 /**
  * Replaces all notes with the given entries and updates the refresh date.
  */
-export declare const replaceAllNotes: (setNotes: SetNotes, setRefreshNotesDate: (date: Date) => void, entries: NoteEntry[]) => void;
+export declare const replaceAllNotes: (setNotes: SetNotes, setLastFileSyncDate: (date: Date) => void, entries: NoteEntry[]) => void;
 export declare const setArticleById: (setArticles: SetArticles, id: string, text: string) => void;
-export declare const replaceAllArticles: (setArticles: SetArticles, setRefreshNotesDate: (date: Date) => void, entries: ArticleEntry[]) => void;
+export declare const replaceAllArticles: (setArticles: SetArticles, setLastFileSyncDate: (date: Date) => void, entries: ArticleEntry[]) => void;
 export declare const setHighlight: (setNotes: SetNotes, book: string | null, chapterNumber: number, verse: number, color: HighlightColor) => void;
 export declare const removeHighlight: (setNotes: SetNotes, book: string | null, chapterNumber: number, verse: number) => void;
 export declare const getHighlights: (notes: NoteEntry[], book: string | null, chapterNumber: number) => HighlightData[];

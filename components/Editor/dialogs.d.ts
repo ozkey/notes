@@ -24,9 +24,13 @@ interface BibleDialogProps {
     book: string;
     chapter: string;
     verse: string;
+    articleIds: string[];
+    articleId: string;
     onBookChange: (book: string) => void;
     onChapterChange: (chapter: string) => void;
     onVerseChange: (verse: string) => void;
+    onArticleChange: (articleId: string) => void;
+    onInsertArticle: () => void;
     onSubmit: () => void;
     onCancel: () => void;
 }

@@ -1,1 +1,1 @@
-{"version":3,"file":"RefPanel.d.ts","sourceRoot":"","sources":["../../../src/components/ReferencePanel/RefPanel.tsx"],"names":[],"mappings":"AASA,OAAO,KAAmD,MAAM,OAAO,CAAC;AA2FxE,eAAO,MAAM,QAAQ,yBAsKpB,CAAC"}
+{"version":3,"file":"RefPanel.d.ts","sourceRoot":"","sources":["../../../src/components/ReferencePanel/RefPanel.tsx"],"names":[],"mappings":"AAUA,OAAO,KAAmD,MAAM,OAAO,CAAC;AAUxE,OAAO,EACL,mBAAmB,EAEpB,MAAM,qCAAqC,CAAC;AAE7C,eAAO,MAAM,uBAAuB,GAClC,oBAAmB,mBAAmB,EAAO,EAC7C,kBAAiB,mBAAmB,EAAO,WAU5C,CAAC;AAwIF,eAAO,MAAM,QAAQ,oDAqOnB,CAAC"}

@@ -12,8 +12,9 @@ export interface BibleContextType {
     books: string[];
     notes: NoteEntry[];
     articles: ArticleEntry[];
-    refreshNotesDate: Date | undefined;
-    setRefreshNotesDate: (date: Date) => void;
+    lastFileSyncDate: Date | undefined;
+    setLastFileSyncDate: (date: Date) => void;
+    hasUnsavedChanges: boolean;
     setNoteForBookChapter: (book: string | null, chapterNumber: number, text: string) => void;
     setArticleById: (id: string, text: string) => void;
     replaceAllNotes: (entries: NoteEntry[]) => void;
@@ -35,6 +36,11 @@ export interface BibleContextType {
     removeHighlight: (book: string | null, chapterNumber: number, verse: number) => void;
     getHighlights: (book: string | null, chapterNumber: number) => HighlightData[];
 }
+export declare const BibleReferenceContext: React.Context<{
+    tabs: TabState[];
+    currentTab: number;
+    bibleText: any | null;
+}>;
 export declare const BibleContext: React.Context<BibleContextType>;
 export declare const BibleProvider: React.FC<{
     children: React.ReactNode;

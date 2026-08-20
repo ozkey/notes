@@ -9,6 +9,7 @@ export type BookGroup = {
 export declare const BOOK_GROUPS: BookGroup[];
 export declare const normalizeBookAlias: (book: string) => string;
 export declare const normalizeReferenceRange: (reference: string) => string;
+export declare const formatReferenceDisplay: (reference: string) => string;
 export declare const extractCrossReferenceBookToken: (reference: string) => string | null;
 export declare const extractCrossReferenceChapterKeys: (reference: string) => string[];
 export declare const buildCrossReferenceBookTokenByAlias: (entries: {
