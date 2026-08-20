@@ -23,15 +23,20 @@ import {
   fetchCrossReferences,
 } from "../../contexts/crossReferenceLoader";
 
-export const getAverageVoteThreshold = (entries: CrossReferenceEntry[]) => {
-  const validVotes = entries
+export const getAverageVoteThreshold = (
+  linkedFromChapter: CrossReferenceEntry[] = [],
+  linkedToChapter: CrossReferenceEntry[] = [],
+) => {
+  const relevantEntries = [...linkedFromChapter, ...linkedToChapter];
+  const validVotes = relevantEntries
     .map((entry) => entry.votes)
     .filter((votes) => Number.isFinite(votes) && votes >= 0);
 
   if (validVotes.length === 0) return 0;
 
-  const totalVotes = validVotes.reduce((sum, votes) => sum + votes, 0);
-  return totalVotes / validVotes.length;
+  return (
+    validVotes.reduce((sum, votes) => sum + votes, 0) / validVotes.length
+  );
 };
 
 const REFERENCE_BOOK_NAME_BY_TOKEN = (() => {
@@ -227,21 +232,6 @@ export const RefPanel = React.memo(() => {
     [crossReferenceEntries],
   );
 
-  const voteThreshold = useMemo(
-    () => getAverageVoteThreshold(crossReferenceEntries),
-    [crossReferenceEntries],
-  );
-
-  const referenceIndex = useMemo(
-    () =>
-      buildChapterReferenceIndex(
-        crossReferenceEntries,
-        ignoreVoteThreshold,
-        voteThreshold,
-      ),
-    [crossReferenceEntries, ignoreVoteThreshold, voteThreshold],
-  );
-
   const bibleVerseLookup = useMemo(
     () => buildBibleVerseLookup(bibleText),
     [bibleText],
@@ -254,12 +244,42 @@ export const RefPanel = React.memo(() => {
     return `${token}.${chapterNumber}`;
   }, [bookTokenByAlias, chapterNumber, currentTabState.mode, selectedBook]);
 
+  const allChapterReferenceIndex = useMemo(
+    () => buildChapterReferenceIndex(crossReferenceEntries, true, 0),
+    [crossReferenceEntries],
+  );
+
   const linkedFromChapter = useMemo(() => {
+    if (!chapterKey) return [];
+    return allChapterReferenceIndex.linkedFrom.get(chapterKey) ?? [];
+  }, [chapterKey, allChapterReferenceIndex]);
+
+  const linkedToChapter = useMemo(() => {
+    if (!chapterKey) return [];
+    return allChapterReferenceIndex.linkedTo.get(chapterKey) ?? [];
+  }, [chapterKey, allChapterReferenceIndex]);
+
+  const voteThreshold = useMemo(
+    () => getAverageVoteThreshold(linkedFromChapter, linkedToChapter),
+    [linkedFromChapter, linkedToChapter],
+  );
+
+  const referenceIndex = useMemo(
+    () =>
+      buildChapterReferenceIndex(
+        crossReferenceEntries,
+        ignoreVoteThreshold,
+        voteThreshold,
+      ),
+    [crossReferenceEntries, ignoreVoteThreshold, voteThreshold],
+  );
+
+  const filteredLinkedFromChapter = useMemo(() => {
     if (!chapterKey) return [];
     return referenceIndex.linkedFrom.get(chapterKey) ?? [];
   }, [chapterKey, referenceIndex]);
 
-  const linkedToChapter = useMemo(() => {
+  const filteredLinkedToChapter = useMemo(() => {
     if (!chapterKey) return [];
     return referenceIndex.linkedTo.get(chapterKey) ?? [];
   }, [chapterKey, referenceIndex]);
@@ -302,12 +322,12 @@ export const RefPanel = React.memo(() => {
                   <h3>
                     Linked from {selectedBook} {chapterNumber}
                   </h3>
-                  {linkedFromChapter.length === 0 && (
+                  {filteredLinkedFromChapter.length === 0 && (
                     <p>No references found.</p>
                   )}
-                  {linkedFromChapter.length > 0 && (
+                  {filteredLinkedFromChapter.length > 0 && (
                     <List dense>
-                      {linkedFromChapter.map((entry, index) => (
+                      {filteredLinkedFromChapter.map((entry, index) => (
                         <ListItem key={`${entry.from}-${entry.to}-${index}`}>
                           <ListItemText
                             primary={
@@ -333,10 +353,12 @@ export const RefPanel = React.memo(() => {
                   <h3>
                     Linking to {selectedBook} {chapterNumber}
                   </h3>
-                  {linkedToChapter.length === 0 && <p>No references found.</p>}
-                  {linkedToChapter.length > 0 && (
+                  {filteredLinkedToChapter.length === 0 && (
+                    <p>No references found.</p>
+                  )}
+                  {filteredLinkedToChapter.length > 0 && (
                     <List dense>
-                      {linkedToChapter.map((entry, index) => (
+                      {filteredLinkedToChapter.map((entry, index) => (
                         <ListItem
                           key={`${entry.from}-${entry.to}-${index}`}
                           disableGutters
