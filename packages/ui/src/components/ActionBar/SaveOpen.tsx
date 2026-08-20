@@ -10,9 +10,11 @@ export const SaveOpen: React.FC = () => {
 
   return (
     <Stack direction="row" spacing={2}>
-      <Button variant="contained" onClick={() => loadNotesFromFile()}>
-        Load
-      </Button>
+      {!lastFileSyncDate && (
+        <Button variant="contained" onClick={() => loadNotesFromFile()}>
+          Load
+        </Button>
+      )}
       <Button variant="contained" onClick={() => saveNotesToFile()}>
         {!lastFileSyncDate && <span>New File</span>}
         {lastFileSyncDate && <span>Save</span>}

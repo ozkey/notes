@@ -2,8 +2,7 @@
 // Extracted sub-components for better code organization
 
 import React from "react";
-import type { LinkMenuState, ImageMenuState, BibleBookmarkSelection } from "./types";
-import { getBibleBooks, parseBibleBookmarkHash } from "./utils";
+import { getBibleBooks } from "./utils";
 
 /**
  * Dialog for inserting or editing a regular link
@@ -36,10 +35,7 @@ export const LinkDialog: React.FC<LinkDialogProps> = ({
   if (!show) return null;
 
   return (
-    <div
-      className="editor-modal-overlay"
-      onClick={onCancel}
-    >
+    <div className="editor-modal-overlay" onClick={onCancel}>
       <div
         className="editor-modal"
         onClick={(event) => event.stopPropagation()}
@@ -85,9 +81,13 @@ interface BibleDialogProps {
   book: string;
   chapter: string;
   verse: string;
+  articleIds: string[];
+  articleId: string;
   onBookChange: (book: string) => void;
   onChapterChange: (chapter: string) => void;
   onVerseChange: (verse: string) => void;
+  onArticleChange: (articleId: string) => void;
+  onInsertArticle: () => void;
   onSubmit: () => void;
   onCancel: () => void;
 }
@@ -98,9 +98,13 @@ export const BibleDialog: React.FC<BibleDialogProps> = ({
   book,
   chapter,
   verse,
+  articleIds,
+  articleId,
   onBookChange,
   onChapterChange,
   onVerseChange,
+  onArticleChange,
+  onInsertArticle,
   onSubmit,
   onCancel,
 }) => {
@@ -109,20 +113,18 @@ export const BibleDialog: React.FC<BibleDialogProps> = ({
   const bibleBooks = getBibleBooks();
 
   return (
-    <div
-      className="editor-modal-overlay"
-      onClick={onCancel}
-    >
+    <div className="editor-modal-overlay" onClick={onCancel}>
       <div
         className="editor-modal"
         onClick={(event) => event.stopPropagation()}
       >
-        <h3>
-          {isEditing ? "Edit Bible Link" : "Insert Bible Link"}
-        </h3>
+        <h3>{isEditing ? "Edit Bible Link" : "Insert Bible Link"}</h3>
         <label className="editor-inline-label">
           Book
-          <select value={book} onChange={(event) => onBookChange(event.target.value)}>
+          <select
+            value={book}
+            onChange={(event) => onBookChange(event.target.value)}
+          >
             {bibleBooks.length === 0 ? (
               <option value="">No books available</option>
             ) : (
@@ -165,6 +167,35 @@ export const BibleDialog: React.FC<BibleDialogProps> = ({
             {isEditing ? "Save" : "Insert"}
           </button>
         </div>
+        <label className="editor-inline-label">
+          Article
+          <select
+            value={articleId}
+            onChange={(event) => onArticleChange(event.target.value)}
+          >
+            {articleIds.length === 0 ? (
+              <option value="">No articles available</option>
+            ) : (
+              <>
+                <option value="">Select an article...</option>
+                {articleIds.map((id) => (
+                  <option key={id} value={id}>
+                    #{id}
+                  </option>
+                ))}
+              </>
+            )}
+          </select>
+        </label>
+        <div className="editor-modal-actions">
+          <button
+            type="button"
+            onClick={onInsertArticle}
+            disabled={!articleId.trim()}
+          >
+            Insert Article
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -193,10 +224,7 @@ export const HighlightDialog: React.FC<HighlightDialogProps> = ({
   if (!show) return null;
 
   return (
-    <div
-      className="editor-modal-overlay"
-      onClick={onClose}
-    >
+    <div className="editor-modal-overlay" onClick={onClose}>
       <div
         className="editor-modal"
         onClick={(event) => event.stopPropagation()}

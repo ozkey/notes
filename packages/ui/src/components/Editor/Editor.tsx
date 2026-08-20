@@ -6,6 +6,7 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import EditLocationIcon from "@mui/icons-material/EditLocation";
 import LinkIcon from "@mui/icons-material/Link";
 import BibleContext from "../../contexts/BibleContext";
+import { articleIdsMatch, normalizeArticleId } from "../../contexts/BibleContextUtils";
 
 // Import types
 import type {
@@ -132,6 +133,7 @@ export default function Editor({
   const [bibleBook, setBibleBook] = useState("");
   const [bibleChapter, setBibleChapter] = useState("1");
   const [bibleVerse, setBibleVerse] = useState("");
+  const [selectedArticleId, setSelectedArticleId] = useState("");
   const [editingBibleAnchor, setEditingBibleAnchor] =
     useState<HTMLAnchorElement | null>(null);
 
@@ -187,7 +189,7 @@ export default function Editor({
   // ============================================================================
 
   const bibleContext = useContext(BibleContext);
-  const { tabs, currentTab } = bibleContext;
+  const { tabs, currentTab, articles } = bibleContext;
   const currentTabState = tabs[currentTab];
 
   // Get highlights for the current Bible chapter
@@ -535,18 +537,30 @@ export default function Editor({
   // BIBLE BOOKMARK OPERATIONS
   // ============================================================================
 
+  const getArticleIdFromHref = (href: string): string | null => {
+    const trimmedHref = href.trim();
+    if (!trimmedHref.startsWith("#")) return null;
+    const hashValue = trimmedHref.slice(1).trim();
+    if (!hashValue) return null;
+    const matchedArticle = articles.find((article) =>
+      articleIdsMatch(article.id, hashValue),
+    );
+    return matchedArticle?.id || null;
+  };
+
   const openBibleDialog = (anchor?: HTMLAnchorElement) => {
     saveSelection();
     const books = getBibleBooks();
-    const parsed = anchor
-      ? parseBibleBookmarkHash(anchor.getAttribute("href") || "")
-      : null;
+    const href = anchor?.getAttribute("href") || "";
+    const parsed = anchor ? parseBibleBookmarkHash(href) : null;
+    const matchedArticleId = anchor ? getArticleIdFromHref(href) : null;
     setEditingBibleAnchor(anchor || null);
     setBibleBook(
       parsed?.book && books.includes(parsed.book) ? parsed.book : "",
     );
     setBibleChapter(String(parsed?.chapterNumber || 1));
     setBibleVerse(parsed?.verseNumber ? String(parsed.verseNumber) : "");
+    setSelectedArticleId(matchedArticleId || "");
     setShowBibleDialog(true);
   };
 
@@ -580,6 +594,26 @@ export default function Editor({
 
     setEditingBibleAnchor(null);
     setShowBibleDialog(false);
+    setSelectedArticleId("");
+  };
+
+  const handleSubmitArticleLink = () => {
+    const normalizedArticleId = normalizeArticleId(selectedArticleId);
+    if (!normalizedArticleId) return;
+    submitLink(
+      `#${encodeURIComponent(normalizedArticleId)}`,
+      `#${normalizedArticleId}`,
+      false,
+      editingBibleAnchor,
+      editorRef,
+      savedRangeRef,
+      insertHtml,
+      replaceElement,
+      syncFromEditor,
+    );
+    setEditingBibleAnchor(null);
+    setShowBibleDialog(false);
+    setSelectedArticleId("");
   };
 
   const editBibleLink = (anchor: HTMLAnchorElement) => {
@@ -894,13 +928,18 @@ export default function Editor({
         book={bibleBook}
         chapter={bibleChapter}
         verse={bibleVerse}
+        articleIds={articles.map((article) => article.id)}
+        articleId={selectedArticleId}
         onBookChange={setBibleBook}
         onChapterChange={setBibleChapter}
         onVerseChange={setBibleVerse}
+        onArticleChange={setSelectedArticleId}
+        onInsertArticle={handleSubmitArticleLink}
         onSubmit={handleSubmitBibleBookmark}
         onCancel={() => {
           setShowBibleDialog(false);
           setEditingBibleAnchor(null);
+          setSelectedArticleId("");
         }}
       />
 
@@ -1026,13 +1065,14 @@ export default function Editor({
             }
 
             const href = anchor.getAttribute("href") || "";
+            const isArticleLink = getArticleIdFromHref(href) !== null;
             event.preventDefault();
             const rect = anchor.getBoundingClientRect();
             setLinkMenu({
               anchor,
               x: rect.left,
               y: rect.bottom + 6,
-              isBibleLink: parseBibleBookmarkHash(href) !== null,
+              isBibleLink: parseBibleBookmarkHash(href) !== null || isArticleLink,
             });
           }}
           onPaste={(event) => {

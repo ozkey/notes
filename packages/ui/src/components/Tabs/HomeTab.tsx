@@ -294,21 +294,23 @@ export const HomeTab: React.FC = () => {
         </Card>
       </Box>
 
-      <Box
-        component="main"
-        sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
-      >
-        <Card>
-          <CardContent>
-            <Stack direction="row" spacing={2}>
-              <Typography variant="subtitle1">
-                Would you like to open your notes or start a new
-              </Typography>
-              <SaveOpen />
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
+      {lastFileSyncDate === undefined && (
+        <Box
+          component="main"
+          sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
+        >
+          <Card>
+            <CardContent>
+              <Stack direction="row" spacing={2}>
+                <Typography variant="subtitle1">
+                  Would you like to open your notes or start a new
+                </Typography>
+                <SaveOpen />
+              </Stack>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
 
       <Stack spacing={2}>
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
