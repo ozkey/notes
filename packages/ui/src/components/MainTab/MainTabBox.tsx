@@ -39,7 +39,7 @@ export const MainTabBox: React.FC<NotesPanelProps> = ({
             verseNumber={verseNumber ?? null}
           />
         )}
-        <StudyPanel />
+        <StudyPanel mode={mode} />
       </Box>
     </>
   );
