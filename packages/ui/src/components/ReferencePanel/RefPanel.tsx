@@ -34,9 +34,7 @@ export const getAverageVoteThreshold = (
 
   if (validVotes.length === 0) return 0;
 
-  return (
-    validVotes.reduce((sum, votes) => sum + votes, 0) / validVotes.length
-  );
+  return validVotes.reduce((sum, votes) => sum + votes, 0) / validVotes.length;
 };
 
 const REFERENCE_BOOK_NAME_BY_TOKEN = (() => {
@@ -319,9 +317,9 @@ export const RefPanel = React.memo(() => {
             >
               <Card variant="outlined">
                 <CardContent>
-                  <h3>
+                  <h4>
                     Linked from {selectedBook} {chapterNumber}
-                  </h3>
+                  </h4>
                   {filteredLinkedFromChapter.length === 0 && (
                     <p>No references found.</p>
                   )}
@@ -350,9 +348,9 @@ export const RefPanel = React.memo(() => {
 
               <Card variant="outlined">
                 <CardContent>
-                  <h3>
+                  <h4>
                     Linking to {selectedBook} {chapterNumber}
-                  </h3>
+                  </h4>
                   {filteredLinkedToChapter.length === 0 && (
                     <p>No references found.</p>
                   )}
