@@ -4,6 +4,7 @@ import {
   formatBookLabel,
   normalizeBookAlias,
   normalizeReferenceRange,
+  formatReferenceDisplay,
   extractCrossReferenceBookToken,
   extractCrossReferenceChapterKeys,
   buildCrossReferenceBookTokenByAlias,
@@ -101,6 +102,20 @@ describe("normalizeReferenceRange", () => {
 
   test("returns reference unchanged when no '-'", () => {
     expect(normalizeReferenceRange("Gen.1.1")).toBe("Gen.1.1");
+  });
+});
+
+// ─── formatReferenceDisplay ─────────────────────────────────────────────────────
+
+describe("formatReferenceDisplay", () => {
+  test("uses the canonical full book name in reference labels", () => {
+    expect(formatReferenceDisplay("Gen.1.1")).toBe("Genesis:1:1");
+    expect(formatReferenceDisplay("1Sam.3.16")).toBe("I Samuel:3:16");
+    expect(formatReferenceDisplay("Song.8.6")).toBe("Song of Solomon:8:6");
+  });
+
+  test("falls back to colon-based formatting when the reference is malformed", () => {
+    expect(formatReferenceDisplay("bad reference")).toBe("bad reference");
   });
 });
 

@@ -152,6 +152,23 @@ export const normalizeReferenceRange = (reference: string) => {
   return reference.split("-")[0].trim();
 };
 
+export const formatReferenceDisplay = (reference: string) => {
+  const normalizedReference = normalizeReferenceRange(reference);
+  const match = normalizedReference.match(/^([^.]+)\.(\d+)\.(\d+)$/);
+  if (!match) return reference.replace(/\./g, ":");
+
+  const [, bookToken, chapterText, verseText] = match;
+  const canonicalBookName =
+    BOOK_GROUPS.flatMap((group) => group.books)
+      .find((aliases) =>
+        aliases.some(
+          (alias) => normalizeBookAlias(alias) === normalizeBookAlias(bookToken),
+        ),
+      )?.[0] ?? bookToken;
+
+  return `${canonicalBookName}:${chapterText}:${verseText}`;
+};
+
 export const extractCrossReferenceBookToken = (reference: string) => {
   const normalizedReference = normalizeReferenceRange(reference);
   const match = normalizedReference.match(/^([^.]+)\./);

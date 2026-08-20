@@ -14,6 +14,7 @@ import {
   BOOK_GROUPS,
   buildCrossReferenceBookTokenByAlias,
   extractCrossReferenceChapterKeys,
+  formatReferenceDisplay,
   normalizeBookAlias,
   normalizeReferenceRange,
 } from "../utils/BibleUtils";
@@ -162,7 +163,7 @@ const renderReferenceLink = (reference: string) => {
         fontWeight: 500,
       }}
     >
-      {reference}
+      {formatReferenceDisplay(reference)}
     </Link>
   );
 };
@@ -301,7 +302,9 @@ export const RefPanel = React.memo(() => {
                   <h3>
                     Linked from {selectedBook} {chapterNumber}
                   </h3>
-                  {linkedFromChapter.length === 0 && <p>No references found.</p>}
+                  {linkedFromChapter.length === 0 && (
+                    <p>No references found.</p>
+                  )}
                   {linkedFromChapter.length > 0 && (
                     <List dense>
                       {linkedFromChapter.map((entry, index) => (
