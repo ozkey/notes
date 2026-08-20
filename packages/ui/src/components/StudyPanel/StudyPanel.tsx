@@ -4,14 +4,18 @@ import { NotesAndEditorPanel } from "../StudyPanel/NotesPanel/NotesAndEditorPane
 import React from "react";
 import { RefPanel } from "../ReferencePanel/RefPanel";
 
-export const StudyPanel = ({}) => {
+interface StudyPanelProps {
+  mode: "bible" | "article";
+}
+
+export const StudyPanel = React.memo(({ mode }: StudyPanelProps) => {
   return (
-    <Card>
-      <CardContent>
-        <NotesAndEditorPanel />
-        <br />
-        <RefPanel />
-      </CardContent>
-    </Card>
+    <div>
+      <NotesAndEditorPanel />
+      <br />
+      {mode === "bible" && <RefPanel />}
+    </div>
   );
-};
+});
+
+StudyPanel.displayName = "StudyPanel";

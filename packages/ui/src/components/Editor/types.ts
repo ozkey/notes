@@ -6,12 +6,12 @@ import type { ReactNode } from "react";
 /**
  * Props for the Editor component
  * @property value - Initial HTML content
- * @property refreshNotesDate - Trigger to refresh content
+ * @property lastFileSyncDate - Trigger to refresh content
  * @property onChange - Callback when content changes
  */
 export type EditorProps = {
   value?: string;
-  refreshNotesDate?: Date;
+  lastFileSyncDate?: Date;
   onChange?: (html: string) => void;
 };
 

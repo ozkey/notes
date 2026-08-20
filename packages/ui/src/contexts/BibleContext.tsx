@@ -51,8 +51,9 @@ export interface BibleContextType {
   books: string[];
   notes: NoteEntry[];
   articles: ArticleEntry[];
-  refreshNotesDate: Date | undefined;
-  setRefreshNotesDate: (date: Date) => void;
+  lastFileSyncDate: Date | undefined;
+  setLastFileSyncDate: (date: Date) => void;
+  hasUnsavedChanges: boolean;
   setNoteForBookChapter: (
     book: string | null,
     chapterNumber: number,
@@ -98,6 +99,24 @@ export interface BibleContextType {
   ) => HighlightData[];
 }
 
+export const BibleReferenceContext = createContext<{
+  tabs: TabState[];
+  currentTab: number;
+  bibleText: any | null;
+}>({
+  tabs: [
+    {
+      mode: "home",
+      selectedBook: null,
+      chapterNumber: 1,
+      verseNumber: null,
+      articleId: null,
+    },
+  ],
+  currentTab: 0,
+  bibleText: null,
+});
+
 export const BibleContext = createContext<BibleContextType>({
   tabs: [
     {
@@ -121,8 +140,9 @@ export const BibleContext = createContext<BibleContextType>({
   notes: [{ book: "Matthew", chapterNumber: 1, text: "" }],
   articles: [],
   // if file loads refresh the date
-  refreshNotesDate: undefined,
-  setRefreshNotesDate: () => {},
+  lastFileSyncDate: undefined,
+  setLastFileSyncDate: () => {},
+  hasUnsavedChanges: false,
   // bible text defaults
   bibleText: null,
   loadingBibleText: false,
@@ -180,9 +200,10 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   const [articles, setArticles] = useState<ArticleEntry[]>([]);
   // books are populated from the API at runtime; default to the static list
   const [books, setBooks] = useState<string[]>([]);
-  const [refreshNotesDate, setRefreshNotesDate] = useState<Date | undefined>(
+  const [lastFileSyncDate, setLastFileSyncDate] = useState<Date | undefined>(
     undefined,
   );
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   // Move editor open state into the context so multiple components can control it
   const [editorOpen, setEditorOpen] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<number>(0);
@@ -225,11 +246,20 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) return;
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   // tab helpers (delegated to utils)
   const addTab = () => addTabUtil(setTabs, setCurrentTab, MAX_TAB_LIMIT);
   const closeTab = (i: number) => closeTabUtil(setTabs, setCurrentTab, i);
   const updateTab = (tabId: number, patch: Partial<TabState>) =>
-    updateTabUtil(setTabs, setRefreshNotesDate, refreshNotesDate, tabId, patch);
+    updateTabUtil(setTabs, setLastFileSyncDate, lastFileSyncDate, tabId, patch);
 
   // Listen for URL hash changes and open/switch tabs when a valid #book:chapter is present.
   useEffect(() => {
@@ -316,16 +346,21 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     book: string | null,
     chapterNumber: number,
     text: string,
-  ) => setNoteForBookChapterUtil(setNotes, book, chapterNumber, text);
+  ) => {
+    setNoteForBookChapterUtil(setNotes, book, chapterNumber, text);
+    setHasUnsavedChanges(true);
+  };
 
   const replaceAllNotes = (entries: NoteEntry[]) =>
-    replaceAllNotesUtil(setNotes, setRefreshNotesDate, entries);
+    replaceAllNotesUtil(setNotes, setLastFileSyncDate, entries);
 
-  const setArticleById = (id: string, text: string) =>
+  const setArticleById = (id: string, text: string) => {
     setArticleByIdUtil(setArticles, id, text);
+    setHasUnsavedChanges(true);
+  };
 
   const replaceAllArticles = (entries: ArticleEntry[]) =>
-    replaceAllArticlesUtil(setArticles, setRefreshNotesDate, entries);
+    replaceAllArticlesUtil(setArticles, setLastFileSyncDate, entries);
 
   const openHomeInCurrentTab = () =>
     updateTab(currentTab, {
@@ -374,13 +409,19 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     chapterNumber: number,
     verse: number,
     color: any,
-  ) => setHighlightUtil(setNotes, book, chapterNumber, verse, color);
+  ) => {
+    setHighlightUtil(setNotes, book, chapterNumber, verse, color);
+    setHasUnsavedChanges(true);
+  };
 
   const removeHighlight = (
     book: string | null,
     chapterNumber: number,
     verse: number,
-  ) => removeHighlightUtil(setNotes, book, chapterNumber, verse);
+  ) => {
+    removeHighlightUtil(setNotes, book, chapterNumber, verse);
+    setHasUnsavedChanges(true);
+  };
 
   const getHighlights = (book: string | null, chapterNumber: number) =>
     getHighlightsUtil(notes, book, chapterNumber);
@@ -389,8 +430,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   // so the context value can pass functions with the expected signatures.
   const saveNotesToFile = async () => {
     await saveNotesToFileImpl(notes, articles, fileHandleRef);
-    // if (refreshNotesDate) - new file should update date
-    setRefreshNotesDate(new Date());
+    setLastFileSyncDate(new Date());
+    setHasUnsavedChanges(false);
   };
 
   const loadNotesFromFile = async () => {
@@ -399,46 +440,94 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       replaceAllNotes,
       replaceAllArticles,
     );
+    setHasUnsavedChanges(false);
   };
 
+  const bibleContextValue = React.useMemo(
+    () => ({
+      tabs,
+      currentTab,
+      setCurrentTab,
+      addTab,
+      closeTab,
+      updateTab,
+      books,
+      notes,
+      articles,
+      lastFileSyncDate,
+      setLastFileSyncDate,
+      hasUnsavedChanges,
+      setNoteForBookChapter,
+      setArticleById,
+      replaceAllNotes,
+      replaceAllArticles,
+      openHomeInCurrentTab,
+      openBibleInCurrentTab,
+      openArticleInCurrentTab,
+      // editor UI state exposed in context
+      editorOpen,
+      setEditorOpen,
+      bibleText,
+      loadingBibleText,
+      loadBibleText,
+      bibleTranslations: BIBLE_TRANSLATIONS,
+      selectedBibleTranslation,
+      setSelectedBibleTranslation,
+      saveNotesToFile,
+      loadNotesFromFile,
+      setHighlight,
+      removeHighlight,
+      getHighlights,
+    }),
+    [
+      addTab,
+      articles,
+      bibleText,
+      books,
+      closeTab,
+      currentTab,
+      editorOpen,
+      getHighlights,
+      hasUnsavedChanges,
+      loadBibleText,
+      loadNotesFromFile,
+      loadingBibleText,
+      notes,
+      openArticleInCurrentTab,
+      openBibleInCurrentTab,
+      openHomeInCurrentTab,
+      lastFileSyncDate,
+      removeHighlight,
+      replaceAllArticles,
+      replaceAllNotes,
+      saveNotesToFile,
+      selectedBibleTranslation,
+      setArticleById,
+      setCurrentTab,
+      setEditorOpen,
+      setHighlight,
+      setNoteForBookChapter,
+      setLastFileSyncDate,
+      setSelectedBibleTranslation,
+      tabs,
+      updateTab,
+    ],
+  );
+
+  const bibleReferenceContextValue = React.useMemo(
+    () => ({
+      tabs,
+      currentTab,
+      bibleText,
+    }),
+    [currentTab, tabs, bibleText],
+  );
+
   return (
-    <BibleContext.Provider
-      value={{
-        tabs,
-        currentTab,
-        setCurrentTab,
-        addTab,
-        closeTab,
-        updateTab,
-        books,
-        notes,
-        articles,
-        refreshNotesDate,
-        setRefreshNotesDate,
-        setNoteForBookChapter,
-        setArticleById,
-        replaceAllNotes,
-        replaceAllArticles,
-        openHomeInCurrentTab,
-        openBibleInCurrentTab,
-        openArticleInCurrentTab,
-        // editor UI state exposed in context
-        editorOpen,
-        setEditorOpen,
-        bibleText,
-        loadingBibleText,
-        loadBibleText,
-        bibleTranslations: BIBLE_TRANSLATIONS,
-        selectedBibleTranslation,
-        setSelectedBibleTranslation,
-        saveNotesToFile,
-        loadNotesFromFile,
-        setHighlight,
-        removeHighlight,
-        getHighlights,
-      }}
-    >
-      {children}
+    <BibleContext.Provider value={bibleContextValue}>
+      <BibleReferenceContext.Provider value={bibleReferenceContextValue}>
+        {children}
+      </BibleReferenceContext.Provider>
     </BibleContext.Provider>
   );
 };

@@ -69,6 +69,7 @@ export const HomeTab: React.FC = () => {
     books,
     notes,
     articles,
+    lastFileSyncDate,
     bibleTranslations,
     selectedBibleTranslation,
     setSelectedBibleTranslation,
@@ -293,21 +294,23 @@ export const HomeTab: React.FC = () => {
         </Card>
       </Box>
 
-      <Box
-        component="main"
-        sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
-      >
-        <Card>
-          <CardContent>
-            <Stack direction="row" spacing={2}>
-              <Typography variant="subtitle1">
-                Would you like to open your notes or start a new
-              </Typography>
-              <SaveOpen />
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
+      {lastFileSyncDate === undefined && (
+        <Box
+          component="main"
+          sx={{ flex: 1, padding: "0px 0 0 0", margin: "0 0  10px 0" }}
+        >
+          <Card>
+            <CardContent>
+              <Stack direction="row" spacing={2}>
+                <Typography variant="subtitle1">
+                  Would you like to open your notes or start a new
+                </Typography>
+                <SaveOpen />
+              </Stack>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
 
       <Stack spacing={2}>
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
@@ -342,102 +345,113 @@ export const HomeTab: React.FC = () => {
                   </Button>
                 </Stack>
 
-                <Divider />
+                {lastFileSyncDate !== undefined && (
+                  <>
+                    <Divider />
 
-                <Typography variant="subtitle1">Open a note</Typography>
-                {existingNoteRefs.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    No saved notes yet.
+                    <Typography variant="subtitle1">Open a note</Typography>
+                    {existingNoteRefs.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        No saved notes yet.
+                      </Typography>
+                    ) : (
+                      <List
+                        dense
+                        sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}
+                      >
+                        {existingNoteRefs.map((note) => {
+                          const isOpen = openBibleRefs.has(
+                            note.id.toLowerCase(),
+                          );
+                          return (
+                            <ListItemButton
+                              key={note.id}
+                              onClick={() =>
+                                openBibleInCurrentTab(
+                                  note.book,
+                                  note.chapterNumber,
+                                )
+                              }
+                              disabled={isOpen}
+                            >
+                              <ListItemText
+                                primary={`${formatBookLabel(note.book)} ${note.chapterNumber}${
+                                  isOpen ? " - open" : ""
+                                }`}
+                              />
+                            </ListItemButton>
+                          );
+                        })}
+                      </List>
+                    )}
+                  </>
+                )}
+              </Stack>
+            </CardContent>
+          </Card>
+
+          {lastFileSyncDate !== undefined && (
+            <Card sx={{ flex: 1 }}>
+              <CardContent>
+                <Stack spacing={2}>
+                  <Typography variant="subtitle1">
+                    Create a new article
                   </Typography>
-                ) : (
-                  <List
-                    dense
-                    sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}
-                  >
-                    {existingNoteRefs.map((note) => {
-                      const isOpen = openBibleRefs.has(note.id.toLowerCase());
-                      return (
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                    <TextField
+                      size="small"
+                      label="Article ID / Hashtag"
+                      value={articleIdInput}
+                      onChange={(e) => {
+                        const nextValue = e.target.value;
+                        setArticleIdInput(nextValue);
+                        const normalizedId = normalizeArticleId(nextValue);
+                        const idText = normalizedId.replace(/^#/, "");
+                        if (idText.length >= 2) setArticleIdError("");
+                      }}
+                      error={Boolean(articleIdError)}
+                      helperText={articleIdError}
+                      sx={{ minWidth: 260 }}
+                    />
+                    <Button variant="contained" onClick={createArticle}>
+                      Create article
+                    </Button>
+                  </Stack>
+
+                  <Divider />
+
+                  <Typography variant="subtitle1">Open an article</Typography>
+                  {existingArticleIds.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      No saved articles yet.
+                    </Typography>
+                  ) : (
+                    <List
+                      dense
+                      sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}
+                    >
+                      {existingArticleIds.map((id: string) => (
                         <ListItemButton
-                          key={note.id}
-                          onClick={() =>
-                            openBibleInCurrentTab(note.book, note.chapterNumber)
-                          }
-                          disabled={isOpen}
+                          key={id}
+                          onClick={() => openArticleInCurrentTab(id)}
+                          disabled={openArticleIds.has(id.toLowerCase())}
                         >
                           <ListItemText
-                            primary={`${formatBookLabel(note.book)} ${note.chapterNumber}${
-                              isOpen ? " - open" : ""
-                            }`}
+                            primary={
+                              id +
+                              (openArticleIds.has(id.toLowerCase())
+                                ? " - open"
+                                : "")
+                            }
                           />
                         </ListItemButton>
-                      );
-                    })}
-                  </List>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ flex: 1 }}>
-            <CardContent>
-              <Stack spacing={2}>
-                <Typography variant="subtitle1">
-                  Create a new article
-                </Typography>
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                  <TextField
-                    size="small"
-                    label="Article ID / Hashtag"
-                    value={articleIdInput}
-                    onChange={(e) => {
-                      const nextValue = e.target.value;
-                      setArticleIdInput(nextValue);
-                      const normalizedId = normalizeArticleId(nextValue);
-                      const idText = normalizedId.replace(/^#/, "");
-                      if (idText.length >= 2) setArticleIdError("");
-                    }}
-                    error={Boolean(articleIdError)}
-                    helperText={articleIdError}
-                    sx={{ minWidth: 260 }}
-                  />
-                  <Button variant="contained" onClick={createArticle}>
-                    Create article
-                  </Button>
+                      ))}
+                    </List>
+                  )}
                 </Stack>
-
-                <Divider />
-
-                <Typography variant="subtitle1">Open an article</Typography>
-                {existingArticleIds.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    No saved articles yet.
-                  </Typography>
-                ) : (
-                  <List
-                    dense
-                    sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}
-                  >
-                    {existingArticleIds.map((id: string) => (
-                      <ListItemButton
-                        key={id}
-                        onClick={() => openArticleInCurrentTab(id)}
-                        disabled={openArticleIds.has(id.toLowerCase())}
-                      >
-                        <ListItemText
-                          primary={
-                            id +
-                            (openArticleIds.has(id.toLowerCase())
-                              ? " - open"
-                              : "")
-                          }
-                        />
-                      </ListItemButton>
-                    ))}
-                  </List>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </Stack>
       </Stack>
     </>

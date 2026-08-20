@@ -13,7 +13,7 @@ export const NotesAndEditorPanel: React.FC = () => {
     articles,
     setNoteForBookChapter,
     setArticleById,
-    refreshNotesDate,
+    lastFileSyncDate,
     editorOpen,
     setEditorOpen,
   } = useContext(BibleContext as React.Context<any>);
@@ -66,20 +66,20 @@ export const NotesAndEditorPanel: React.FC = () => {
     //   currentNoteText.length,
     // );
     // dont open editor if there is no text at all but open if length = 0
-    if (refreshNotesDate && currentNoteText.length === 0) {
+    if (lastFileSyncDate && currentNoteText.length === 0) {
       setEditorOpen(true);
     }
-  }, [refreshNotesDate]);
+  }, [lastFileSyncDate]);
 
   return (
     <Card>
       <CardActions>
-        {refreshNotesDate && !editorOpen && (
+        {lastFileSyncDate && !editorOpen && (
           <Button variant="contained" onClick={() => setEditorOpen(true)}>
             Open Editor
           </Button>
         )}
-        {refreshNotesDate && editorOpen && (
+        {lastFileSyncDate && editorOpen && (
           <Button variant="contained" onClick={() => setEditorOpen(false)}>
             Close Editor
           </Button>
@@ -90,7 +90,7 @@ export const NotesAndEditorPanel: React.FC = () => {
       </CardActions>
       <hr />
       <CardContent>
-        {!refreshNotesDate && (
+        {!lastFileSyncDate && (
           <div>
             <h2>Personal notes</h2>
             <br />
@@ -107,7 +107,7 @@ export const NotesAndEditorPanel: React.FC = () => {
             {/*/>*/}
           </div>
         )}
-        {refreshNotesDate && editorOpen && (
+        {lastFileSyncDate && editorOpen && (
           <>
             <Editor
               value={currentNoteText}
@@ -124,7 +124,7 @@ export const NotesAndEditorPanel: React.FC = () => {
                   html,
                 );
               }}
-              refreshNotesDate={refreshNotesDate}
+              lastFileSyncDate={lastFileSyncDate}
             />
           </>
         )}

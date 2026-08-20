@@ -108,15 +108,15 @@ export const closeTab = (
 
 export const updateTab = (
   setTabs: SetTabs,
-  setRefreshNotesDate: (d: Date | undefined) => void,
-  refreshNotesDate: Date | undefined,
+  setLastFileSyncDate: (d: Date | undefined) => void,
+  lastFileSyncDate: Date | undefined,
   tabId: number,
   patch: Partial<TabState>,
 ) => {
   setTabs((prev) =>
     prev.map((t, idx) => (idx === tabId ? { ...t, ...patch } : t)),
   );
-  if (refreshNotesDate) setRefreshNotesDate(new Date());
+  if (lastFileSyncDate) setLastFileSyncDate(new Date());
 };
 
 export const openTabForBookChapter = (

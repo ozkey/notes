@@ -11,7 +11,11 @@ import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import PhotoSizeSelectLargeIcon from "@mui/icons-material/PhotoSizeSelectLarge";
 import PhotoSizeSelectSmallIcon from "@mui/icons-material/PhotoSizeSelectSmall";
 import WidthFullIcon from "@mui/icons-material/WidthFull";
-import type { LinkMenuState, ImageMenuState, ResizeOverlayState } from "./types";
+import type {
+  LinkMenuState,
+  ImageMenuState,
+  ResizeOverlayState,
+} from "./types";
 
 /**
  * Context menu for link operations
@@ -34,23 +38,21 @@ export const LinkContextMenu: React.FC<LinkMenuProps> = ({
   if (!menu) return null;
 
   return (
-    <div
-      className="editor-floating-menu"
-      style={{ left: menu.x, top: menu.y }}
-    >
+    <div className="editor-floating-menu" style={{ left: menu.x, top: menu.y }}>
       <button type="button" onClick={onOpen}>
         Open
       </button>
-      <button type="button" onClick={onEdit}>
-        Edit Link
-      </button>
+
       {menu.isBibleLink && (
         <button type="button" onClick={onEditBible}>
-          Edit Bible
+          Edit Link (Bible/Article)
         </button>
       )}
       <button type="button" onClick={onRemove}>
         Remove
+      </button>
+      <button type="button" onClick={onEdit}>
+        Edit Link
       </button>
     </div>
   );
@@ -85,10 +87,7 @@ export const ImageContextMenu: React.FC<ImageMenuProps> = ({
   if (!menu) return null;
 
   return (
-    <div
-      className="editor-floating-menu"
-      style={{ left: menu.x, top: menu.y }}
-    >
+    <div className="editor-floating-menu" style={{ left: menu.x, top: menu.y }}>
       <button
         type="button"
         title="Small image size"
