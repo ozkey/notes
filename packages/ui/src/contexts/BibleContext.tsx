@@ -98,6 +98,24 @@ export interface BibleContextType {
   ) => HighlightData[];
 }
 
+export const BibleReferenceContext = createContext<{
+  tabs: TabState[];
+  currentTab: number;
+  bibleText: any | null;
+}>({
+  tabs: [
+    {
+      mode: "home",
+      selectedBook: null,
+      chapterNumber: 1,
+      verseNumber: null,
+      articleId: null,
+    },
+  ],
+  currentTab: 0,
+  bibleText: null,
+});
+
 export const BibleContext = createContext<BibleContextType>({
   tabs: [
     {
@@ -401,44 +419,89 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
+  const bibleContextValue = React.useMemo(
+    () => ({
+      tabs,
+      currentTab,
+      setCurrentTab,
+      addTab,
+      closeTab,
+      updateTab,
+      books,
+      notes,
+      articles,
+      refreshNotesDate,
+      setRefreshNotesDate,
+      setNoteForBookChapter,
+      setArticleById,
+      replaceAllNotes,
+      replaceAllArticles,
+      openHomeInCurrentTab,
+      openBibleInCurrentTab,
+      openArticleInCurrentTab,
+      // editor UI state exposed in context
+      editorOpen,
+      setEditorOpen,
+      bibleText,
+      loadingBibleText,
+      loadBibleText,
+      bibleTranslations: BIBLE_TRANSLATIONS,
+      selectedBibleTranslation,
+      setSelectedBibleTranslation,
+      saveNotesToFile,
+      loadNotesFromFile,
+      setHighlight,
+      removeHighlight,
+      getHighlights,
+    }),
+    [
+      addTab,
+      articles,
+      bibleText,
+      books,
+      closeTab,
+      currentTab,
+      editorOpen,
+      getHighlights,
+      loadBibleText,
+      loadNotesFromFile,
+      loadingBibleText,
+      notes,
+      openArticleInCurrentTab,
+      openBibleInCurrentTab,
+      openHomeInCurrentTab,
+      refreshNotesDate,
+      removeHighlight,
+      replaceAllArticles,
+      replaceAllNotes,
+      saveNotesToFile,
+      selectedBibleTranslation,
+      setArticleById,
+      setCurrentTab,
+      setEditorOpen,
+      setHighlight,
+      setNoteForBookChapter,
+      setRefreshNotesDate,
+      setSelectedBibleTranslation,
+      tabs,
+      updateTab,
+    ],
+  );
+
+  const bibleReferenceContextValue = React.useMemo(
+    () => ({
+      tabs,
+      currentTab,
+      bibleText,
+    }),
+    [currentTab, tabs, bibleText],
+  );
+
   return (
-    <BibleContext.Provider
-      value={{
-        tabs,
-        currentTab,
-        setCurrentTab,
-        addTab,
-        closeTab,
-        updateTab,
-        books,
-        notes,
-        articles,
-        refreshNotesDate,
-        setRefreshNotesDate,
-        setNoteForBookChapter,
-        setArticleById,
-        replaceAllNotes,
-        replaceAllArticles,
-        openHomeInCurrentTab,
-        openBibleInCurrentTab,
-        openArticleInCurrentTab,
-        // editor UI state exposed in context
-        editorOpen,
-        setEditorOpen,
-        bibleText,
-        loadingBibleText,
-        loadBibleText,
-        bibleTranslations: BIBLE_TRANSLATIONS,
-        selectedBibleTranslation,
-        setSelectedBibleTranslation,
-        saveNotesToFile,
-        loadNotesFromFile,
-        setHighlight,
-        removeHighlight,
-        getHighlights,
-      }}
-    >
-      {children}
+    <BibleContext.Provider value={bibleContextValue}>
+      <BibleReferenceContext.Provider value={bibleReferenceContextValue}>
+        {children}
+      </BibleReferenceContext.Provider>
     </BibleContext.Provider>
   );
 };

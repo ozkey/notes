@@ -8,7 +8,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import BibleContext from "../../contexts/BibleContext";
+import { BibleReferenceContext } from "../../contexts/BibleContext";
 import {
   BOOK_GROUPS,
   buildCrossReferenceBookTokenByAlias,
@@ -151,9 +151,9 @@ const renderReferenceLink = (reference: string) => {
   );
 };
 
-export const RefPanel = () => {
+export const RefPanel = React.memo(() => {
   const { tabs, currentTab, bibleText } = useContext(
-    BibleContext as React.Context<any>,
+   BibleReferenceContext as React.Context<any>,
   );
   const [crossReferenceEntries, setCrossReferenceEntries] = useState<
     CrossReferenceEntry[]
@@ -162,11 +162,15 @@ export const RefPanel = () => {
    () => tabs[currentTab]?.mode === "bible",
   );
   const [loadError, setLoadError] = useState<string | null>(null);
-  const currentTabState = tabs[currentTab] ?? {
-   mode: "home",
-    selectedBook: null,
-    chapterNumber: 1,
-  };
+  const currentTabState = useMemo(
+   () =>
+     tabs[currentTab] ?? {
+       mode: "home",
+       selectedBook: null,
+       chapterNumber: 1,
+     },
+   [currentTab, tabs],
+  );
 
   const selectedBook = currentTabState.selectedBook as string | null;
   const chapterNumber = currentTabState.chapterNumber as number;
@@ -325,4 +329,6 @@ export const RefPanel = () => {
       </CardContent>
     </Card>
   );
-};
+});
+
+RefPanel.displayName = "RefPanel";

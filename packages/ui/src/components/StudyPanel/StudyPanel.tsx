@@ -1,27 +1,19 @@
-import { Box, Card, CardContent, Tab, Tabs } from "@mui/material";
-import React, { useState } from "react";
+import { Card, CardContent } from "@mui/material";
 
-import { NotesAndEditorPanel } from "./NotesPanel/NotesAndEditorPanel";
+import { NotesAndEditorPanel } from "../StudyPanel/NotesPanel/NotesAndEditorPanel";
+import React from "react";
 import { RefPanel } from "../ReferencePanel/RefPanel";
 
-export const StudyPanel = () => {
-  const [activeTab, setActiveTab] = useState<"notes" | "references">("notes");
-
+export const StudyPanel = React.memo(() => {
   return (
     <Card>
-      <CardContent sx={{ pb: 0 }}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs
-            value={activeTab}
-            onChange={(_, newValue) => setActiveTab(newValue)}
-            aria-label="Study panel tabs"
-          >
-            <Tab label="Notes" value="notes" />
-            <Tab label="References" value="references" />
-          </Tabs>
-        </Box>
+      <CardContent>
+        <NotesAndEditorPanel />
+        <br />
+        <RefPanel />
       </CardContent>
-      {activeTab === "notes" ? <NotesAndEditorPanel /> : <RefPanel />}
     </Card>
   );
-};
+});
+
+StudyPanel.displayName = "StudyPanel";
