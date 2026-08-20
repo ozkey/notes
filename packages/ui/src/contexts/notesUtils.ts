@@ -39,11 +39,11 @@ export const setNoteForBookChapter = (
  */
 export const replaceAllNotes = (
   setNotes: SetNotes,
-  setRefreshNotesDate: (date: Date) => void,
+  setLastFileSyncDate: (date: Date) => void,
   entries: NoteEntry[],
 ) => {
   setNotes(entries ?? []);
-  setRefreshNotesDate(new Date());
+  setLastFileSyncDate(new Date());
 };
 
 export const setArticleById = (
@@ -67,11 +67,11 @@ export const setArticleById = (
 
 export const replaceAllArticles = (
   setArticles: SetArticles,
-  setRefreshNotesDate: (date: Date) => void,
+  setLastFileSyncDate: (date: Date) => void,
   entries: ArticleEntry[],
 ) => {
   setArticles(entries ?? []);
-  setRefreshNotesDate(new Date());
+  setLastFileSyncDate(new Date());
 };
 
 export const setHighlight = (

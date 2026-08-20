@@ -93,7 +93,7 @@ import "./Editor.css";
  */
 export default function Editor({
   value = "",
-  refreshNotesDate: _refreshNotesDate,
+  lastFileSyncDate: _lastFileSyncDate,
   onChange,
 }: EditorProps) {
   // ============================================================================

@@ -34,7 +34,7 @@ The single React context (`BibleContextType`) that all components consume. Key f
 | `notes` | `NoteEntry[]` | Per-chapter notes (including highlights) |
 | `articles` | `ArticleEntry[]` | Free-form articles keyed by `#id` |
 | `bibleText` | `any \| null` | Parsed JSON from the selected translation |
-| `refreshNotesDate` | `Date \| undefined` | Truthy when a notes file is loaded; gates save/edit UI |
+| `lastFileSyncDate` | `Date \| undefined` | Truthy when a notes file is loaded; gates save/edit UI |
 | `editorOpen` | `boolean` | Whether the rich-text editor is visible |
 
 Highlights are stored inside `NoteEntry.highlights: HighlightData[]` and managed by `setHighlight`, `removeHighlight`, `getHighlights`.
@@ -96,11 +96,11 @@ Thin wrapper `<Card>` that composes `NotesAndEditorPanel` and `RefPanel`.
 
 #### `NotesAndEditorPanel` — `src/components/StudyPanel/NotesPanel/NotesAndEditorPanel.tsx`
 Manages note/article editing UI:
-- **No notes file loaded** (`!refreshNotesDate`): shows "New File" prompt.
+- **No notes file loaded** (`!lastFileSyncDate`): shows "New File" prompt.
 - **Home mode**: shows "Select an option from Home to get started."
 - **Bible/article mode**: shows the current note as rendered HTML (read-only) **or** the `Editor` component (when `editorOpen`). Toggle via "Open Editor" / "Close Editor" buttons.
 
-Auto-opens the editor when `refreshNotesDate` is set and `currentNoteText` is empty (new note).
+Auto-opens the editor when `lastFileSyncDate` is set and `currentNoteText` is empty (new note).
 
 ---
 
@@ -116,7 +116,7 @@ Only active in `bible` mode; shows a placeholder otherwise.
 ---
 
 #### `SaveOpen` — `src/components/ActionBar/SaveOpen.tsx`
-Two-button row: **Load** (calls `loadNotesFromFile`) and either **New File** or **Save** depending on `refreshNotesDate`. Used in `HomeTab` and `NotesAndEditorPanel`.
+Two-button row: **Load** (calls `loadNotesFromFile`) and either **New File** or **Save** depending on `lastFileSyncDate`. Used in `HomeTab` and `NotesAndEditorPanel`.
 
 ---
 

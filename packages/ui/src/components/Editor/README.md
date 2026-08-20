@@ -30,7 +30,7 @@ Editor/
 **Purpose:** Centralized TypeScript type definitions
 
 **Key Types:**
-- `EditorProps` - Component props (value, refreshNotesDate, onChange)
+- `EditorProps` - Component props (value, lastFileSyncDate, onChange)
 - `LinkMenuState` - Context menu state for links
 - `ImageMenuState` - Context menu state for images
 - `ResizeOverlayState` - Image resize handle overlay state

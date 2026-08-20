@@ -356,49 +356,49 @@ describe("updateTab", () => {
   test("applies patch to specified tab", () => {
     let capturedUpdater: ((prev: TabState[]) => TabState[]) | null = null;
     const mockSetTabs = jest.fn((fn: any) => { capturedUpdater = fn; });
-    const mockSetRefreshNotesDate = jest.fn();
+    const mocksetLastFileSyncDate = jest.fn();
 
     const tab: TabState = { mode: "home", selectedBook: null, chapterNumber: 1, articleId: null };
-    updateTab(mockSetTabs, mockSetRefreshNotesDate, undefined, 0, { mode: "bible" });
+    updateTab(mockSetTabs, mocksetLastFileSyncDate, undefined, 0, { mode: "bible" });
 
     const result = capturedUpdater!([tab]);
     expect(result[0].mode).toBe("bible");
   });
 
-  test("does not call setRefreshNotesDate when undefined", () => {
+  test("does not call setLastFileSyncDate when undefined", () => {
     let capturedUpdater: ((prev: TabState[]) => TabState[]) | null = null;
     const mockSetTabs = jest.fn((fn: any) => { capturedUpdater = fn; });
-    const mockSetRefreshNotesDate = jest.fn();
+    const mocksetLastFileSyncDate = jest.fn();
 
     const tab: TabState = { mode: "home", selectedBook: null, chapterNumber: 1, articleId: null };
-    updateTab(mockSetTabs, mockSetRefreshNotesDate, undefined, 0, { chapterNumber: 5 });
+    updateTab(mockSetTabs, mocksetLastFileSyncDate, undefined, 0, { chapterNumber: 5 });
     capturedUpdater!([tab]);
 
-    expect(mockSetRefreshNotesDate).not.toHaveBeenCalled();
+    expect(mocksetLastFileSyncDate).not.toHaveBeenCalled();
   });
 
-  test("calls setRefreshNotesDate with new Date when refreshNotesDate is defined", () => {
+  test("calls setLastFileSyncDate with new Date when lastFileSyncDate is defined", () => {
     let capturedUpdater: ((prev: TabState[]) => TabState[]) | null = null;
     const mockSetTabs = jest.fn((fn: any) => { capturedUpdater = fn; });
-    const mockSetRefreshNotesDate = jest.fn();
+    const mocksetLastFileSyncDate = jest.fn();
 
     const tab: TabState = { mode: "home", selectedBook: null, chapterNumber: 1, articleId: null };
-    updateTab(mockSetTabs, mockSetRefreshNotesDate, new Date(), 0, { chapterNumber: 5 });
+    updateTab(mockSetTabs, mocksetLastFileSyncDate, new Date(), 0, { chapterNumber: 5 });
     capturedUpdater!([tab]);
 
-    expect(mockSetRefreshNotesDate).toHaveBeenCalledWith(expect.any(Date));
+    expect(mocksetLastFileSyncDate).toHaveBeenCalledWith(expect.any(Date));
   });
 
   test("leaves other tabs unchanged", () => {
     let capturedUpdater: ((prev: TabState[]) => TabState[]) | null = null;
     const mockSetTabs = jest.fn((fn: any) => { capturedUpdater = fn; });
-    const mockSetRefreshNotesDate = jest.fn();
+    const mocksetLastFileSyncDate = jest.fn();
 
     const tabs: TabState[] = [
       { mode: "home", selectedBook: null, chapterNumber: 1, articleId: null },
       { mode: "bible", selectedBook: "Genesis", chapterNumber: 2, articleId: null },
     ];
-    updateTab(mockSetTabs, mockSetRefreshNotesDate, undefined, 0, { chapterNumber: 99 });
+    updateTab(mockSetTabs, mocksetLastFileSyncDate, undefined, 0, { chapterNumber: 99 });
 
     const result = capturedUpdater!(tabs);
     expect(result[0].chapterNumber).toBe(99);
