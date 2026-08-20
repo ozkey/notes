@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Link,
@@ -21,7 +22,7 @@ import {
   fetchCrossReferences,
 } from "../../contexts/crossReferenceLoader";
 
-const VOTE_THRESHOLD = 0;
+const VOTE_THRESHOLD = 50;
 
 const REFERENCE_BOOK_NAME_BY_TOKEN = (() => {
   const lookup = new Map<string, string>();
@@ -38,7 +39,9 @@ const REFERENCE_BOOK_NAME_BY_TOKEN = (() => {
 })();
 
 const resolveBookNameFromReferenceToken = (bookToken: string) => {
-  return REFERENCE_BOOK_NAME_BY_TOKEN.get(normalizeBookAlias(bookToken)) ?? null;
+  return (
+    REFERENCE_BOOK_NAME_BY_TOKEN.get(normalizeBookAlias(bookToken)) ?? null
+  );
 };
 
 const buildBibleVerseLookup = (bibleText: any) => {
@@ -81,12 +84,15 @@ const getReferenceVerseText = (
   return bibleVerseLookup.get(verseKey) ?? null;
 };
 
-const buildChapterReferenceIndex = (entries: CrossReferenceEntry[]) => {
+const buildChapterReferenceIndex = (
+  entries: CrossReferenceEntry[],
+  ignoreVoteThreshold: boolean,
+) => {
   const linkedFrom = new Map<string, CrossReferenceEntry[]>();
   const linkedTo = new Map<string, CrossReferenceEntry[]>();
 
   for (const entry of entries) {
-    if (entry.votes <= VOTE_THRESHOLD) continue;
+    if (!ignoreVoteThreshold && entry.votes <= VOTE_THRESHOLD) continue;
 
     for (const chapterKey of extractCrossReferenceChapterKeys(entry.from)) {
       const existingEntries = linkedFrom.get(chapterKey);
@@ -153,23 +159,24 @@ const renderReferenceLink = (reference: string) => {
 
 export const RefPanel = React.memo(() => {
   const { tabs, currentTab, bibleText } = useContext(
-   BibleReferenceContext as React.Context<any>,
+    BibleReferenceContext as React.Context<any>,
   );
   const [crossReferenceEntries, setCrossReferenceEntries] = useState<
     CrossReferenceEntry[]
   >([]);
+  const [ignoreVoteThreshold, setIgnoreVoteThreshold] = useState(false);
   const [loadingReferences, setLoadingReferences] = useState(
-   () => tabs[currentTab]?.mode === "bible",
+    () => tabs[currentTab]?.mode === "bible",
   );
   const [loadError, setLoadError] = useState<string | null>(null);
   const currentTabState = useMemo(
-   () =>
-     tabs[currentTab] ?? {
-       mode: "home",
-       selectedBook: null,
-       chapterNumber: 1,
-     },
-   [currentTab, tabs],
+    () =>
+      tabs[currentTab] ?? {
+        mode: "home",
+        selectedBook: null,
+        chapterNumber: 1,
+      },
+    [currentTab, tabs],
   );
 
   const selectedBook = currentTabState.selectedBook as string | null;
@@ -210,8 +217,8 @@ export const RefPanel = React.memo(() => {
   );
 
   const referenceIndex = useMemo(
-    () => buildChapterReferenceIndex(crossReferenceEntries),
-    [crossReferenceEntries],
+    () => buildChapterReferenceIndex(crossReferenceEntries, ignoreVoteThreshold),
+    [crossReferenceEntries, ignoreVoteThreshold],
   );
 
   const bibleVerseLookup = useMemo(
@@ -245,6 +252,10 @@ export const RefPanel = React.memo(() => {
     return `${trimmedText} — v: ${votes}`;
   };
 
+  const toggleVoteThresholdLabel = ignoreVoteThreshold
+    ? "show relevant only"
+    : "show all";
+
   return (
     <Card>
       <CardContent>
@@ -256,75 +267,92 @@ export const RefPanel = React.memo(() => {
         )}
 
         {chapterKey && !loadingReferences && !loadError && (
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-              gap: 2,
-              alignItems: "stretch",
-            }}
-          >
-            <Card variant="outlined">
-              <CardContent>
-                <h3>
-                  Linked from {selectedBook} {chapterNumber}
-                </h3>
-                {linkedFromChapter.length === 0 && <p>No references found.</p>}
-                {linkedFromChapter.length > 0 && (
-                  <List dense>
-                    {linkedFromChapter.map((entry, index) => (
-                      <ListItem key={`${entry.from}-${entry.to}-${index}`}>
-                        <ListItemText
-                          primary={
-                            <>
-                              {renderReferenceLink(entry.from)} {" => "}{" "}
-                              {renderReferenceLink(entry.to)}
-                            </>
-                          }
-                          secondary={getReferenceSecondaryText(
-                            entry.to,
-                            entry.votes,
-                          )}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-              </CardContent>
-            </Card>
+          <>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: 2,
+                alignItems: "stretch",
+              }}
+            >
+              <Card variant="outlined">
+                <CardContent>
+                  <h3>
+                    Linked from {selectedBook} {chapterNumber}
+                  </h3>
+                  {linkedFromChapter.length === 0 && <p>No references found.</p>}
+                  {linkedFromChapter.length > 0 && (
+                    <List dense>
+                      {linkedFromChapter.map((entry, index) => (
+                        <ListItem key={`${entry.from}-${entry.to}-${index}`}>
+                          <ListItemText
+                            primary={
+                              <>
+                                {renderReferenceLink(entry.from)} {" => "}{" "}
+                                {renderReferenceLink(entry.to)}
+                              </>
+                            }
+                            secondary={getReferenceSecondaryText(
+                              entry.to,
+                              entry.votes,
+                            )}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </CardContent>
+              </Card>
 
-            <Card variant="outlined">
-              <CardContent>
-                <h3>
-                  Linking to {selectedBook} {chapterNumber}
-                </h3>
-                {linkedToChapter.length === 0 && <p>No references found.</p>}
-                {linkedToChapter.length > 0 && (
-                  <List dense>
-                    {linkedToChapter.map((entry, index) => (
-                      <ListItem
-                        key={`${entry.from}-${entry.to}-${index}`}
-                        disableGutters
-                      >
-                        <ListItemText
-                          primary={
-                            <>
-                              {renderReferenceLink(entry.from)} {" => "}{" "}
-                              {renderReferenceLink(entry.to)}
-                            </>
-                          }
-                          secondary={getReferenceSecondaryText(
-                            entry.from,
-                            entry.votes,
-                          )}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-              </CardContent>
-            </Card>
-          </Box>
+              <Card variant="outlined">
+                <CardContent>
+                  <h3>
+                    Linking to {selectedBook} {chapterNumber}
+                  </h3>
+                  {linkedToChapter.length === 0 && <p>No references found.</p>}
+                  {linkedToChapter.length > 0 && (
+                    <List dense>
+                      {linkedToChapter.map((entry, index) => (
+                        <ListItem
+                          key={`${entry.from}-${entry.to}-${index}`}
+                          disableGutters
+                        >
+                          <ListItemText
+                            primary={
+                              <>
+                                {renderReferenceLink(entry.from)} {" => "}{" "}
+                                {renderReferenceLink(entry.to)}
+                              </>
+                            }
+                            secondary={getReferenceSecondaryText(
+                              entry.from,
+                              entry.votes,
+                            )}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </CardContent>
+              </Card>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                mt: 2,
+              }}
+            >
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => setIgnoreVoteThreshold((current) => !current)}
+              >
+                {toggleVoteThresholdLabel}
+              </Button>
+            </Box>
+          </>
         )}
       </CardContent>
     </Card>
