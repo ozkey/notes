@@ -4,6 +4,7 @@ import {
   articleIdsMatch,
   addTab,
   closeTab,
+  moveTab,
   updateTab,
   openTabForBookChapter,
   MAX_TAB_LIMIT,
@@ -213,12 +214,13 @@ describe("addTab", () => {
 
     const result = capturedUpdater!([homeTab]);
     expect(result).toHaveLength(2);
-    expect(result[1]).toEqual({
+    expect(result[1]).toEqual(expect.objectContaining({
       mode: "home",
       selectedBook: null,
       chapterNumber: 1,
+      verseNumber: null,
       articleId: null,
-    });
+    }));
     expect(mockSetCurrentTab).toHaveBeenCalledWith(1);
   });
 
@@ -279,9 +281,14 @@ describe("closeTab", () => {
     closeTab(mockSetTabs, mockSetCurrentTab, 0);
 
     const result = capturedTabsUpdater!([homeTab(1)]);
-    expect(result).toEqual([
-      { mode: "home", selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: null },
-    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(expect.objectContaining({
+      mode: "home",
+      selectedBook: null,
+      chapterNumber: 1,
+      verseNumber: null,
+      articleId: null,
+    }));
     expect(mockSetCurrentTab).toHaveBeenCalledWith(0);
   });
 
@@ -347,6 +354,52 @@ describe("closeTab", () => {
     const getNewCurrent = captureSetCurrentTabUpdater(mockSetCurrentTab);
     // current is 0, closing tab 2 which is > 0 => return cur (0)
     expect(getNewCurrent(0)).toBe(0);
+  });
+});
+
+// ─── moveTab ───────────────────────────────────────────────────────────────────
+
+describe("moveTab", () => {
+  const tab = (id: string, chapterNumber: number): TabState => ({
+    id,
+    mode: "home",
+    selectedBook: null,
+    chapterNumber,
+    verseNumber: null,
+    articleId: null,
+  });
+
+  test("moves a tab to a new position", () => {
+    let capturedUpdater: ((prev: TabState[]) => TabState[]) | null = null;
+    const mockSetTabs = jest.fn((fn: any) => {
+      capturedUpdater = fn;
+    });
+    const mockSetCurrentTab = jest.fn();
+
+    moveTab(mockSetTabs, mockSetCurrentTab, 0, 2);
+
+    const result = capturedUpdater!([
+      tab("a", 1),
+      tab("b", 2),
+      tab("c", 3),
+    ]);
+    expect(result.map((entry) => entry.id)).toEqual(["b", "c", "a"]);
+    expect(mockSetCurrentTab).toHaveBeenCalled();
+  });
+
+  test("keeps current tab aligned when the selected tab is moved", () => {
+    let capturedUpdater: ((prev: TabState[]) => TabState[]) | null = null;
+    const mockSetTabs = jest.fn((fn: any) => {
+      capturedUpdater = fn;
+    });
+    const mockSetCurrentTab = jest.fn();
+
+    moveTab(mockSetTabs, mockSetCurrentTab, 1, 0);
+
+    capturedUpdater!([tab("a", 1), tab("b", 2), tab("c", 3)]);
+
+    const updater = mockSetCurrentTab.mock.calls[0][0];
+    expect(updater(1)).toBe(0);
   });
 });
 

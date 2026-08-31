@@ -4,7 +4,7 @@ import { BibleContext, BibleContextType } from '../../contexts/BibleContext';
 import { BIBLE_TRANSLATIONS } from '../../contexts/bibleTextLoader';
 
 export const DEFAULT_MOCK_TABS = [
-  { mode: 'home' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: null },
+  { id: 'tab-1', mode: 'home' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: null },
 ];
 
 export const createMockContextValue = (
@@ -15,12 +15,14 @@ export const createMockContextValue = (
   setCurrentTab: jest.fn(),
   addTab: jest.fn(),
   closeTab: jest.fn(),
+  moveTab: jest.fn(),
   updateTab: jest.fn(),
   books: ['Genesis', 'Exodus', 'Matthew', 'Revelation'],
   notes: [],
   articles: [],
   lastFileSyncDate: undefined,
   setLastFileSyncDate: jest.fn(),
+  hasUnsavedChanges: false,
   bibleText: null,
   loadingBibleText: false,
   loadBibleText: jest.fn().mockResolvedValue(undefined),

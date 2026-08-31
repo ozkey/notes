@@ -3,6 +3,40 @@ import { TabState } from "./BibleTypes";
 
 // Maximum number of tabs allowed
 export const MAX_TAB_LIMIT = 10;
+let tabIdCounter = 0;
+
+export const createTabId = () => `tab-${++tabIdCounter}`;
+
+export const createHomeTab = (): TabState => ({
+  id: createTabId(),
+  mode: "home",
+  selectedBook: null,
+  chapterNumber: 1,
+  verseNumber: null,
+  articleId: null,
+});
+
+export const createBibleTab = (
+  book: string,
+  chapterNumber: number,
+  verseNumber: number | null = null,
+): TabState => ({
+  id: createTabId(),
+  mode: "bible",
+  selectedBook: book,
+  chapterNumber,
+  verseNumber,
+  articleId: null,
+});
+
+export const createArticleTab = (articleId: string): TabState => ({
+  id: createTabId(),
+  mode: "article",
+  selectedBook: null,
+  chapterNumber: 1,
+  verseNumber: null,
+  articleId,
+});
 
 // Parse a hash of the form #book:chapter[:verse] and return normalized values
 // Accepts a list of candidate books and an optional default list to fall back to
@@ -69,10 +103,7 @@ export const addTab = (
 ) => {
   setTabs((prev) => {
     if (prev.length >= maxLimit) return prev;
-    const next: TabState[] = [
-      ...prev,
-      { mode: "home", selectedBook: null, chapterNumber: 1, articleId: null },
-    ];
+    const next: TabState[] = [...prev, createHomeTab()];
     setCurrentTab(next.length - 1);
     return next;
   });
@@ -86,15 +117,7 @@ export const closeTab = (
   setTabs((prev) => {
     if (prev.length <= 1) {
       setCurrentTab(0);
-      return [
-        {
-          mode: "home",
-          selectedBook: null,
-          chapterNumber: 1,
-          verseNumber: null,
-          articleId: null,
-        },
-      ];
+      return [createHomeTab()];
     }
     const next = prev.filter((_, idx) => idx !== i);
     setCurrentTab((cur) => {
@@ -119,6 +142,38 @@ export const updateTab = (
   if (lastFileSyncDate) setLastFileSyncDate(new Date());
 };
 
+export const moveTab = (
+  setTabs: SetTabs,
+  setCurrentTab: SetCurrentTab,
+  fromIndex: number,
+  toIndex: number,
+) => {
+  setTabs((prev) => {
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= prev.length ||
+      toIndex >= prev.length
+    ) {
+      return prev;
+    }
+
+    const next = [...prev];
+    const [movedTab] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, movedTab);
+
+    setCurrentTab((current) => {
+      if (current === fromIndex) return toIndex;
+      if (fromIndex < current && toIndex >= current) return current - 1;
+      if (fromIndex > current && toIndex <= current) return current + 1;
+      return current;
+    });
+
+    return next;
+  });
+};
+
 export const openTabForBookChapter = (
   setTabs: SetTabs,
   setCurrentTab: SetCurrentTab,
@@ -141,16 +196,7 @@ export const openTabForBookChapter = (
       );
     }
     if (prev.length >= maxLimit) return prev;
-    const next: TabState[] = [
-      ...prev,
-      {
-        mode: "bible",
-        selectedBook: book,
-        chapterNumber,
-        verseNumber,
-        articleId: null,
-      },
-    ];
+    const next: TabState[] = [...prev, createBibleTab(book, chapterNumber, verseNumber)];
     setCurrentTab(next.length - 1);
     return next;
   });

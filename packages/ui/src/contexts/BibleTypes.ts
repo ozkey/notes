@@ -2,6 +2,7 @@
 export type TabMode = "home" | "bible" | "article";
 
 export interface TabState {
+  id?: string;
   mode: TabMode;
   selectedBook: string | null;
   chapterNumber: number;

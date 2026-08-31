@@ -15,6 +15,9 @@ import {
   parseHash as parseHashUtil,
   addTab as addTabUtil,
   closeTab as closeTabUtil,
+  createArticleTab,
+  createHomeTab,
+  moveTab as moveTabUtil,
   updateTab as updateTabUtil,
   openTabForBookChapter as openTabForBookChapterUtil,
   articleIdsMatch,
@@ -47,6 +50,7 @@ export interface BibleContextType {
   setCurrentTab: (index: number) => void;
   addTab: () => void;
   closeTab: (index: number) => void;
+  moveTab: (fromIndex: number, toIndex: number) => void;
   updateTab: (index: number, patch: Partial<TabState>) => void;
   books: string[];
   notes: NoteEntry[];
@@ -135,6 +139,8 @@ export const BibleContext = createContext<BibleContextType>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   closeTab: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
+  moveTab: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   updateTab: () => {},
   books: BIBLE_BOOKS,
   notes: [{ book: "Matthew", chapterNumber: 1, text: "" }],
@@ -186,13 +192,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [tabs, setTabs] = useState<TabState[]>([
-    {
-      mode: "home",
-      selectedBook: null,
-      chapterNumber: 1,
-      verseNumber: null,
-      articleId: null,
-    },
+    createHomeTab(),
   ]);
   const [notes, setNotes] = useState<NoteEntry[]>([
     { book: "Matthew", chapterNumber: 1, text: "" },
@@ -258,6 +258,8 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   // tab helpers (delegated to utils)
   const addTab = () => addTabUtil(setTabs, setCurrentTab, MAX_TAB_LIMIT);
   const closeTab = (i: number) => closeTabUtil(setTabs, setCurrentTab, i);
+  const moveTab = (fromIndex: number, toIndex: number) =>
+    moveTabUtil(setTabs, setCurrentTab, fromIndex, toIndex);
   const updateTab = (tabId: number, patch: Partial<TabState>) =>
     updateTabUtil(setTabs, setLastFileSyncDate, lastFileSyncDate, tabId, patch);
 
@@ -296,13 +298,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
             if (previousTabs.length >= MAX_TAB_LIMIT) return previousTabs;
             const nextTabs: TabState[] = [
               ...previousTabs,
-              {
-                mode: "article",
-                selectedBook: null,
-                chapterNumber: 1,
-                verseNumber: null,
-                articleId: matchedArticle.id,
-              },
+              createArticleTab(matchedArticle.id),
             ];
             setCurrentTab(nextTabs.length - 1);
             return nextTabs;
@@ -464,6 +460,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       openHomeInCurrentTab,
       openBibleInCurrentTab,
       openArticleInCurrentTab,
+      moveTab,
       // editor UI state exposed in context
       editorOpen,
       setEditorOpen,
@@ -497,6 +494,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       openBibleInCurrentTab,
       openHomeInCurrentTab,
       lastFileSyncDate,
+      moveTab,
       removeHighlight,
       replaceAllArticles,
       replaceAllNotes,

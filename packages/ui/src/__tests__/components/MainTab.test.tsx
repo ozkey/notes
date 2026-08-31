@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MainTab } from '../../components/MainTab/MainTab';
 import { renderWithContext } from './testUtils';
@@ -16,7 +16,7 @@ jest.mock('../../components/MainTab/MainTabBox', () => ({
 
 describe('MainTab', () => {
   const homeTabs = [
-    { mode: 'home' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: null },
+    { id: 'tab-1', mode: 'home' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: null },
   ];
 
   it('renders a tab for each entry in tabs', () => {
@@ -31,7 +31,7 @@ describe('MainTab', () => {
 
   it('shows book and chapter as label for bible-mode tabs', () => {
     const bibleTabs = [
-      { mode: 'bible' as const, selectedBook: 'Genesis', chapterNumber: 2, verseNumber: null, articleId: null },
+      { id: 'tab-2', mode: 'bible' as const, selectedBook: 'Genesis', chapterNumber: 2, verseNumber: null, articleId: null },
     ];
     renderWithContext(<MainTab />, { tabs: bibleTabs, currentTab: 0 });
     expect(screen.getByText('Genesis 2')).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('MainTab', () => {
 
   it('shows "Select a book" when bible tab has no selected book', () => {
     const bibleTabs = [
-      { mode: 'bible' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: null },
+      { id: 'tab-3', mode: 'bible' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: null },
     ];
     renderWithContext(<MainTab />, { tabs: bibleTabs });
     expect(screen.getByText('Select a book')).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('MainTab', () => {
 
   it('shows article id as label for article-mode tabs', () => {
     const articleTabs = [
-      { mode: 'article' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: '#my-topic' },
+      { id: 'tab-4', mode: 'article' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: '#my-topic' },
     ];
     renderWithContext(<MainTab />, { tabs: articleTabs });
     expect(screen.getByText('#my-topic')).toBeInTheDocument();
@@ -59,7 +59,8 @@ describe('MainTab', () => {
   });
 
   it('hides the add tab button when at the tab limit', () => {
-    const maxTabs = Array.from({ length: MAX_TAB_LIMIT }, () => ({
+    const maxTabs = Array.from({ length: MAX_TAB_LIMIT }, (_, index) => ({
+      id: `tab-${index}`,
       mode: 'home' as const,
       selectedBook: null,
       chapterNumber: 1,
@@ -88,5 +89,22 @@ describe('MainTab', () => {
   it('renders the active tab panel content', () => {
     renderWithContext(<MainTab />, { tabs: homeTabs, currentTab: 0 });
     expect(screen.getByTestId('home-tab-content')).toBeInTheDocument();
+  });
+
+  it('reorders tabs when a tab is dropped onto another tab', () => {
+    const moveTab = jest.fn();
+    const tabs = [
+      { id: 'tab-a', mode: 'home' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: null },
+      { id: 'tab-b', mode: 'bible' as const, selectedBook: 'Genesis', chapterNumber: 2, verseNumber: null, articleId: null },
+    ];
+    renderWithContext(<MainTab />, { tabs, moveTab });
+
+    const sourceTab = screen.getByText('Home').closest('[role="tab"]') as HTMLElement;
+    const targetTab = screen.getByText('Genesis 2').closest('[role="tab"]') as HTMLElement;
+    fireEvent.dragStart(sourceTab);
+    fireEvent.dragOver(targetTab);
+    fireEvent.drop(targetTab);
+
+    expect(moveTab).toHaveBeenCalledWith(0, 1);
   });
 });

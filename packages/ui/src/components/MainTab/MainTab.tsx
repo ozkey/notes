@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import { TabState } from "../../contexts/BibleTypes";
 import { ContainedButtons } from "../ActionBar/ActionBar";
@@ -64,8 +64,10 @@ function getCustomTabPanel(i: number, currentTab: number, t: TabState) {
 }
 
 export const MainTab: React.FC = () => {
-  const { tabs, currentTab, setCurrentTab, addTab, closeTab } =
-    useContext(BibleContext);
+  const bibleContext = useContext(BibleContext);
+  const { tabs, currentTab, setCurrentTab, addTab, closeTab } = bibleContext;
+  const { moveTab } = bibleContext;
+  const [draggedTabIndex, setDraggedTabIndex] = useState<number | null>(null);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     // if user clicked the + tab (index === tabs.length) then add
@@ -74,6 +76,12 @@ export const MainTab: React.FC = () => {
       return;
     }
     setCurrentTab(newValue);
+  };
+
+  const handleDropOnTab = (targetIndex: number) => {
+    if (draggedTabIndex === null) return;
+    moveTab(draggedTabIndex, targetIndex);
+    setDraggedTabIndex(null);
   };
 
   return (
@@ -94,7 +102,16 @@ export const MainTab: React.FC = () => {
         >
           {tabs.map((t, i: number) => (
             <Tab
-              key={i}
+              component="div"
+              key={t.id ?? i}
+              draggable
+              onDragStart={() => setDraggedTabIndex(i)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                handleDropOnTab(i);
+              }}
+              onDragEnd={() => setDraggedTabIndex(null)}
               label={
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <span style={{ marginRight: 8 }}>
@@ -125,6 +142,15 @@ export const MainTab: React.FC = () => {
           ))}
           {tabs.length < MAX_TAB_LIMIT && (
             <Tab
+              component="div"
+              draggable
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                if (draggedTabIndex === null) return;
+                moveTab(draggedTabIndex, tabs.length - 1);
+                setDraggedTabIndex(null);
+              }}
               label={
                 <Box
                   component="span"
