@@ -21,6 +21,7 @@ export const createMockContextValue = (
   articles: [],
   lastFileSyncDate: undefined,
   setLastFileSyncDate: jest.fn(),
+  hasUnsavedChanges: false,
   bibleText: null,
   loadingBibleText: false,
   loadBibleText: jest.fn().mockResolvedValue(undefined),

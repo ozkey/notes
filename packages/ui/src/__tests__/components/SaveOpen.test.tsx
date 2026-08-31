@@ -36,4 +36,18 @@ describe('SaveOpen', () => {
     await userEvent.click(screen.getByText('Save'));
     expect(saveNotesToFile).toHaveBeenCalledTimes(1);
   });
+
+  it('shows unsaved-changes badge dot when hasUnsavedChanges is true', () => {
+    renderWithContext(<SaveOpen />, { lastFileSyncDate: new Date(), hasUnsavedChanges: true });
+    // MUI Badge renders a span with class MuiBadge-badge that is not invisible
+    const badge = document.querySelector('.MuiBadge-badge');
+    expect(badge).toBeInTheDocument();
+    expect(badge).not.toHaveClass('MuiBadge-invisible');
+  });
+
+  it('hides the badge when hasUnsavedChanges is false', () => {
+    renderWithContext(<SaveOpen />, { lastFileSyncDate: new Date(), hasUnsavedChanges: false });
+    const badge = document.querySelector('.MuiBadge-badge');
+    expect(badge).toHaveClass('MuiBadge-invisible');
+  });
 });

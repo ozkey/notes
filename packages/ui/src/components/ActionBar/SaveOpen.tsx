@@ -1,10 +1,10 @@
-import { Button } from "@mui/material";
+import { Badge, Button } from "@mui/material";
 import React, { useContext } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import Stack from "@mui/material/Stack";
 
 export const SaveOpen: React.FC = () => {
-  const { saveNotesToFile, loadNotesFromFile, lastFileSyncDate } = useContext(
+  const { saveNotesToFile, loadNotesFromFile, lastFileSyncDate, hasUnsavedChanges } = useContext(
     BibleContext as React.Context<any>,
   );
 
@@ -15,10 +15,12 @@ export const SaveOpen: React.FC = () => {
           Load
         </Button>
       )}
-      <Button variant="contained" onClick={() => saveNotesToFile()}>
-        {!lastFileSyncDate && <span>New File</span>}
-        {lastFileSyncDate && <span>Save</span>}
-      </Button>
+      <Badge color="warning" variant="dot" invisible={!hasUnsavedChanges}>
+        <Button variant="contained" onClick={() => saveNotesToFile()}>
+          {!lastFileSyncDate && <span>New File</span>}
+          {lastFileSyncDate && <span>Save</span>}
+        </Button>
+      </Badge>
     </Stack>
   );
 };
