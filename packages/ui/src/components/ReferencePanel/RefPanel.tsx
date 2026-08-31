@@ -307,14 +307,17 @@ export const RefPanel = React.memo(() => {
 
         {chapterKey && !loadingReferences && !loadError && (
           <>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 2,
-                alignItems: "stretch",
-              }}
-            >
+             <Box
+               sx={{
+                 display: "grid",
+                 gridTemplateColumns: {
+                   xs: "minmax(0, 1fr)",
+                   sm: "repeat(2, minmax(0, 1fr))",
+                 },
+                 gap: 2,
+                 alignItems: "stretch",
+               }}
+             >
               <Card variant="outlined">
                 <CardContent>
                   <h4>
