@@ -302,7 +302,7 @@ export const RefPanel = React.memo(() => {
         {loadingReferences && <p>Loading cross references...</p>}
         {loadError && <p>{loadError}</p>}
         {!loadingReferences && !loadError && !chapterKey && (
-          <p>Open a Bible chapter to view incoming and outgoing references.</p>
+          <p>No references found</p>
         )}
 
         {chapterKey && !loadingReferences && !loadError && (

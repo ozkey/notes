@@ -49,7 +49,7 @@ export const BOOK_GROUPS: BookGroup[] = [
       ["Nehemiah", "Neh"],
       ["Tobit", "Tob"],
       ["Judith", "Jdt"],
-      ["Esther", "Est"],
+      ["Esther", "Esth", "Est"],
       ["I Maccabees", "1 Maccabees", "1 Macc", "1 Mc"],
       ["II Maccabees", "2 Maccabees", "2 Macc", "2 Mc"],
     ],
