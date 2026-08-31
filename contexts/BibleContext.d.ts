@@ -8,6 +8,7 @@ export interface BibleContextType {
     setCurrentTab: (index: number) => void;
     addTab: () => void;
     closeTab: (index: number) => void;
+    moveTab: (fromIndex: number, toIndex: number) => void;
     updateTab: (index: number, patch: Partial<TabState>) => void;
     books: string[];
     notes: NoteEntry[];
