@@ -302,19 +302,22 @@ export const RefPanel = React.memo(() => {
         {loadingReferences && <p>Loading cross references...</p>}
         {loadError && <p>{loadError}</p>}
         {!loadingReferences && !loadError && !chapterKey && (
-          <p>Open a Bible chapter to view incoming and outgoing references.</p>
+          <p>No references found</p>
         )}
 
         {chapterKey && !loadingReferences && !loadError && (
           <>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 2,
-                alignItems: "stretch",
-              }}
-            >
+             <Box
+               sx={{
+                 display: "grid",
+                 gridTemplateColumns: {
+                   xs: "minmax(0, 1fr)",
+                   sm: "repeat(2, minmax(0, 1fr))",
+                 },
+                 gap: 2,
+                 alignItems: "stretch",
+               }}
+             >
               <Card variant="outlined">
                 <CardContent>
                   <h4>

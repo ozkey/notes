@@ -50,8 +50,8 @@ const bookSpineSx = {
   height: 155,
   px: 0.75,
   py: 1,
-  borderRadius: "4px 10px 10px 4px",
-  borderLeftWidth: 8,
+  borderRadius: "4px",
+  borderLeftWidth: 10,
   borderLeftStyle: "solid",
   borderLeftColor: "primary.dark",
   justifyContent: "center",
@@ -240,7 +240,10 @@ export const HomeTab: React.FC = () => {
                         sx={{
                           flexShrink: 0,
                           borderBottom: "4px solid",
-                          borderColor: "#234",
+                          borderColor: "rgba(139, 111, 71, 0.3)",
+                          // transparent 50% groupColor
+                          backgroundColor: "rgba(139, 111, 71, 0.1)",
+                          borderRadius: "10px 10px 0px 0px",
                           px: 1,
                           py: 0.75,
                         }}

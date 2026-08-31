@@ -112,6 +112,7 @@ describe("formatReferenceDisplay", () => {
     expect(formatReferenceDisplay("Gen.1.1")).toBe("Genesis:1:1");
     expect(formatReferenceDisplay("1Sam.3.16")).toBe("I Samuel:3:16");
     expect(formatReferenceDisplay("Song.8.6")).toBe("Song of Solomon:8:6");
+    expect(formatReferenceDisplay("Esth.2.7")).toBe("Esther:2:7");
   });
 
   test("falls back to colon-based formatting when the reference is malformed", () => {
@@ -200,6 +201,16 @@ describe("buildCrossReferenceBookTokenByAlias", () => {
     ];
     const map = buildCrossReferenceBookTokenByAlias(entries);
     expect(map.size).toBe(0);
+  });
+
+  test("maps full Esther aliases when cross references use the Esth token", () => {
+    const entries = [
+      { from: "Esth.1.1", to: "Rom.1.1" },
+    ];
+    const map = buildCrossReferenceBookTokenByAlias(entries);
+    expect(map.get("esther")).toBe("Esth");
+    expect(map.get("est")).toBe("Esth");
+    expect(map.get("esth")).toBe("Esth");
   });
 });
 
