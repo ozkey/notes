@@ -99,6 +99,9 @@ export const MainTab: React.FC = () => {
           value={currentTab}
           onChange={handleChange}
           aria-label="bible tabs"
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
         >
           {tabs.map((t, i: number) => (
             <Tab
@@ -113,7 +116,7 @@ export const MainTab: React.FC = () => {
               }}
               onDragEnd={() => setDraggedTabIndex(null)}
               label={
-                <div style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
                   <span style={{ marginRight: 8 }}>
                     {t.mode === "home"
                       ? "Home"
@@ -137,6 +140,12 @@ export const MainTab: React.FC = () => {
                   </IconButton>
                 </div>
               }
+              sx={{
+                minHeight: 48,
+                minWidth: "auto",
+                flexShrink: 0,
+                textTransform: "none",
+              }}
               {...a11yProps(i)}
             />
           ))}
@@ -164,10 +173,12 @@ export const MainTab: React.FC = () => {
                 >
                   <AddIcon fontSize="small" />
                   New Tab
-                </Box>
+                  </Box>
               }
               sx={{
                 minHeight: 48,
+                minWidth: "auto",
+                flexShrink: 0,
                 textTransform: "none",
                 border: 1,
                 borderColor: "primary.main",

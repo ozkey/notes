@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Autocomplete, TextField, Button } from "@mui/material";
+import { Autocomplete, Button, Stack, TextField } from "@mui/material";
 import BibleContext from "../../contexts/BibleContext";
 
 export const BookActions: React.FC = () => {
@@ -16,24 +16,44 @@ export const BookActions: React.FC = () => {
   const [chapterInput, setChapterInput] = useState<string>(
     String(current.chapterNumber ?? 1),
   );
+  const [verseInput, setVerseInput] = useState<string>(
+    current.verseNumber ? String(current.verseNumber) : "",
+  );
 
   useEffect(() => {
     setChapterInput(String(current.chapterNumber ?? 1));
-  }, [currentTab, current.chapterNumber]);
+    setVerseInput(current.verseNumber ? String(current.verseNumber) : "");
+  }, [currentTab, current.chapterNumber, current.selectedBook, current.verseNumber]);
 
-  const commitChapter = () => {
+  const commitSelection = () => {
     const parsed = parseInt(chapterInput, 10);
-    if (!Number.isNaN(parsed) && parsed >= 1) {
-      updateTab(currentTab, { chapterNumber: parsed, verseNumber: null });
-      setChapterInput(String(parsed));
-    } else {
-      // revert to last valid
+    const trimmedVerse = verseInput.trim();
+    const parsedVerse = trimmedVerse ? parseInt(trimmedVerse, 10) : null;
+
+    if (
+      Number.isNaN(parsed) ||
+      parsed < 1 ||
+      (parsedVerse !== null && (Number.isNaN(parsedVerse) || parsedVerse < 1))
+    ) {
       setChapterInput(String(current.chapterNumber ?? 1));
+      setVerseInput(current.verseNumber ? String(current.verseNumber) : "");
+      return;
     }
+
+    updateTab(currentTab, {
+      chapterNumber: parsed,
+      verseNumber: parsedVerse,
+    });
+    setChapterInput(String(parsed));
+    setVerseInput(parsedVerse ? String(parsedVerse) : "");
   };
 
   return (
-    <div style={{ display: "flex", gap: "0.2em", padding: "0.2em" }}>
+    <Stack
+      direction={{ xs: "column", sm: "row" }}
+      spacing={1}
+      sx={{ p: 0.25, width: "100%", alignItems: { xs: "stretch", sm: "center" } }}
+    >
       <Autocomplete
         freeSolo={false}
         options={books}
@@ -41,6 +61,7 @@ export const BookActions: React.FC = () => {
         onChange={(_, value) =>
           updateTab(currentTab, { selectedBook: value, verseNumber: null })
         }
+        fullWidth
         renderInput={(params) => (
           <TextField
             {...params}
@@ -49,7 +70,7 @@ export const BookActions: React.FC = () => {
             size="small"
           />
         )}
-        sx={{ width: 180 }}
+        sx={{ width: { xs: "100%", sm: 180 } }}
       />
 
       <TextField
@@ -61,18 +82,36 @@ export const BookActions: React.FC = () => {
         onChange={(e) => {
           setChapterInput(e.target.value);
         }}
-        onBlur={commitChapter}
+        onBlur={commitSelection}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            commitChapter();
+            commitSelection();
           }
         }}
-        sx={{ width: 70, marginLeft: 0 }}
+        sx={{ width: { xs: "100%", sm: 90 } }}
       />
-      <Button variant="contained" onClick={commitChapter}>
-        {/*&gt;*/}
+
+      <TextField
+        label="Verse"
+        variant="outlined"
+        size="small"
+        type="number"
+        value={verseInput}
+        onChange={(e) => {
+          setVerseInput(e.target.value);
+        }}
+        onBlur={commitSelection}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            commitSelection();
+          }
+        }}
+        sx={{ width: { xs: "100%", sm: 90 } }}
+      />
+
+      <Button variant="contained" onClick={commitSelection} sx={{ width: { xs: "100%", sm: "auto" } }}>
         Open
       </Button>
-    </div>
+    </Stack>
   );
 };

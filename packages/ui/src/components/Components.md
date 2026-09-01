@@ -83,7 +83,7 @@ Displays a single Bible chapter. States: no-book, loading, unavailable, book-not
 ---
 
 #### `BookActions` — `src/components/BiblePanel/BookActions.tsx`
-A compact toolbar (book `Autocomplete` + chapter `TextField` + Open button) that lives inside `BibleText`'s card header. Calls `updateTab(currentTab, { selectedBook, chapterNumber })`.
+A compact toolbar (book `Autocomplete` + chapter/verse `TextField`s + Open button) that lives inside `BibleText`'s card header. Calls `updateTab(currentTab, { selectedBook, chapterNumber, verseNumber })` and stacks vertically on mobile.
 
 ⚠️ MUI Autocomplete renders a popup-indicator button with `aria-label="Open"`. When querying for the chapter navigation "Open" button in tests, use `screen.getByText('Open')` rather than `getByRole('button', { name: /open/i })` to avoid ambiguity.
 

@@ -40,6 +40,34 @@ describe('BookActions', () => {
     expect(updateTab).toHaveBeenCalledWith(0, { chapterNumber: 5, verseNumber: null });
   });
 
+  it('calls updateTab with chapter and verse when verse is entered', async () => {
+    const updateTab = jest.fn();
+    renderWithContext(<BookActions />, {
+      tabs: [{ mode: 'bible', selectedBook: 'Genesis', chapterNumber: 1, verseNumber: null, articleId: null }],
+      updateTab,
+    });
+    const chapterInput = screen.getByRole('spinbutton', { name: /chapter/i });
+    const verseInput = screen.getByRole('spinbutton', { name: /verse/i });
+    await userEvent.clear(chapterInput);
+    await userEvent.type(chapterInput, '5');
+    await userEvent.clear(verseInput);
+    await userEvent.type(verseInput, '12');
+    await userEvent.click(screen.getByText('Open'));
+    expect(updateTab).toHaveBeenCalledWith(0, { chapterNumber: 5, verseNumber: 12 });
+  });
+
+  it('opens chapter only when verse is cleared', async () => {
+    const updateTab = jest.fn();
+    renderWithContext(<BookActions />, {
+      tabs: [{ mode: 'bible', selectedBook: 'Genesis', chapterNumber: 2, verseNumber: 7, articleId: null }],
+      updateTab,
+    });
+    const verseInput = screen.getByRole('spinbutton', { name: /verse/i });
+    await userEvent.clear(verseInput);
+    await userEvent.click(screen.getByText('Open'));
+    expect(updateTab).toHaveBeenCalledWith(0, { chapterNumber: 2, verseNumber: null });
+  });
+
   it('does not call updateTab with invalid chapter (non-numeric)', async () => {
     const updateTab = jest.fn();
     renderWithContext(<BookActions />, {
