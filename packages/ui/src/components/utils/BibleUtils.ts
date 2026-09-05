@@ -185,19 +185,9 @@ export const extractCrossReferenceChapterKeys = (reference: string) => {
   return chapterKeys;
 };
 
-export const buildCrossReferenceBookTokenByAlias = (
-  entries: { from: string; to: string }[],
-) => {
-  const tokens = new Set<string>();
-  for (const entry of entries) {
-    const fromToken = extractCrossReferenceBookToken(entry.from);
-    const toToken = extractCrossReferenceBookToken(entry.to);
-    if (fromToken) tokens.add(fromToken);
-    if (toToken) tokens.add(toToken);
-  }
-
+export const buildCrossReferenceBookTokenByAlias = (bookTokens: string[]) => {
   const map = new Map<string, string>();
-  for (const token of tokens) {
+  for (const token of bookTokens) {
     map.set(normalizeBookAlias(token), token);
   }
 

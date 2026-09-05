@@ -168,10 +168,7 @@ describe("extractCrossReferenceChapterKeys", () => {
 
 describe("buildCrossReferenceBookTokenByAlias", () => {
   test("builds alias map for Genesis entries", () => {
-    const entries = [
-      { from: "Gen.1.1", to: "Gen.2.1" },
-    ];
-    const map = buildCrossReferenceBookTokenByAlias(entries);
+    const map = buildCrossReferenceBookTokenByAlias(["Gen"]);
 
     // 'Gen' token should map to 'Gen'
     expect(map.get("gen")).toBe("Gen");
@@ -181,33 +178,19 @@ describe("buildCrossReferenceBookTokenByAlias", () => {
     expect(map.get("gn")).toBe("Gen");
   });
 
-  test("returns empty map for empty entries", () => {
+  test("returns empty map for empty token list", () => {
     const map = buildCrossReferenceBookTokenByAlias([]);
     expect(map.size).toBe(0);
   });
 
-  test("handles both 'from' and 'to' tokens", () => {
-    const entries = [
-      { from: "Gen.1.1", to: "Rev.22.1" },
-    ];
-    const map = buildCrossReferenceBookTokenByAlias(entries);
+  test("handles multiple tokens", () => {
+    const map = buildCrossReferenceBookTokenByAlias(["Gen", "Rev"]);
     expect(map.get("gen")).toBe("Gen");
     expect(map.get("rev")).toBe("Rev");
   });
 
-  test("handles entries without dots (null tokens) gracefully", () => {
-    const entries = [
-      { from: "NoBookRef", to: "AlsoNoRef" },
-    ];
-    const map = buildCrossReferenceBookTokenByAlias(entries);
-    expect(map.size).toBe(0);
-  });
-
   test("maps full Esther aliases when cross references use the Esth token", () => {
-    const entries = [
-      { from: "Esth.1.1", to: "Rom.1.1" },
-    ];
-    const map = buildCrossReferenceBookTokenByAlias(entries);
+    const map = buildCrossReferenceBookTokenByAlias(["Esth"]);
     expect(map.get("esther")).toBe("Esth");
     expect(map.get("est")).toBe("Esth");
     expect(map.get("esth")).toBe("Esth");

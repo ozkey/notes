@@ -105,9 +105,9 @@ Auto-opens the editor when `lastFileSyncDate` is set and `currentNoteText` is em
 ---
 
 #### `RefPanel` — `src/components/ReferencePanel/RefPanel.tsx`
-Loads `./public/Refdata/cross_references.json` only when the Bible panel is active, then indexes it for fast chapter lookups. Displays two MUI `List`s:
-- **Linked from** this chapter — other references that cite the current chapter.
-- **Linking to** this chapter — references from the current chapter to elsewhere.
+Loads `./public/Refdata/cross_references_from.json`, `cross_references_to.json`, and `books.json` only when the Bible panel is active. Both cross-reference files are keyed by book/chapter/verse (not a flat array), so the panel reads only the current chapter's data directly (`data[book][chapter]`) instead of scanning the whole dataset. Displays two MUI `List`s:
+- **Linked from** this chapter — references this chapter points to elsewhere (`cross_references_from.json`).
+- **Linking to** this chapter — other references that cite the current chapter (`cross_references_to.json`).
 
 Each entry is a clickable `<Link href="#BookName:chapter:verse">` that navigates via URL hash routing. Preview text for each reference is taken from the loaded `bibleText`.
 
