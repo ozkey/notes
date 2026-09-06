@@ -13,28 +13,37 @@ import { BibleReferenceContext } from "../../contexts/BibleContext";
 import {
   BOOK_GROUPS,
   buildCrossReferenceBookTokenByAlias,
-  extractCrossReferenceChapterKeys,
   formatReferenceDisplay,
   normalizeBookAlias,
   normalizeReferenceRange,
 } from "../utils/BibleUtils";
 import {
-  CrossReferenceEntry,
-  fetchCrossReferences,
+  CrossReferenceBookMap,
+  fetchCrossReferenceBookTokens,
+  fetchCrossReferencesFrom,
+  fetchCrossReferencesTo,
+  getChapterVerseLinks,
 } from "../../contexts/crossReferenceLoader";
+
+/** A single resolved cross reference pair, ready for display. */
+export interface CrossReferenceEntry {
+  from: string;
+  to: string;
+  score: number;
+}
 
 export const getAverageVoteThreshold = (
   linkedFromChapter: CrossReferenceEntry[] = [],
   linkedToChapter: CrossReferenceEntry[] = [],
 ) => {
   const relevantEntries = [...linkedFromChapter, ...linkedToChapter];
-  const validVotes = relevantEntries
-    .map((entry) => entry.votes)
-    .filter((votes) => Number.isFinite(votes) && votes >= 0);
+  const validScores = relevantEntries
+    .map((entry) => entry.score)
+    .filter((score) => Number.isFinite(score) && score >= 0);
 
-  if (validVotes.length === 0) return 0;
+  if (validScores.length === 0) return 0;
 
-  return validVotes.reduce((sum, votes) => sum + votes, 0) / validVotes.length;
+  return validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
 };
 
 const REFERENCE_BOOK_NAME_BY_TOKEN = (() => {
@@ -97,49 +106,50 @@ const getReferenceVerseText = (
   return bibleVerseLookup.get(verseKey) ?? null;
 };
 
-const buildChapterReferenceIndex = (
+/**
+ * Reads the links for a single chapter directly out of the nested
+ * book/chapter/verse map (no scanning of the full dataset) and resolves them
+ * into display-ready `{ from, to, score }` pairs.
+ *
+ * `direction` indicates which side of the pair the current chapter occupies:
+ * - "from": `data` is `cross_references_from.json`, so the chapter is the
+ *   source and each link's `to` is the referenced verse.
+ * - "to": `data` is `cross_references_to.json`, so the chapter is the target
+ *   and each link's `to` field actually holds the referencing ("from") verse.
+ */
+const buildChapterEntries = (
+  data: CrossReferenceBookMap | null,
+  bookToken: string | null,
+  chapterNumber: number,
+  direction: "from" | "to",
+): CrossReferenceEntry[] => {
+  if (!data || !bookToken) return [];
+
+  const verseLinks = getChapterVerseLinks(data, bookToken, chapterNumber);
+  const entries: CrossReferenceEntry[] = [];
+
+  for (const [verse, links] of Object.entries(verseLinks)) {
+    const chapterReference = `${bookToken}.${chapterNumber}.${verse}`;
+    for (const link of links) {
+      entries.push(
+        direction === "from"
+          ? { from: chapterReference, to: link.to, score: link.score }
+          : { from: link.to, to: chapterReference, score: link.score },
+      );
+    }
+  }
+
+  return entries.sort((left, right) => right.score - left.score);
+};
+
+const filterByVoteThreshold = (
   entries: CrossReferenceEntry[],
   ignoreVoteThreshold: boolean,
   voteThreshold: number,
-) => {
-  const linkedFrom = new Map<string, CrossReferenceEntry[]>();
-  const linkedTo = new Map<string, CrossReferenceEntry[]>();
-
-  for (const entry of entries) {
-    if (!ignoreVoteThreshold && entry.votes <= voteThreshold) continue;
-
-    for (const chapterKey of extractCrossReferenceChapterKeys(entry.from)) {
-      const existingEntries = linkedFrom.get(chapterKey);
-      if (existingEntries) {
-        existingEntries.push(entry);
-      } else {
-        linkedFrom.set(chapterKey, [entry]);
-      }
-    }
-
-    for (const chapterKey of extractCrossReferenceChapterKeys(entry.to)) {
-      const existingEntries = linkedTo.get(chapterKey);
-      if (existingEntries) {
-        existingEntries.push(entry);
-      } else {
-        linkedTo.set(chapterKey, [entry]);
-      }
-    }
-  }
-
-  const sortByVotes = (left: CrossReferenceEntry, right: CrossReferenceEntry) =>
-    right.votes - left.votes;
-
-  for (const entriesForChapter of linkedFrom.values()) {
-    entriesForChapter.sort(sortByVotes);
-  }
-
-  for (const entriesForChapter of linkedTo.values()) {
-    entriesForChapter.sort(sortByVotes);
-  }
-
-  return { linkedFrom, linkedTo };
-};
+) =>
+  ignoreVoteThreshold
+    ? entries
+    : entries.filter((entry) => entry.score > voteThreshold);
 
 const buildReferenceHash = (reference: string) => {
   const normalizedReference = normalizeReferenceRange(reference);
@@ -175,9 +185,11 @@ export const RefPanel = React.memo(() => {
   const { tabs, currentTab, bibleText } = useContext(
     BibleReferenceContext as React.Context<any>,
   );
-  const [crossReferenceEntries, setCrossReferenceEntries] = useState<
-    CrossReferenceEntry[]
-  >([]);
+  const [crossReferencesFrom, setCrossReferencesFrom] =
+    useState<CrossReferenceBookMap | null>(null);
+  const [crossReferencesTo, setCrossReferencesTo] =
+    useState<CrossReferenceBookMap | null>(null);
+  const [bookTokens, setBookTokens] = useState<string[]>([]);
   const [ignoreVoteThreshold, setIgnoreVoteThreshold] = useState(false);
   const [loadingReferences, setLoadingReferences] = useState(
     () => tabs[currentTab]?.mode === "bible",
@@ -205,10 +217,16 @@ export const RefPanel = React.memo(() => {
 
     let mounted = true;
     setLoadingReferences(true);
-    fetchCrossReferences()
-      .then((entries) => {
+    Promise.all([
+      fetchCrossReferencesFrom(),
+      fetchCrossReferencesTo(),
+      fetchCrossReferenceBookTokens(),
+    ])
+      .then(([fromData, toData, tokens]) => {
         if (!mounted) return;
-        setCrossReferenceEntries(entries);
+        setCrossReferencesFrom(fromData);
+        setCrossReferencesTo(toData);
+        setBookTokens(tokens);
         setLoadError(null);
       })
       .catch((error) => {
@@ -226,8 +244,8 @@ export const RefPanel = React.memo(() => {
   }, [currentTabState.mode]);
 
   const bookTokenByAlias = useMemo(
-    () => buildCrossReferenceBookTokenByAlias(crossReferenceEntries),
-    [crossReferenceEntries],
+    () => buildCrossReferenceBookTokenByAlias(bookTokens),
+    [bookTokens],
   );
 
   const bibleVerseLookup = useMemo(
@@ -235,52 +253,37 @@ export const RefPanel = React.memo(() => {
     [bibleText],
   );
 
-  const chapterKey = useMemo(() => {
+  const chapterToken = useMemo(() => {
     if (currentTabState.mode !== "bible" || !selectedBook) return null;
-    const token = bookTokenByAlias.get(normalizeBookAlias(selectedBook));
-    if (!token) return null;
-    return `${token}.${chapterNumber}`;
-  }, [bookTokenByAlias, chapterNumber, currentTabState.mode, selectedBook]);
+    return bookTokenByAlias.get(normalizeBookAlias(selectedBook)) ?? null;
+  }, [bookTokenByAlias, currentTabState.mode, selectedBook]);
 
-  const allChapterReferenceIndex = useMemo(
-    () => buildChapterReferenceIndex(crossReferenceEntries, true, 0),
-    [crossReferenceEntries],
+  const chapterKey = chapterToken ? `${chapterToken}.${chapterNumber}` : null;
+
+  const linkedFromChapter = useMemo(
+    () => buildChapterEntries(crossReferencesFrom, chapterToken, chapterNumber, "from"),
+    [crossReferencesFrom, chapterToken, chapterNumber],
   );
 
-  const linkedFromChapter = useMemo(() => {
-    if (!chapterKey) return [];
-    return allChapterReferenceIndex.linkedFrom.get(chapterKey) ?? [];
-  }, [chapterKey, allChapterReferenceIndex]);
-
-  const linkedToChapter = useMemo(() => {
-    if (!chapterKey) return [];
-    return allChapterReferenceIndex.linkedTo.get(chapterKey) ?? [];
-  }, [chapterKey, allChapterReferenceIndex]);
+  const linkedToChapter = useMemo(
+    () => buildChapterEntries(crossReferencesTo, chapterToken, chapterNumber, "to"),
+    [crossReferencesTo, chapterToken, chapterNumber],
+  );
 
   const voteThreshold = useMemo(
     () => getAverageVoteThreshold(linkedFromChapter, linkedToChapter),
     [linkedFromChapter, linkedToChapter],
   );
 
-  const referenceIndex = useMemo(
-    () =>
-      buildChapterReferenceIndex(
-        crossReferenceEntries,
-        ignoreVoteThreshold,
-        voteThreshold,
-      ),
-    [crossReferenceEntries, ignoreVoteThreshold, voteThreshold],
+  const filteredLinkedFromChapter = useMemo(
+    () => filterByVoteThreshold(linkedFromChapter, ignoreVoteThreshold, voteThreshold),
+    [linkedFromChapter, ignoreVoteThreshold, voteThreshold],
   );
 
-  const filteredLinkedFromChapter = useMemo(() => {
-    if (!chapterKey) return [];
-    return referenceIndex.linkedFrom.get(chapterKey) ?? [];
-  }, [chapterKey, referenceIndex]);
-
-  const filteredLinkedToChapter = useMemo(() => {
-    if (!chapterKey) return [];
-    return referenceIndex.linkedTo.get(chapterKey) ?? [];
-  }, [chapterKey, referenceIndex]);
+  const filteredLinkedToChapter = useMemo(
+    () => filterByVoteThreshold(linkedToChapter, ignoreVoteThreshold, voteThreshold),
+    [linkedToChapter, ignoreVoteThreshold, voteThreshold],
+  );
 
   const getReferenceSecondaryText = (reference: string, votes: number) => {
     const verseText = getReferenceVerseText(reference, bibleVerseLookup);
@@ -339,7 +342,7 @@ export const RefPanel = React.memo(() => {
                             }
                             secondary={getReferenceSecondaryText(
                               entry.to,
-                              entry.votes,
+                              entry.score,
                             )}
                           />
                         </ListItem>
@@ -373,7 +376,7 @@ export const RefPanel = React.memo(() => {
                             }
                             secondary={getReferenceSecondaryText(
                               entry.from,
-                              entry.votes,
+                              entry.score,
                             )}
                           />
                         </ListItem>

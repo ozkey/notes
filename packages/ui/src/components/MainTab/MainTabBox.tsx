@@ -2,12 +2,14 @@ import { Box } from "@mui/material";
 import { BibleText } from "../BiblePanel/BibleText";
 import React from "react";
 import { StudyPanel } from "../StudyPanel/StudyPanel";
+import { SearchResults } from "../Search/SearchResults";
 
 interface NotesPanelProps {
-  mode: "bible" | "article";
+  mode: "bible" | "article" | "search";
   selectedBook: string | null;
   chapterNumber: number;
   verseNumber?: number | null;
+  searchQuery?: string | null;
 }
 
 export const MainTabBox: React.FC<NotesPanelProps> = ({
@@ -15,8 +17,10 @@ export const MainTabBox: React.FC<NotesPanelProps> = ({
   selectedBook,
   chapterNumber,
   verseNumber,
+  searchQuery,
 }) => {
   const isBibleTab = mode === "bible";
+  const isSearchTab = mode === "search";
   return (
     <>
       <Box
@@ -39,7 +43,8 @@ export const MainTabBox: React.FC<NotesPanelProps> = ({
             verseNumber={verseNumber ?? null}
           />
         )}
-        <StudyPanel mode={mode} />
+        {isSearchTab && searchQuery && <SearchResults searchQuery={searchQuery} />}
+        {!isSearchTab && <StudyPanel mode={mode} />}
       </Box>
     </>
   );
