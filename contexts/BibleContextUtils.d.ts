@@ -5,6 +5,7 @@ export declare const createTabId: () => string;
 export declare const createHomeTab: () => TabState;
 export declare const createBibleTab: (book: string, chapterNumber: number, verseNumber?: number | null) => TabState;
 export declare const createArticleTab: (articleId: string) => TabState;
+export declare const createSearchTab: (searchQuery: string) => TabState;
 export declare const parseHash: (hash: string, books: string[], defaultBooks?: string[]) => {
     book: string;
     chapter: number;

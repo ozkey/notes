@@ -12,9 +12,6 @@ export declare const normalizeReferenceRange: (reference: string) => string;
 export declare const formatReferenceDisplay: (reference: string) => string;
 export declare const extractCrossReferenceBookToken: (reference: string) => string | null;
 export declare const extractCrossReferenceChapterKeys: (reference: string) => string[];
-export declare const buildCrossReferenceBookTokenByAlias: (entries: {
-    from: string;
-    to: string;
-}[]) => Map<string, string>;
+export declare const buildCrossReferenceBookTokenByAlias: (bookTokens: string[]) => Map<string, string>;
 export declare const crossReferenceHasChapter: (reference: string, chapterKey: string) => boolean;
 //# sourceMappingURL=BibleUtils.d.ts.map

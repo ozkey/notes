@@ -1,4 +1,4 @@
-export type TabMode = "home" | "bible" | "article";
+export type TabMode = "home" | "bible" | "article" | "search";
 export interface TabState {
     id?: string;
     mode: TabMode;
@@ -6,6 +6,7 @@ export interface TabState {
     chapterNumber: number;
     verseNumber?: number | null;
     articleId?: string | null;
+    searchQuery?: string | null;
 }
 export type HighlightColor = "green" | "blue" | "pink" | "red" | "orange" | "purple";
 export interface HighlightData {

@@ -23,6 +23,7 @@ export interface BibleContextType {
     openHomeInCurrentTab: () => void;
     openBibleInCurrentTab: (book: string, chapterNumber: number, verseNumber?: number | null) => void;
     openArticleInCurrentTab: (articleId: string) => void;
+    openSearchInCurrentTab: (searchQuery: string) => void;
     bibleText: any | null;
     loadingBibleText: boolean;
     loadBibleText: (translationId?: BibleTranslationId) => Promise<void>;
