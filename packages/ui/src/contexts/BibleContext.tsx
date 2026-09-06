@@ -415,7 +415,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       chapterNumber: 1,
       verseNumber: null,
       articleId: null,
-      searchQuery: searchQuery.trim(),
+      searchQuery,
     });
 
   const setHighlight = (

@@ -195,7 +195,7 @@ export const HomeTab: React.FC = () => {
   };
 
   const handleSearch = () => {
-    const query = searchInput.trim();
+    const query = searchInput;
     if (query.length > 0) {
       openSearchInCurrentTab(query);
     }
@@ -334,17 +334,15 @@ export const HomeTab: React.FC = () => {
         <Card>
           <CardContent>
             <Stack spacing={2}>
-              <Typography variant="subtitle1">
-                Search the Bible
-              </Typography>
+              <Typography variant="subtitle1">Search the Bible</Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                 <TextField
                   size="small"
-                  label="Enter keyword"
+                  label="Search"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyPress={handleSearchKeyPress}
-                  placeholder="e.g., faith, love, grace..."
+                  placeholder="love"
                   sx={{ minWidth: 260 }}
                 />
                 <Button variant="contained" onClick={handleSearch}>

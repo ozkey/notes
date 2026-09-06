@@ -32,7 +32,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   }, [bibleText, searchQuery]);
 
   const handleRefineSearch = () => {
-    const query = refinedSearch.trim();
+    const query = refinedSearch;
     if (query.length > 0) {
       openSearchInCurrentTab(query);
     }
