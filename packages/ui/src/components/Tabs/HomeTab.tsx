@@ -76,6 +76,7 @@ export const HomeTab: React.FC = () => {
     loadBibleText,
     openBibleInCurrentTab,
     openArticleInCurrentTab,
+    openSearchInCurrentTab,
   } = useContext(BibleContext as React.Context<any>);
 
   const current = tabs[currentTab] ?? {
@@ -92,6 +93,7 @@ export const HomeTab: React.FC = () => {
   );
   const [articleIdInput, setArticleIdInput] = useState<string>("#");
   const [articleIdError, setArticleIdError] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
 
   useEffect(() => {
     setSelectedBook(current.selectedBook ?? books[0] ?? null);
@@ -190,6 +192,19 @@ export const HomeTab: React.FC = () => {
     }
     setArticleIdError("");
     openArticleInCurrentTab(normalizedId);
+  };
+
+  const handleSearch = () => {
+    const query = searchInput.trim();
+    if (query.length > 0) {
+      openSearchInCurrentTab(query);
+    }
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   const handleBibleTranslationChange = (nextTranslation: string) => {
@@ -316,6 +331,33 @@ export const HomeTab: React.FC = () => {
       )}
 
       <Stack spacing={2}>
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <Typography variant="subtitle1">
+                Search the Bible
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <TextField
+                  size="small"
+                  label="Enter keyword"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyPress={handleSearchKeyPress}
+                  placeholder="e.g., faith, love, grace..."
+                  sx={{ minWidth: 260 }}
+                />
+                <Button variant="contained" onClick={handleSearch}>
+                  Search
+                </Button>
+              </Stack>
+              <Typography variant="caption" color="text.secondary">
+                Search will open in a new tab showing matching verses
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
           <Card sx={{ flex: 1 }}>
             <CardContent>

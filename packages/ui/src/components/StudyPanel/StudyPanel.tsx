@@ -5,7 +5,7 @@ import React from "react";
 import { RefPanel } from "../ReferencePanel/RefPanel";
 
 interface StudyPanelProps {
-  mode: "bible" | "article";
+  mode: "bible" | "article" | "search";
 }
 
 export const StudyPanel = React.memo(({ mode }: StudyPanelProps) => {

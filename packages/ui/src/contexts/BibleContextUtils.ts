@@ -38,6 +38,16 @@ export const createArticleTab = (articleId: string): TabState => ({
   articleId,
 });
 
+export const createSearchTab = (searchQuery: string): TabState => ({
+  id: createTabId(),
+  mode: "search",
+  selectedBook: null,
+  chapterNumber: 1,
+  verseNumber: null,
+  articleId: null,
+  searchQuery,
+});
+
 // Parse a hash of the form #book:chapter[:verse] and return normalized values
 // Accepts a list of candidate books and an optional default list to fall back to
 export const parseHash = (

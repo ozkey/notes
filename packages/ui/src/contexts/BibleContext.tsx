@@ -73,6 +73,7 @@ export interface BibleContextType {
     verseNumber?: number | null,
   ) => void;
   openArticleInCurrentTab: (articleId: string) => void;
+  openSearchInCurrentTab: (searchQuery: string) => void;
   // parsed bible text loaded from public/Douay-Rheims.json
   bibleText: any | null;
   loadingBibleText: boolean;
@@ -115,6 +116,7 @@ export const BibleReferenceContext = createContext<{
       chapterNumber: 1,
       verseNumber: null,
       articleId: null,
+      searchQuery: null,
     },
   ],
   currentTab: 0,
@@ -129,6 +131,7 @@ export const BibleContext = createContext<BibleContextType>({
       chapterNumber: 1,
       verseNumber: null,
       articleId: null,
+      searchQuery: null,
     },
   ],
   currentTab: 0,
@@ -172,6 +175,8 @@ export const BibleContext = createContext<BibleContextType>({
   openBibleInCurrentTab: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   openArticleInCurrentTab: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  openSearchInCurrentTab: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   saveNotesToFile: async () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -365,6 +370,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       chapterNumber: 1,
       verseNumber: null,
       articleId: null,
+      searchQuery: null,
     });
 
   const openBibleInCurrentTab = (
@@ -378,6 +384,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       chapterNumber,
       verseNumber,
       articleId: null,
+      searchQuery: null,
     });
 
   const openArticleInCurrentTab = (articleId: string) => {
@@ -396,9 +403,20 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       chapterNumber: 1,
       verseNumber: null,
       articleId: normalizedId,
+      searchQuery: null,
     });
     setEditorOpen(true);
   };
+
+  const openSearchInCurrentTab = (searchQuery: string) =>
+    updateTab(currentTab, {
+      mode: "search",
+      selectedBook: null,
+      chapterNumber: 1,
+      verseNumber: null,
+      articleId: null,
+      searchQuery: searchQuery.trim(),
+    });
 
   const setHighlight = (
     book: string | null,
@@ -460,6 +478,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       openHomeInCurrentTab,
       openBibleInCurrentTab,
       openArticleInCurrentTab,
+      openSearchInCurrentTab,
       moveTab,
       // editor UI state exposed in context
       editorOpen,
@@ -493,6 +512,7 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       openArticleInCurrentTab,
       openBibleInCurrentTab,
       openHomeInCurrentTab,
+      openSearchInCurrentTab,
       lastFileSyncDate,
       moveTab,
       removeHighlight,

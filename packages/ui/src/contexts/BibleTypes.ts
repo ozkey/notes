@@ -1,5 +1,5 @@
 // Shared types used by Bible context and utilities
-export type TabMode = "home" | "bible" | "article";
+export type TabMode = "home" | "bible" | "article" | "search";
 
 export interface TabState {
   id?: string;
@@ -8,6 +8,7 @@ export interface TabState {
   chapterNumber: number;
   verseNumber?: number | null;
   articleId?: string | null;
+  searchQuery?: string | null;
 }
 
 export type HighlightColor =

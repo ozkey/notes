@@ -57,6 +57,7 @@ function getCustomTabPanel(i: number, currentTab: number, t: TabState) {
           selectedBook={t.selectedBook}
           chapterNumber={t.chapterNumber}
           verseNumber={t.verseNumber}
+          searchQuery={t.searchQuery}
         />
       )}
     </CustomTabPanel>
@@ -124,9 +125,13 @@ export const MainTab: React.FC = () => {
                         ? t.articleId
                           ? `${t.articleId}`
                           : "Article"
-                        : t.selectedBook
-                          ? `${t.selectedBook} ${t.chapterNumber}`
-                          : "Select a book"}
+                        : t.mode === "search"
+                          ? t.searchQuery
+                            ? `Search: ${t.searchQuery}`
+                            : "Search"
+                          : t.selectedBook
+                            ? `${t.selectedBook} ${t.chapterNumber}`
+                            : "Select a book"}
                   </span>
                   <IconButton
                     size="small"
