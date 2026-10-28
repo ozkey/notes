@@ -12,18 +12,221 @@ const TEMPLATE_HTML = `<!doctype html>
     <meta charset="UTF-8" />
     <title>Notes</title>
     <style>
-      article {
-        border: 1px solid #ccc;
-        padding: 1em;
-        margin: 1em;
-        display: flow-root;
+      :root {
+        --bg: #f6f2e9;
+        --surface: #fffdf8;
+        --surface-alt: #fffcf7;
+        --border: rgba(45, 90, 72, 0.2);
+        --border-strong: rgba(45, 90, 72, 0.3);
+        --text: #2d3a35;
+        --text-muted: #56645e;
+        --accent: #2d5a48;
       }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", "Inter", "Roboto", Arial, sans-serif;
+        line-height: 1.55;
+        color: var(--text);
+        background: linear-gradient(180deg, #faf7f1 0%, var(--bg) 100%);
+        padding: 24px;
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        color: #1f3f33;
+        font-size: clamp(1.5rem, 2vw + 1rem, 2.15rem);
+      }
+
       #indexList {
-        border: 1px solid #ccc;
-        padding: 1em;
-        margin: 1em;
+        background: var(--surface-alt);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin: 0 0 18px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
       }
-      
+
+      .index-list {
+        margin: 0;
+        padding-left: 18px;
+        columns: 2;
+        column-gap: 28px;
+      }
+
+      .index-list li {
+        margin: 6px 0;
+        break-inside: avoid;
+      }
+
+      .index-list a {
+        color: var(--accent);
+        border-bottom: 1px solid transparent;
+      }
+
+      #displayNotes {
+        display: grid;
+        gap: 14px;
+      }
+
+      article.note {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+        background: var(--surface);
+        display: flow-root;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      article.note > h2 {
+        margin: 0 0 10px;
+        font-size: 1.1rem;
+        color: #214637;
+      }
+
+      .note-content {
+        color: var(--text);
+      }
+
+      .note-content p {
+        margin: 0 0 0.9em;
+      }
+
+      .note-content h1,
+      .note-content h2,
+      .note-content h3,
+      .note-content h4 {
+        margin: 1em 0 0.5em;
+        line-height: 1.3;
+      }
+
+      .note-content ul,
+      .note-content ol {
+        margin: 0 0 0.9em;
+        padding-left: 1.5rem;
+      }
+
+      .note-content li {
+        margin: 0.25em 0;
+      }
+
+      .note-content a {
+        color: var(--accent);
+      }
+
+      .note-content pre {
+        background: #1f2328;
+        color: #e4e7eb;
+        border-radius: 8px;
+        padding: 12px;
+        overflow-x: auto;
+      }
+
+      .note-content code {
+        font-family: "Consolas", "Courier New", monospace;
+      }
+
+      .note-content table,
+      .note-content .editor-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .note-content table td,
+      .note-content table th,
+      .note-content .editor-table td,
+      .note-content .editor-table th {
+        border: 1px solid #a3b2ab;
+        padding: 7px;
+        vertical-align: top;
+      }
+
+      .note-content blockquote {
+        margin: 0.8em 0;
+        padding: 10px 12px;
+        border-left: 4px solid #2d5a48;
+        background: #eef4f0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .note-content blockquote.editor-alert-info {
+        border-left-color: #0277bd;
+        background: #e1f5fe;
+      }
+
+      .note-content blockquote.editor-alert-warning {
+        border-left-color: #ef6c00;
+        background: #fff3e0;
+      }
+
+      .note-content blockquote.editor-alert-error {
+        border-left-color: #c62828;
+        background: #ffebee;
+      }
+
+      .note-content .editor-highlight-badge {
+        display: inline-block;
+        background-color: #c8e6c9;
+        border: 1px solid #88a88f;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.85em;
+        line-height: 1.2;
+        padding: 0.15em 0.55em;
+        margin-right: 0.35em;
+        color: #1e372d;
+        vertical-align: baseline;
+      }
+
+      .note-content .editor-highlight-badge[data-color="blue"] {
+        background-color: #bbdefb;
+        border-color: #87abc8;
+      }
+
+      .note-content .editor-highlight-badge[data-color="pink"] {
+        background-color: #f8bbd0;
+        border-color: #c98ea2;
+      }
+
+      .note-content .editor-highlight-badge[data-color="red"] {
+        background-color: #ffcdd2;
+        border-color: #d39aa1;
+      }
+
+      .note-content .editor-highlight-badge[data-color="orange"] {
+        background-color: #ffe0b2;
+        border-color: #d7b388;
+      }
+
+      .note-content .editor-highlight-badge[data-color="purple"] {
+        background-color: #e1bee7;
+        border-color: #b996c0;
+      }
+
+      .note-content .editor-highlight-badge[data-color="white"] {
+        background-color: #ffffff;
+        border-color: #d7d7d7;
+      }
+
+      @media (max-width: 900px) {
+        body {
+          padding: 14px;
+        }
+
+        .index-list {
+          columns: 1;
+        }
+      }
+
       /* Editor styles - imported from Editor.css */
       ${editorCss || "/* Editor CSS failed to load */"}
     </style>
