@@ -74,9 +74,9 @@ export const HomeTab: React.FC = () => {
     selectedBibleTranslation,
     setSelectedBibleTranslation,
     loadBibleText,
-    openBibleInCurrentTab,
-    openArticleInCurrentTab,
-    openSearchInCurrentTab,
+    openBibleInNewTab,
+    openArticleInNewTab,
+    openSearchInNewTab,
   } = useContext(BibleContext as React.Context<any>);
 
   const current = tabs[currentTab] ?? {
@@ -180,7 +180,7 @@ export const HomeTab: React.FC = () => {
     const parsedChapter = parseInt(chapterInput, 10);
     if (!selectedBook || Number.isNaN(parsedChapter) || parsedChapter < 1)
       return;
-    openBibleInCurrentTab(selectedBook, parsedChapter);
+    openBibleInNewTab(selectedBook, parsedChapter);
   };
 
   const createArticle = () => {
@@ -191,13 +191,13 @@ export const HomeTab: React.FC = () => {
       return;
     }
     setArticleIdError("");
-    openArticleInCurrentTab(normalizedId);
+    openArticleInNewTab(normalizedId);
   };
 
   const handleSearch = () => {
     const query = searchInput;
     if (query.length > 0) {
-      openSearchInCurrentTab(query);
+      openSearchInNewTab(query);
     }
   };
 
@@ -278,7 +278,7 @@ export const HomeTab: React.FC = () => {
                               onClick={() => {
                                 setSelectedBook(book);
                                 setChapterInput("1");
-                                openBibleInCurrentTab(book, 1);
+                                openBibleInNewTab(book, 1);
                               }}
                               variant={
                                 selectedBook === book ? "contained" : "outlined"
@@ -410,10 +410,7 @@ export const HomeTab: React.FC = () => {
                             <ListItemButton
                               key={note.id}
                               onClick={() =>
-                                openBibleInCurrentTab(
-                                  note.book,
-                                  note.chapterNumber,
-                                )
+                                openBibleInNewTab(note.book, note.chapterNumber)
                               }
                               disabled={isOpen}
                             >
@@ -476,7 +473,7 @@ export const HomeTab: React.FC = () => {
                       {existingArticleIds.map((id: string) => (
                         <ListItemButton
                           key={id}
-                          onClick={() => openArticleInCurrentTab(id)}
+                          onClick={() => openArticleInNewTab(id)}
                           disabled={openArticleIds.has(id.toLowerCase())}
                         >
                           <ListItemText

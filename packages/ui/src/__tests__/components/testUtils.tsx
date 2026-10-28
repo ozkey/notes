@@ -1,10 +1,17 @@
-import React from 'react';
-import { render, RenderOptions, RenderResult } from '@testing-library/react';
-import { BibleContext, BibleContextType } from '../../contexts/BibleContext';
-import { BIBLE_TRANSLATIONS } from '../../contexts/bibleTextLoader';
+import React from "react";
+import { render, RenderOptions, RenderResult } from "@testing-library/react";
+import { BibleContext, BibleContextType } from "../../contexts/BibleContext";
+import { BIBLE_TRANSLATIONS } from "../../contexts/bibleTextLoader";
 
 export const DEFAULT_MOCK_TABS = [
-  { id: 'tab-1', mode: 'home' as const, selectedBook: null, chapterNumber: 1, verseNumber: null, articleId: null },
+  {
+    id: "tab-1",
+    mode: "home" as const,
+    selectedBook: null,
+    chapterNumber: 1,
+    verseNumber: null,
+    articleId: null,
+  },
 ];
 
 export const createMockContextValue = (
@@ -17,7 +24,7 @@ export const createMockContextValue = (
   closeTab: jest.fn(),
   moveTab: jest.fn(),
   updateTab: jest.fn(),
-  books: ['Genesis', 'Exodus', 'Matthew', 'Revelation'],
+  books: ["Genesis", "Exodus", "Matthew", "Revelation"],
   notes: [],
   articles: [],
   lastFileSyncDate: undefined,
@@ -27,7 +34,7 @@ export const createMockContextValue = (
   loadingBibleText: false,
   loadBibleText: jest.fn().mockResolvedValue(undefined),
   bibleTranslations: BIBLE_TRANSLATIONS,
-  selectedBibleTranslation: 'cpdv',
+  selectedBibleTranslation: "cpdv",
   setSelectedBibleTranslation: jest.fn(),
   setNoteForBookChapter: jest.fn(),
   setArticleById: jest.fn(),
@@ -35,7 +42,11 @@ export const createMockContextValue = (
   replaceAllArticles: jest.fn(),
   openHomeInCurrentTab: jest.fn(),
   openBibleInCurrentTab: jest.fn(),
+  openBibleInNewTab: jest.fn(),
   openArticleInCurrentTab: jest.fn(),
+  openArticleInNewTab: jest.fn(),
+  openSearchInCurrentTab: jest.fn(),
+  openSearchInNewTab: jest.fn(),
   saveNotesToFile: jest.fn().mockResolvedValue(undefined),
   loadNotesFromFile: jest.fn().mockResolvedValue(undefined),
   editorOpen: false,

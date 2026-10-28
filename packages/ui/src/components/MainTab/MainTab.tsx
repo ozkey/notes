@@ -8,14 +8,12 @@ import {
   Container,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import AddIcon from "@mui/icons-material/Add";
 import React, { useContext, useState } from "react";
 import BibleContext from "../../contexts/BibleContext";
 import { TabState } from "../../contexts/BibleTypes";
 import { ContainedButtons } from "../ActionBar/ActionBar";
 import { MainTabBox } from "./MainTabBox";
 import { HomeTab } from "../Tabs/HomeTab";
-import { MAX_TAB_LIMIT } from "../../contexts/BibleContextUtils";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -68,21 +66,20 @@ function getCustomTabPanel(i: number, currentTab: number, t: TabState) {
 
 export const MainTab: React.FC = () => {
   const bibleContext = useContext(BibleContext);
-  const { tabs, currentTab, setCurrentTab, addTab, closeTab } = bibleContext;
+  const { tabs, currentTab, setCurrentTab, closeTab } = bibleContext;
   const { moveTab } = bibleContext;
   const [draggedTabIndex, setDraggedTabIndex] = useState<number | null>(null);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    // if user clicked the + tab (index === tabs.length) then add
-    if (newValue === tabs.length) {
-      addTab();
-      return;
-    }
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
   };
 
   const handleDropOnTab = (targetIndex: number) => {
     if (draggedTabIndex === null) return;
+    if (draggedTabIndex === 0 || targetIndex === 0) {
+      setDraggedTabIndex(null);
+      return;
+    }
     moveTab(draggedTabIndex, targetIndex);
     setDraggedTabIndex(null);
   };
@@ -126,10 +123,19 @@ export const MainTab: React.FC = () => {
                   <Tab
                     component="div"
                     key={t.id ?? i}
-                    draggable
-                    onDragStart={() => setDraggedTabIndex(i)}
-                    onDragOver={(event) => event.preventDefault()}
+                    draggable={i !== 0}
+                    onDragStart={() => {
+                      if (i === 0) return;
+                      setDraggedTabIndex(i);
+                    }}
+                    onDragOver={(event) => {
+                      if (draggedTabIndex === null) return;
+                      if (draggedTabIndex === 0 || i === 0) return;
+                      event.preventDefault();
+                    }}
                     onDrop={(event) => {
+                      if (draggedTabIndex === null) return;
+                      if (draggedTabIndex === 0 || i === 0) return;
                       event.preventDefault();
                       handleDropOnTab(i);
                     }}
@@ -157,25 +163,27 @@ export const MainTab: React.FC = () => {
                                   ? `${t.selectedBook} ${t.chapterNumber}`
                                   : "Select a book"}
                         </Box>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            closeTab(i);
-                          }}
-                          aria-label={`close-tab-${i}`}
-                          sx={{
-                            ml: 0.45,
-                            p: 0.2,
-                            color: "text.secondary",
-                            "&:hover": {
-                              backgroundColor: "transparent",
-                              color: "text.primary",
-                            },
-                          }}
-                        >
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
+                        {i !== 0 && (
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              closeTab(i);
+                            }}
+                            aria-label={`close-tab-${i}`}
+                            sx={{
+                              ml: 0.45,
+                              p: 0.2,
+                              color: "text.secondary",
+                              "&:hover": {
+                                backgroundColor: "transparent",
+                                color: "text.primary",
+                              },
+                            }}
+                          >
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        )}
                       </Box>
                     }
                     sx={{
@@ -190,6 +198,7 @@ export const MainTab: React.FC = () => {
                       bgcolor: "#F6F1E6",
                       color: "#4E5B53",
                       fontWeight: 500,
+                      cursor: i === 0 ? "default" : "grab",
                       "&.Mui-selected": {
                         bgcolor: "#FFFCF6",
                         color: "#1F2A24",
@@ -203,49 +212,6 @@ export const MainTab: React.FC = () => {
                     {...a11yProps(i)}
                   />
                 ))}
-                {tabs.length < MAX_TAB_LIMIT && (
-                  <Tab
-                    component="div"
-                    draggable
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      if (draggedTabIndex === null) return;
-                      moveTab(draggedTabIndex, tabs.length - 1);
-                      setDraggedTabIndex(null);
-                    }}
-                    label={
-                      <Box
-                        component="span"
-                        sx={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 0.5,
-                          fontWeight: 700,
-                          color: "primary.main",
-                        }}
-                      >
-                        <AddIcon fontSize="small" />
-                        New Tab
-                      </Box>
-                    }
-                    sx={{
-                      minHeight: 38,
-                      minWidth: "auto",
-                      flexShrink: 0,
-                      px: 1.1,
-                      border: "1px solid #D9D3C2",
-                      borderRadius: "8px 8px 0 0",
-                      bgcolor: "#F8F4EA",
-                      ml: 0.2,
-                      color: "primary.dark",
-                      "&:hover": {
-                        bgcolor: "#FCF8EF",
-                      },
-                    }}
-                    {...a11yProps(tabs.length)}
-                  />
-                )}
               </Tabs>
             </Box>
             {tabs.map((t, i: number) => getCustomTabPanel(i, currentTab, t))}
