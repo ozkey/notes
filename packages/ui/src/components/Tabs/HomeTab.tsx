@@ -74,6 +74,7 @@ export const HomeTab: React.FC = () => {
   const current = tabs[currentTab] ?? {
     selectedBook: null,
     chapterNumber: 1,
+    verseNumber: null,
     articleId: null,
   };
 
@@ -83,11 +84,21 @@ export const HomeTab: React.FC = () => {
   const [chapterInput, setChapterInput] = useState<string>(
     String(current.chapterNumber ?? 1),
   );
+  const [verseInput, setVerseInput] = useState<string>(
+    current.verseNumber ? String(current.verseNumber) : "",
+  );
 
   useEffect(() => {
     setSelectedBook(current.selectedBook ?? books[0] ?? null);
     setChapterInput(String(current.chapterNumber ?? 1));
-  }, [currentTab, current.selectedBook, current.chapterNumber, books]);
+    setVerseInput(current.verseNumber ? String(current.verseNumber) : "");
+  }, [
+    currentTab,
+    current.selectedBook,
+    current.chapterNumber,
+    current.verseNumber,
+    books,
+  ]);
 
   const groupedBooks = useMemo(() => {
     const booksByKey = new Map(
@@ -125,9 +136,17 @@ export const HomeTab: React.FC = () => {
 
   const openBible = () => {
     const parsedChapter = parseInt(chapterInput, 10);
-    if (!selectedBook || Number.isNaN(parsedChapter) || parsedChapter < 1)
+    const trimmedVerse = verseInput.trim();
+    const parsedVerse = trimmedVerse ? parseInt(trimmedVerse, 10) : null;
+
+    if (
+      !selectedBook ||
+      Number.isNaN(parsedChapter) ||
+      parsedChapter < 1 ||
+      (parsedVerse !== null && (Number.isNaN(parsedVerse) || parsedVerse < 1))
+    )
       return;
-    openBibleInNewTab(selectedBook, parsedChapter);
+    openBibleInNewTab(selectedBook, parsedChapter, parsedVerse);
   };
 
   const handleBibleTranslationChange = (nextTranslation: string) => {
@@ -185,7 +204,7 @@ export const HomeTab: React.FC = () => {
                           size="small"
                         />
                       )}
-                      sx={{ minWidth: 220 }}
+                      sx={{ minWidth: 200 }}
                     />
                     <TextField
                       size="small"
@@ -193,7 +212,15 @@ export const HomeTab: React.FC = () => {
                       type="number"
                       value={chapterInput}
                       onChange={(e) => setChapterInput(e.target.value)}
-                      sx={{ width: 120 }}
+                      sx={{ width: 100 }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Verse"
+                      type="number"
+                      value={verseInput}
+                      onChange={(e) => setVerseInput(e.target.value)}
+                      sx={{ width: 100 }}
                     />
                     <Button variant="contained" onClick={openBible}>
                       Open
@@ -240,6 +267,7 @@ export const HomeTab: React.FC = () => {
                               onClick={() => {
                                 setSelectedBook(book);
                                 setChapterInput("1");
+                                setVerseInput("");
                                 openBibleInNewTab(book, 1);
                               }}
                               variant={
