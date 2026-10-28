@@ -9,19 +9,23 @@ html,
 body {
   padding: 0;
   margin: 0;
+  min-height: 100%;
 }
 
 #root {
   padding: 0;
   margin: 0;
+  min-height: 100%;
 }
 
 p {
-  margin-bottom: 1em;
+  margin-bottom: 0.9em;
 }
 
 blockquote {
-  background: #fda;
-  padding: 3px 3px 3px 20px;
-  margin: 3px;
+  background: #f5efe0;
+  padding: 6px 8px 6px 14px;
+  margin: 6px 0;
+  border-left: 4px solid #a17a2d;
+  border-radius: 6px;
 }

@@ -31,9 +31,10 @@ export const MainTabBox: React.FC<NotesPanelProps> = ({
             sm: "1fr",
             md: isBibleTab ? "1fr 1fr" : "1fr",
           },
-          gap: 0.5,
-          padding: "0px",
-          margin: "0px",
+          gap: 1.25,
+          p: 0,
+          m: 0,
+          alignItems: "start",
         }}
       >
         {isBibleTab && (
@@ -43,7 +44,9 @@ export const MainTabBox: React.FC<NotesPanelProps> = ({
             verseNumber={verseNumber ?? null}
           />
         )}
-        {isSearchTab && searchQuery && <SearchResults searchQuery={searchQuery} />}
+        {isSearchTab && searchQuery && (
+          <SearchResults searchQuery={searchQuery} />
+        )}
         {!isSearchTab && <StudyPanel mode={mode} />}
       </Box>
     </>

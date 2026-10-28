@@ -34,7 +34,9 @@ function CustomTabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && (
+        <Box sx={{ p: { xs: 1.25, md: 1.75 } }}>{children}</Box>
+      )}
     </div>
   );
 }
@@ -88,114 +90,128 @@ export const MainTab: React.FC = () => {
   return (
     <Container
       maxWidth="xl"
-      sx={{ padding: "0px", marginTop: "10px" }}
+      sx={{ padding: 0, marginTop: 1.5 }}
       disableGutters={true}
     >
       <ContainedButtons />
-      <Box
-        component="main"
-        sx={{ flex: 1, padding: "0px", margin: "0px", marginTop: "20px" }}
-      >
-        <Tabs
-          value={currentTab}
-          onChange={handleChange}
-          aria-label="bible tabs"
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
-        >
-          {tabs.map((t, i: number) => (
-            <Tab
-              component="div"
-              key={t.id ?? i}
-              draggable
-              onDragStart={() => setDraggedTabIndex(i)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.preventDefault();
-                handleDropOnTab(i);
+      <Box component="main" sx={{ flex: 1, p: 0, m: 0, mt: 1.25 }}>
+        <Card sx={{ p: 0, m: 0 }}>
+          <CardContent sx={{ p: 0, m: 0 }}>
+            <Box
+              sx={{
+                px: 1.25,
+                pt: 1,
+                borderBottom: "1px solid",
+                borderColor: "rgba(45, 90, 72, 0.18)",
+                backgroundColor: "#FFFCF8",
               }}
-              onDragEnd={() => setDraggedTabIndex(null)}
-              label={
-                <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
-                  <span style={{ marginRight: 8 }}>
-                    {t.mode === "home"
-                      ? "Home"
-                      : t.mode === "article"
-                        ? t.articleId
-                          ? `${t.articleId}`
-                          : "Article"
-                        : t.mode === "search"
-                          ? t.searchQuery
-                            ? `Search: ${t.searchQuery}`
-                            : "Search"
-                          : t.selectedBook
-                            ? `${t.selectedBook} ${t.chapterNumber}`
-                            : "Select a book"}
-                  </span>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      closeTab(i);
+            >
+              <Tabs
+                value={currentTab}
+                onChange={handleChange}
+                aria-label="bible tabs"
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+              >
+                {tabs.map((t, i: number) => (
+                  <Tab
+                    component="div"
+                    key={t.id ?? i}
+                    draggable
+                    onDragStart={() => setDraggedTabIndex(i)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      handleDropOnTab(i);
                     }}
-                    aria-label={`close-tab-${i}`}
-                  >
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                </div>
-              }
-              sx={{
-                minHeight: 48,
-                minWidth: "auto",
-                flexShrink: 0,
-                textTransform: "none",
-              }}
-              {...a11yProps(i)}
-            />
-          ))}
-          {tabs.length < MAX_TAB_LIMIT && (
-            <Tab
-              component="div"
-              draggable
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.preventDefault();
-                if (draggedTabIndex === null) return;
-                moveTab(draggedTabIndex, tabs.length - 1);
-                setDraggedTabIndex(null);
-              }}
-              label={
-                <Box
-                  component="span"
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    fontWeight: 700,
-                    color: "primary.main",
-                  }}
-                >
-                  <AddIcon fontSize="small" />
-                  New Tab
-                  </Box>
-              }
-              sx={{
-                minHeight: 48,
-                minWidth: "auto",
-                flexShrink: 0,
-                textTransform: "none",
-                border: 1,
-                borderColor: "primary.main",
-                borderRadius: 1,
-                marginLeft: 1,
-              }}
-              {...a11yProps(tabs.length)}
-            />
-          )}
-        </Tabs>
-        <Card sx={{ bgcolor: "grey.50", padding: "0px", margin: "0px" }}>
-          <CardContent sx={{ padding: "0px", margin: "0px" }}>
+                    onDragEnd={() => setDraggedTabIndex(null)}
+                    label={
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <Box component="span" sx={{ mr: 0.5 }}>
+                          {t.mode === "home"
+                            ? "Home"
+                            : t.mode === "article"
+                              ? t.articleId
+                                ? `${t.articleId}`
+                                : "Article"
+                              : t.mode === "search"
+                                ? t.searchQuery
+                                  ? `Search: ${t.searchQuery}`
+                                  : "Search"
+                                : t.selectedBook
+                                  ? `${t.selectedBook} ${t.chapterNumber}`
+                                  : "Select a book"}
+                        </Box>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            closeTab(i);
+                          }}
+                          aria-label={`close-tab-${i}`}
+                          sx={{ ml: 0.5 }}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    }
+                    sx={{
+                      minHeight: 46,
+                      minWidth: "auto",
+                      flexShrink: 0,
+                      px: 0.5,
+                    }}
+                    {...a11yProps(i)}
+                  />
+                ))}
+                {tabs.length < MAX_TAB_LIMIT && (
+                  <Tab
+                    component="div"
+                    draggable
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      if (draggedTabIndex === null) return;
+                      moveTab(draggedTabIndex, tabs.length - 1);
+                      setDraggedTabIndex(null);
+                    }}
+                    label={
+                      <Box
+                        component="span"
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          fontWeight: 700,
+                          color: "primary.main",
+                        }}
+                      >
+                        <AddIcon fontSize="small" />
+                        New Tab
+                      </Box>
+                    }
+                    sx={{
+                      minHeight: 42,
+                      minWidth: "auto",
+                      flexShrink: 0,
+                      border: 1,
+                      borderColor: "primary.main",
+                      borderRadius: 1,
+                      ml: 1,
+                      my: "6px",
+                    }}
+                    {...a11yProps(tabs.length)}
+                  />
+                )}
+              </Tabs>
+            </Box>
             {tabs.map((t, i: number) => getCustomTabPanel(i, currentTab, t))}
           </CardContent>
         </Card>

@@ -25,6 +25,19 @@ export const BibleText: React.FC<{
   const highlights = getHighlights(selectedBook, chapterNumber);
   const highlightsByVerse = new Map(highlights.map((h) => [h.verse, h.color]));
 
+  const renderStatusCard = (message: string) => (
+    <Card sx={{ p: 0, m: 0 }}>
+      <CardActions sx={{ px: 1, pt: 1, pb: 0.75 }}>
+        <BookActions />
+      </CardActions>
+      <CardContent sx={{ pt: 1.25 }}>
+        <Typography variant="body1" color="text.secondary">
+          {message}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+
   useEffect(() => {
     if (!verseNumber) return;
     const verseElement = chapterContainerRef.current?.querySelector(
@@ -70,48 +83,15 @@ export const BibleText: React.FC<{
   };
 
   if (!selectedBook) {
-    return (
-      <Card>
-        <CardActions>
-          <BookActions />
-        </CardActions>
-        <div style={{ padding: "1em", margin: "1em" }}>
-          <Typography variant="body2" color="text.secondary">
-            No book selected
-          </Typography>
-        </div>
-      </Card>
-    );
+    return renderStatusCard("No book selected");
   }
 
   if (loadingBibleText) {
-    return (
-      <Card>
-        <CardActions>
-          <BookActions />
-        </CardActions>
-        <div style={{ padding: "1em", margin: "1em" }}>
-          <Typography variant="body2" color="text.secondary">
-            Loading text...
-          </Typography>
-        </div>
-      </Card>
-    );
+    return renderStatusCard("Loading text...");
   }
 
   if (!bibleText) {
-    return (
-      <Card>
-        <CardActions>
-          <BookActions />
-        </CardActions>
-        <div style={{ padding: "1em", margin: "1em" }}>
-          <Typography variant="body2" color="text.secondary">
-            Bible text not available
-          </Typography>
-        </div>
-      </Card>
-    );
+    return renderStatusCard("Bible text not available");
   }
 
   const book = (bibleText as any).books?.find(
@@ -120,51 +100,45 @@ export const BibleText: React.FC<{
   const chapter = book?.chapters?.find((c: any) => c.chapter === chapterNumber);
 
   if (!book) {
-    return (
-      <Card>
-        <CardActions>
-          <BookActions />
-        </CardActions>
-        <div style={{ padding: "1em", margin: "1em" }}>
-          <Typography variant="body2" color="text.secondary">
-            Book "{selectedBook}" not found in text.json
-          </Typography>
-        </div>
-      </Card>
-    );
+    return renderStatusCard(`Book "${selectedBook}" not found in text.json`);
   }
 
   if (!chapter) {
-    return (
-      <Card>
-        <CardActions>
-          <BookActions />
-        </CardActions>
-        <div style={{ padding: "1em", margin: "1em" }}>
-          <Typography variant="body2" color="text.secondary">
-            Chapter {chapterNumber} not found for {selectedBook}
-          </Typography>
-        </div>
-      </Card>
+    return renderStatusCard(
+      `Chapter ${chapterNumber} not found for ${selectedBook}`,
     );
   }
 
   return (
-    <Card sx={{ padding: "0px", margin: "0px" }}>
-      <CardActions>
+    <Card sx={{ p: 0, m: 0 }}>
+      <CardActions sx={{ px: 1, pt: 1, pb: 0.75 }}>
         <BookActions />
       </CardActions>
-      <CardContent>
+      <CardContent sx={{ pt: 1.25 }}>
         <Typography
-          variant="h6"
+          variant="h4"
           gutterBottom
-          sx={{ fontFamily: "Georgia, Garamond, serif", color: "primary.dark" }}
+          sx={{
+            fontFamily: "Georgia, Garamond, serif",
+            color: "primary.dark",
+            fontSize: { xs: "1.8rem", md: "2.2rem" },
+            lineHeight: 1.2,
+            mb: 1.25,
+          }}
         >
           {chapter.name}
         </Typography>
         <Box
           ref={chapterContainerRef}
-          sx={{ fontFamily: "Georgia, Garamond, serif", lineHeight: 1.8 }}
+          sx={{
+            fontFamily: "Georgia, Garamond, serif",
+            lineHeight: 1.85,
+            border: "1px solid rgba(45, 90, 72, 0.14)",
+            borderRadius: 1,
+            backgroundColor: "#FFFDF8",
+            px: 1.2,
+            py: 1.1,
+          }}
           onMouseUp={handleTextSelection}
         >
           {chapter.verses.map((v: any) => {
@@ -188,12 +162,13 @@ export const BibleText: React.FC<{
                 sx={{
                   fontFamily: "Georgia, Garamond, serif",
                   color: "text.primary",
-                  marginBottom: "0.8em",
+                  marginBottom: "0.7em",
                   lineHeight: 1.8,
                   backgroundColor: bgColor,
-                  padding: bgColor !== "transparent" ? "0.2em 0.4em" : "0",
-                  borderRadius: "2px",
+                  padding: bgColor !== "transparent" ? "0.23em 0.45em" : "0",
+                  borderRadius: "3px",
                   cursor: "text",
+                  transition: "background-color 120ms ease",
                   textDecorationLine:
                     currentVerseNumber === verseNumber ? "underline" : "none",
                   textDecorationColor:
@@ -207,8 +182,8 @@ export const BibleText: React.FC<{
                 <span
                   style={{
                     fontWeight: "bold",
-                    color: "#8B6F47",
-                    marginRight: "0.3em",
+                    color: "#A17A2D",
+                    marginRight: "0.35em",
                     fontSize: "0.9em",
                   }}
                 >

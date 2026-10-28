@@ -19,14 +19,15 @@ const App: React.FC = () => {
       <Box
         component="header"
         sx={{
-          backgroundColor: "primary.dark",
+          background:
+            "linear-gradient(90deg, rgba(22,54,42,1) 0%, rgba(36,74,60,1) 55%, rgba(31,63,51,1) 100%)",
           color: "white",
-          padding: "7px",
+          px: 2.5,
+          py: 1.25,
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-start",
-          gap: 1.5,
-          paddingLeft: 2,
+          gap: 1.25,
+          borderBottom: "1px solid rgba(255, 255, 255, 0.14)",
         }}
       >
         <Box
@@ -34,13 +35,24 @@ const App: React.FC = () => {
           src={appLogo}
           alt="Bible Notes App logo"
           sx={{
-            width: 66,
-            height: 66,
+            width: 48,
+            height: 48,
             objectFit: "contain",
             display: "block",
+            borderRadius: 1,
+            backgroundColor: "rgba(255,255,255,0.95)",
+            p: 0.3,
           }}
         />
-        <Typography variant="h4" component="h1">
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
+            lineHeight: 1.1,
+            letterSpacing: 0.2,
+            fontSize: { xs: "1.55rem", md: "2rem" },
+          }}
+        >
           Bible Notes App
         </Typography>
       </Box>
@@ -55,13 +67,18 @@ const App: React.FC = () => {
         component="footer"
         sx={{
           backgroundColor: "primary.dark",
-          color: "white",
-          padding: "20px",
+          color: "rgba(255,255,255,0.9)",
+          px: 2,
+          py: 1.5,
           textAlign: "center",
           marginTop: "auto",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <Typography variant="body2">
+        <Typography
+          variant="body2"
+          sx={{ fontFamily: "inherit", fontSize: "0.85rem" }}
+        >
           © 2026 Notes App. All rights reserved.
         </Typography>
       </Box>
