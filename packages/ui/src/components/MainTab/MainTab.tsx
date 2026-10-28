@@ -99,11 +99,10 @@ export const MainTab: React.FC = () => {
           <CardContent sx={{ p: 0, m: 0 }}>
             <Box
               sx={{
-                px: 1.25,
-                pt: 1,
-                borderBottom: "1px solid",
-                borderColor: "rgba(45, 90, 72, 0.18)",
-                backgroundColor: "#FFFCF8",
+                px: 1.1,
+                pt: 0.9,
+                borderBottom: "1px solid #DDD7C8",
+                backgroundColor: "#FBF8F1",
               }}
             >
               <Tabs
@@ -113,6 +112,15 @@ export const MainTab: React.FC = () => {
                 variant="scrollable"
                 scrollButtons="auto"
                 allowScrollButtonsMobile
+                sx={{
+                  minHeight: 40,
+                  "& .MuiTabs-indicator": {
+                    display: "none",
+                  },
+                  "& .MuiTabs-scrollButtons": {
+                    color: "text.secondary",
+                  },
+                }}
               >
                 {tabs.map((t, i: number) => (
                   <Tab
@@ -156,17 +164,41 @@ export const MainTab: React.FC = () => {
                             closeTab(i);
                           }}
                           aria-label={`close-tab-${i}`}
-                          sx={{ ml: 0.5 }}
+                          sx={{
+                            ml: 0.45,
+                            p: 0.2,
+                            color: "text.secondary",
+                            "&:hover": {
+                              backgroundColor: "transparent",
+                              color: "text.primary",
+                            },
+                          }}
                         >
                           <CloseIcon fontSize="small" />
                         </IconButton>
                       </Box>
                     }
                     sx={{
-                      minHeight: 46,
+                      minHeight: 38,
                       minWidth: "auto",
                       flexShrink: 0,
-                      px: 0.5,
+                      px: 0.9,
+                      mr: 0.8,
+                      border: "1px solid #D9D3C2",
+                      borderBottom: "1px solid #D9D3C2",
+                      borderRadius: "8px 8px 0 0",
+                      bgcolor: "#F6F1E6",
+                      color: "#4E5B53",
+                      fontWeight: 500,
+                      "&.Mui-selected": {
+                        bgcolor: "#FFFCF6",
+                        color: "#1F2A24",
+                        fontWeight: 700,
+                        borderBottomColor: "#FFFCF6",
+                      },
+                      "&:hover": {
+                        bgcolor: "#FBF7EE",
+                      },
                     }}
                     {...a11yProps(i)}
                   />
@@ -198,14 +230,18 @@ export const MainTab: React.FC = () => {
                       </Box>
                     }
                     sx={{
-                      minHeight: 42,
+                      minHeight: 38,
                       minWidth: "auto",
                       flexShrink: 0,
-                      border: 1,
-                      borderColor: "primary.main",
-                      borderRadius: 1,
-                      ml: 1,
-                      my: "6px",
+                      px: 1.1,
+                      border: "1px solid #D9D3C2",
+                      borderRadius: "8px 8px 0 0",
+                      bgcolor: "#F8F4EA",
+                      ml: 0.2,
+                      color: "primary.dark",
+                      "&:hover": {
+                        bgcolor: "#FCF8EF",
+                      },
                     }}
                     {...a11yProps(tabs.length)}
                   />
