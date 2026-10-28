@@ -52,7 +52,7 @@
 }
 
 .editor-content {
-  height: 25vh;
+  height: 50vh;
   border: 1px solid rgba(45, 90, 72, 0.2);
   border-radius: 10px;
   padding: 12px;
@@ -252,7 +252,7 @@ blockquote.editor-alert-error {
   pointer-events: auto;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1024px) {
   .editor-toolbar-btn,
   .editor-toolbar-select {
     min-height: 40px;
@@ -260,7 +260,7 @@ blockquote.editor-alert-error {
 
   .editor-content,
   .editor-source {
-    height: 50vh;
+    height: 25vh;
   }
 }
 
