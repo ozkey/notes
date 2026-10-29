@@ -7,14 +7,23 @@ export const SaveOpen: React.FC = () => {
   const { saveNotesToFile, loadNotesFromFile, lastFileSyncDate, hasUnsavedChanges } = useContext(
     BibleContext as React.Context<any>,
   );
+  const handleOpen = async () => {
+    if (hasUnsavedChanges) {
+      const shouldSave = window.confirm(
+        "You have unsaved changes. Save the current file before opening another one?",
+      );
+      if (shouldSave) {
+        await saveNotesToFile();
+      }
+    }
+    await loadNotesFromFile();
+  };
 
   return (
     <Stack direction="row" spacing={2}>
-      {!lastFileSyncDate && (
-        <Button variant="contained" onClick={() => loadNotesFromFile()}>
-          Load
-        </Button>
-      )}
+      <Button variant="contained" onClick={handleOpen}>
+        Open
+      </Button>
       <Badge color="warning" variant="dot" invisible={!hasUnsavedChanges}>
         <Button variant="contained" onClick={() => saveNotesToFile()}>
           {!lastFileSyncDate && <span>New File</span>}
