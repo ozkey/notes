@@ -21,15 +21,15 @@ export const SaveOpen: React.FC = () => {
 
   return (
     <Stack direction="row" spacing={2}>
-      <Button variant="contained" onClick={handleOpen}>
-        Open
-      </Button>
       <Badge color="warning" variant="dot" invisible={!hasUnsavedChanges}>
         <Button variant="contained" onClick={() => saveNotesToFile()}>
           {!lastFileSyncDate && <span>New File</span>}
           {lastFileSyncDate && <span>Save</span>}
         </Button>
       </Badge>
+      <Button variant="contained" onClick={handleOpen}>
+        Open
+      </Button>
     </Stack>
   );
 };

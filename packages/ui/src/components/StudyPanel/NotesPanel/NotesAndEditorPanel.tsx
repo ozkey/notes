@@ -97,6 +97,7 @@ export const NotesAndEditorPanel: React.FC = () => {
   return (
     <Card sx={{ p: 0, m: 0 }}>
       <CardActions
+        disableSpacing
         sx={{
           px: 1.25,
           py: 1,
@@ -123,16 +124,16 @@ export const NotesAndEditorPanel: React.FC = () => {
             Close Editor
           </Button>
         )}
-        {lastFileSyncDate && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ ml: "auto", mr: 1, fontFamily: "inherit" }}
-          >
-            Last saved {lastSavedLabel}
-          </Typography>
-        )}
-        <Box sx={{ ml: lastFileSyncDate ? 0 : "auto" }}>
+        <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 1 }}>
+          {lastFileSyncDate && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontFamily: "inherit" }}
+            >
+              Last saved {lastSavedLabel}
+            </Typography>
+          )}
           <SaveOpen />
         </Box>
       </CardActions>
