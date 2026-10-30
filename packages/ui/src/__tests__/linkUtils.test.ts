@@ -1,4 +1,5 @@
 import { submitLink, removeLink, openLink, submitBibleBookmark } from "../components/Editor/linkUtils";
+import { insertHtmlAtSelection } from "../components/Editor/formattingUtils";
 
 function makeEditorRef(el: HTMLDivElement | null): React.RefObject<HTMLDivElement | null> {
   return { current: el } as React.RefObject<HTMLDivElement | null>;
@@ -114,6 +115,56 @@ describe("submitLink", () => {
     expect(draft.getAttribute("href")).toBe("https://new.com");
     expect(draft.getAttribute("target")).toBe("_blank");
     expect(draft.textContent).toBe("New");
+  });
+
+  test("inserts link at saved cursor when live selection is outside editor", () => {
+    const editor = document.createElement("div");
+    editor.innerHTML = "<p>alpha beta</p>";
+    document.body.appendChild(editor);
+    const editorRef = makeEditorRef(editor);
+    const savedRangeRef = makeSavedRangeRef();
+    const syncFromEditor = jest.fn();
+
+    const paragraphText = editor.querySelector("p")!.firstChild as Text;
+    const savedRange = document.createRange();
+    savedRange.setStart(paragraphText, 6);
+    savedRange.collapse(true);
+    savedRangeRef.current = savedRange;
+
+    const outsideNode = document.createTextNode("outside");
+    document.body.appendChild(outsideNode);
+    const outsideRange = document.createRange();
+    outsideRange.setStart(outsideNode, 0);
+    outsideRange.collapse(true);
+
+    const mockSelection = {
+      rangeCount: 1,
+      getRangeAt: jest.fn().mockReturnValue(outsideRange),
+      removeAllRanges: jest.fn(),
+      addRange: jest.fn(),
+    };
+    jest.spyOn(window, "getSelection").mockReturnValue(mockSelection as any);
+
+    const insertHtml = (html: string) =>
+      insertHtmlAtSelection(editorRef, html, syncFromEditor, savedRangeRef.current);
+
+    submitLink(
+      "https://example.com",
+      "Example",
+      false,
+      null,
+      editorRef,
+      savedRangeRef,
+      insertHtml,
+      jest.fn(),
+      syncFromEditor,
+    );
+
+    expect(editor.innerHTML).toContain(
+      '<p>alpha <a href="https://example.com">Example</a>beta</p>',
+    );
+    expect(syncFromEditor).toHaveBeenCalled();
+    jest.restoreAllMocks();
   });
 });
 

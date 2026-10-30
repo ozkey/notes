@@ -348,7 +348,7 @@ export default function Editor({
    * Wrapper for insertHtmlAtSelection that includes all required refs
    */
   const insertHtml = (html: string) => {
-    insertHtmlAtSelection(editorRef, html, syncFromEditor);
+    insertHtmlAtSelection(editorRef, html, syncFromEditor, savedRangeRef.current);
   };
 
   /**

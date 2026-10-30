@@ -80,13 +80,34 @@ export const insertHtmlAtSelection = (
   editorRef: React.RefObject<HTMLDivElement | null>,
   html: string,
   syncFromEditor: () => void,
+  preferredRange: Range | null = null,
 ) => {
   if (!editorRef.current) return;
   editorRef.current.focus();
-  
+
+  const isRangeInEditor = (range: Range) =>
+    editorRef.current?.contains(range.commonAncestorContainer) ?? false;
+
   const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) {
-    // No selection, append to end of editor
+  let range: Range | null = null;
+
+  if (preferredRange && isRangeInEditor(preferredRange)) {
+    range = preferredRange.cloneRange();
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }
+
+  if (!range && selection && selection.rangeCount > 0) {
+    const currentRange = selection.getRangeAt(0);
+    if (isRangeInEditor(currentRange)) {
+      range = currentRange;
+    }
+  }
+
+  if (!range) {
+    // No usable selection, append to end of editor
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
     while (tempDiv.firstChild) {
@@ -94,9 +115,8 @@ export const insertHtmlAtSelection = (
     }
   } else {
     // Insert at current selection using Range API
-    const range = selection.getRangeAt(0);
     range.deleteContents();
-    
+
     // Create document fragment from HTML string
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
@@ -104,16 +124,18 @@ export const insertHtmlAtSelection = (
     while (tempDiv.firstChild) {
       fragment.appendChild(tempDiv.firstChild);
     }
-    
+
     // Insert the fragment
     range.insertNode(fragment);
-    
+
     // Move cursor to end of inserted content
     range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
   }
-  
+
   syncFromEditor();
 };
 
