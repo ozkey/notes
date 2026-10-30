@@ -281,6 +281,33 @@ describe("insertHtmlAtSelection", () => {
     expect(syncFromEditor).toHaveBeenCalled();
     jest.restoreAllMocks();
   });
+
+  test("uses insertHTML command for highlighted verse insertion", () => {
+    const div = document.createElement("div");
+    div.innerHTML = "<p>alpha beta</p>";
+    document.body.appendChild(div);
+    const editorRef = makeEditorRef(div);
+    const syncFromEditor = jest.fn();
+
+    const paragraphText = div.querySelector("p")!.firstChild as Text;
+    const preferredRange = document.createRange();
+    preferredRange.setStart(paragraphText, 6);
+    preferredRange.collapse(true);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(preferredRange);
+
+    const badgeHtml = createHighlightBadgeHtml(7, "green");
+    insertHtmlAtSelection(editorRef, badgeHtml, syncFromEditor, preferredRange);
+
+    expect(document.execCommand).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      badgeHtml,
+    );
+    expect(syncFromEditor).toHaveBeenCalled();
+  });
 });
 
 // ─── applyAlertVariant ────────────────────────────────────────────────────────

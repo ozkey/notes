@@ -818,7 +818,10 @@ export default function Editor({
             title="Add highlighted verse"
             aria-label="Add highlighted verse"
             onMouseDown={(event) => event.preventDefault()}
-            onClick={() => setShowHighlightDialog(true)}
+            onClick={() => {
+              saveSelection();
+              setShowHighlightDialog(true);
+            }}
           >
             <EditLocationIcon fontSize="small" />
           </button>
