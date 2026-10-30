@@ -135,6 +135,11 @@ describe("replaceElementUndoably", () => {
 
     expect(result).not.toBeNull();
     expect(result?.textContent).toBe("changed");
+    expect(document.execCommand).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      expect.stringContaining(">changed<"),
+    );
     jest.restoreAllMocks();
   });
 });

@@ -196,6 +196,11 @@ describe("insertHtmlAtSelection", () => {
 
     insertHtmlAtSelection(editorRef, "<span>inserted</span>", syncFromEditor);
 
+    expect(document.execCommand).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      "<span>inserted</span>"
+    );
     expect(syncFromEditor).toHaveBeenCalled();
     jest.restoreAllMocks();
   });
@@ -225,6 +230,7 @@ describe("insertHtmlAtSelection", () => {
       addRange: jest.fn(),
     };
     jest.spyOn(window, "getSelection").mockReturnValue(mockSelection as any);
+    (document as any).execCommand = jest.fn().mockReturnValue(false);
 
     insertHtmlAtSelection(
       editorRef,
@@ -262,6 +268,7 @@ describe("insertHtmlAtSelection", () => {
       addRange: jest.fn(),
     };
     jest.spyOn(window, "getSelection").mockReturnValue(mockSelection as any);
+    (document as any).execCommand = jest.fn().mockReturnValue(false);
 
     insertHtmlAtSelection(
       editorRef,

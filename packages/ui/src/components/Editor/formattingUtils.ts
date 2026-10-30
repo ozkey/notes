@@ -114,25 +114,34 @@ export const insertHtmlAtSelection = (
       editorRef.current.appendChild(tempDiv.firstChild);
     }
   } else {
-    // Insert at current selection using Range API
-    range.deleteContents();
-
-    // Create document fragment from HTML string
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    const fragment = document.createDocumentFragment();
-    while (tempDiv.firstChild) {
-      fragment.appendChild(tempDiv.firstChild);
+    let insertedWithExec = false;
+    try {
+      insertedWithExec = document.execCommand("insertHTML", false, html);
+    } catch (e) {
+      console.warn("insertHTML command failed:", e);
     }
 
-    // Insert the fragment
-    range.insertNode(fragment);
+    if (!insertedWithExec) {
+      // Insert at current selection using Range API
+      range.deleteContents();
 
-    // Move cursor to end of inserted content
-    range.collapse(false);
-    if (selection) {
-      selection.removeAllRanges();
-      selection.addRange(range);
+      // Create document fragment from HTML string
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      const fragment = document.createDocumentFragment();
+      while (tempDiv.firstChild) {
+        fragment.appendChild(tempDiv.firstChild);
+      }
+
+      // Insert the fragment
+      range.insertNode(fragment);
+
+      // Move cursor to end of inserted content
+      range.collapse(false);
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
     }
   }
 
