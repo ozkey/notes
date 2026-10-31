@@ -6,10 +6,10 @@ import { HomeTab } from "../../components/Tabs/HomeTab";
 import { renderWithContext } from "./testUtils";
 
 describe("HomeTab", () => {
-  it("renders an optional verse input", () => {
+  it("renders a verse input", () => {
     renderWithContext(<HomeTab />, { lastFileSyncDate: new Date() });
     expect(
-      screen.getByRole("spinbutton", { name: /verse \(optional\)/i }),
+      screen.getByRole("spinbutton", { name: /verse/i }),
     ).toBeInTheDocument();
   });
 
@@ -33,7 +33,7 @@ describe("HomeTab", () => {
     });
 
     const chapterInput = screen.getByRole("spinbutton", { name: /chapter/i });
-    const verseInput = screen.getByRole("spinbutton", { name: /verse \(optional\)/i });
+    const verseInput = screen.getByRole("spinbutton", { name: /verse/i });
     await userEvent.clear(chapterInput);
     await userEvent.type(chapterInput, "3");
     await userEvent.clear(verseInput);
@@ -63,7 +63,7 @@ describe("HomeTab", () => {
     });
 
     const chapterInput = screen.getByRole("spinbutton", { name: /chapter/i });
-    const verseInput = screen.getByRole("spinbutton", { name: /verse \(optional\)/i });
+    const verseInput = screen.getByRole("spinbutton", { name: /verse/i });
     await userEvent.clear(chapterInput);
     await userEvent.type(chapterInput, "4");
     await userEvent.clear(verseInput);
