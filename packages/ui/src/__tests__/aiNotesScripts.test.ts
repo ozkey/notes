@@ -155,6 +155,7 @@ describe("ai notes split/combine scripts", () => {
   test("combine allows note hash links to article ids", () => {
     fs.writeFileSync(sourceFile, makeHtmlWithData({ notes: [], articles: [], savedAt: null }), "utf8");
     fs.mkdirSync(notesDir, { recursive: true });
+    fs.mkdirSync(articlesDir, { recursive: true });
     fs.writeFileSync(
       path.join(notesDir, "genesis-1.json"),
       JSON.stringify(
@@ -168,8 +169,61 @@ describe("ai notes split/combine scripts", () => {
       ),
       "utf8"
     );
+    fs.writeFileSync(
+      path.join(articlesDir, "mary.json"),
+      JSON.stringify({ id: "mary", text: "<p>article</p>" }, null, 2),
+      "utf8"
+    );
 
     expect(() => combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile, booksFile })).not.toThrow();
+  });
+
+  test("combine throws when note hash links reference missing article ids", () => {
+    fs.writeFileSync(sourceFile, makeHtmlWithData({ notes: [], articles: [], savedAt: null }), "utf8");
+    fs.mkdirSync(notesDir, { recursive: true });
+    fs.mkdirSync(articlesDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(notesDir, "genesis-1.json"),
+      JSON.stringify(
+        {
+          book: "Genesis",
+          chapterNumber: 1,
+          text: '<p><a href="#missing-article">article</a></p>',
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+    fs.writeFileSync(
+      path.join(articlesDir, "mary.json"),
+      JSON.stringify({ id: "mary", text: "<p>article</p>" }, null, 2),
+      "utf8"
+    );
+
+    expect(() => combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile, booksFile })).toThrow(
+      /article link "#missing-article" has unknown article id "missing-article"/
+    );
+  });
+
+  test("combine throws when article hash links reference missing article ids", () => {
+    fs.writeFileSync(sourceFile, makeHtmlWithData({ notes: [], articles: [], savedAt: null }), "utf8");
+    fs.mkdirSync(notesDir, { recursive: true });
+    fs.mkdirSync(articlesDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(notesDir, "genesis-1.json"),
+      JSON.stringify({ book: "Genesis", chapterNumber: 1, text: "<p>ok</p>" }, null, 2),
+      "utf8"
+    );
+    fs.writeFileSync(
+      path.join(articlesDir, "mary.json"),
+      JSON.stringify({ id: "mary", text: '<p><a href="#missing-article">ref</a></p>' }, null, 2),
+      "utf8"
+    );
+
+    expect(() => combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile, booksFile })).toThrow(
+      /article link "#missing-article" has unknown article id "missing-article"/
+    );
   });
 
   test("combine accepts Roman numeral filename variants when books use numeric prefixes", () => {

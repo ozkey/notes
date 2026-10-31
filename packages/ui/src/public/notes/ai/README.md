@@ -8,8 +8,10 @@ If you follow this file, output will be compatible with the app/editor and combi
 
 Important distinction:
 
-- Some rules below are hard-validated by `combine-ai-notes.js`.
-- Others are compatibility requirements for the app/editor (not enforced by combine).
+- **MUST** = required for reliable behavior.
+- **SHOULD** = strongly recommended for compatibility/maintenance.
+- Some MUST rules are hard-validated by `combine-ai-notes.js`.
+- Other MUST/SHOULD rules are app/editor compatibility requirements (not enforced by combine).
 
 ## 1) Where to write files
 
@@ -17,9 +19,9 @@ Important distinction:
 - Articles: `packages/ui/src/public/notes/ai/articles/*.json`
 - Valid book list: `packages/ui/src/public/notes/ai/books.json`
 
-Only write `.json` files in `notes` and `articles`.
+Only write `.json` files directly in `notes` and `articles` (no subfolders).
 
-## 2) Required JSON shapes (app/editor compatibility)
+## 2) Required JSON shapes (app/editor contract; not combine-validated)
 
 ### Note file shape
 
@@ -34,9 +36,9 @@ Only write `.json` files in `notes` and `articles`.
 }
 ```
 
-- `book` (required): must resolve to a book from `books.json` (case-insensitive; spaces, `_` and `-` normalized; leading Roman/Arabic number style is interchangeable, e.g. `i samuel` / `1 samuel`).
-- `chapterNumber` (required): positive integer.
-- `text` (required): HTML string.
+- `book` (**MUST**): must resolve to a book from `books.json` (case-insensitive; spaces, `_`, and `-` normalized; leading Roman/Arabic number style is interchangeable, e.g. `i samuel` / `1 samuel`).
+- `chapterNumber` (**MUST**): positive integer.
+- `text` (**MUST**): HTML string.
 - `highlights` (optional): array of `{ verse: number, color: "green"|"blue"|"pink"|"red"|"orange"|"purple" }`.
 
 ### Article file shape
@@ -48,8 +50,8 @@ Only write `.json` files in `notes` and `articles`.
 }
 ```
 
-- `id` (required): slug-like article id (recommended lowercase + hyphen).
-- `text` (required): HTML string.
+- `id` (**MUST**): article id used in links. **SHOULD** be lowercase + hyphen (`mary`, `fruit-of-spirit`).
+- `text` (**MUST**): HTML string.
 
 ## 3) Note filename rules (required for combine)
 
@@ -66,13 +68,13 @@ Examples:
 
 Important:
 
-- Final segment must be chapter number.
-- Do **not** add suffixes like `-2` to note filenames (`genesis-1-2.json` is invalid for combine validation).
-- `book` in file content must match the same canonical book as filename token.
+- Final segment **MUST** be the chapter number.
+- Do **not** add suffixes like `-2` to note filenames (`genesis-1-2.json` fails combine validation).
+- `book` in file content **MUST** match the same canonical book as filename token.
 
 ## 4) Bible link rules inside note `text` (combine-sensitive)
 
-When using Bible links in HTML, use:
+For Bible links in note HTML, use:
 
 - `href="#Book:Chapter"` or
 - `href="#Book:Chapter:Verse"`
@@ -84,11 +86,11 @@ Examples:
 
 Rules:
 
-- Book in `href` must exist in `books.json`.
+- Book in `href` **MUST** exist in `books.json`.
 - Use double quotes in attributes (`href="..."`).
 - Book separators in hash can be spaces or `-`/`_` (editor/parser handles these).
-- Combine validates Bible-style hash links in note files (hash fragments containing `:`), and treats the first segment as a book token.
-- Non-Bible hash links like `href="#mary"` are not treated as Bible links by combine but as articles.
+- Combine validation behavior is narrow: in note files, it only checks hash links containing `:` and validates the first segment as a known book token.
+- Hash links without `:` are treated as article links and validated against article ids.
 
 ## 5) Article links inside `text`
 
@@ -102,6 +104,7 @@ Example:
 
 Keep `article-id` normalized (lowercase, hyphenated, no spaces) for best compatibility.
 You can use this in article content and in note content.
+Combine validates these links in both note and article `text`.
 
 ## 6) Allowed HTML (editor-compatible)
 
@@ -132,11 +135,11 @@ Do not generate:
 - Complex custom widgets/components/classes unknown to editor
 - SVG/MathML blocks
 
-Keep HTML simple, semantic, and in the supported set above.
+The app/export rendering path inserts `text` as HTML. Keep HTML simple, semantic, and in the supported set above.
 
 ## 8) Image storage format (how images are stored in files)
 
-Images are stored inline in `text` as `<img>` tags with **data URL** `src` values (usually WebP base64).
+Images are typically stored inline in `text` as `<img>` tags with **data URL** `src` values (usually WebP base64).
 
 Editor-generated pattern:
 
@@ -151,7 +154,7 @@ Editor-generated pattern:
 
 For compatibility, use:
 
-- `src`: `data:image/...;base64,...` (recommended; self-contained and portable)
+- `src`: `data:image/...;base64,...` (**SHOULD**; self-contained and portable)
 - `class`: at least `editor-image`
 - Optional layout classes:
   - `editor-image editor-image-small`
@@ -194,5 +197,6 @@ Notes:
 1. Every note filename follows `<book-token>-<chapter>.json`.
 2. Every note `book` exists in `books.json`.
 3. Filename book token and note `book` refer to same canonical book.
-4. Bible links in `href="#Book:Chapter[:Verse]"` use known books.
+4. Bible links in note HTML with `href="#Book:Chapter[:Verse]"` use known books.
 5. HTML uses only supported tags/patterns above.
+6. Hash links without `:` resolve to an existing article `id`.

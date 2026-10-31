@@ -133,6 +133,53 @@ function validateNotesAgainstBooks(noteEntries, books) {
   }
 }
 
+function collectArticleIds(articleEntries) {
+  const articleIds = new Set();
+  for (const { data } of articleEntries) {
+    const id = decodeURIComponent(String(data?.id ?? "").replace(/^#/, "").trim());
+    if (id) {
+      articleIds.add(id);
+    }
+  }
+  return articleIds;
+}
+
+function validateArticleHashLinks(noteEntries, articleEntries) {
+  const articleIds = collectArticleIds(articleEntries);
+  const errors = [];
+
+  const validateEntry = (scope, fileName, text) => {
+    const hrefMatches = String(text ?? "").matchAll(/href="([^"]+)"/g);
+    for (const match of hrefMatches) {
+      const href = match[1];
+      if (!href.startsWith("#")) {
+        continue;
+      }
+
+      const fragment = decodeURIComponent(href.slice(1)).trim();
+      if (!fragment || fragment.includes(":")) {
+        continue;
+      }
+
+      if (!articleIds.has(fragment)) {
+        errors.push(`${scope}/${fileName}: article link "${href}" has unknown article id "${fragment}"`);
+      }
+    }
+  };
+
+  for (const { fileName, data } of noteEntries) {
+    validateEntry("notes", fileName, data.text);
+  }
+
+  for (const { fileName, data } of articleEntries) {
+    validateEntry("articles", fileName, data.text);
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Article link validation failed:\n- ${errors.join("\n- ")}`);
+  }
+}
+
 function combineAiNotes({
   sourceFile = SOURCE_FILE,
   notesDir = NOTES_DIR,
@@ -148,10 +195,12 @@ function combineAiNotes({
 
   const books = JSON.parse(fs.readFileSync(booksFile, "utf8"));
   const noteEntries = readJsonFiles(notesDir, { includeFileName: true });
+  const articleEntries = readJsonFiles(articlesDir, { includeFileName: true });
   validateNotesAgainstBooks(noteEntries, books);
+  validateArticleHashLinks(noteEntries, articleEntries);
 
   const notes = noteEntries.map((entry) => entry.data);
-  const articles = readJsonFiles(articlesDir);
+  const articles = articleEntries.map((entry) => entry.data);
   const savedAt = fs.existsSync(metaFile)
     ? JSON.parse(fs.readFileSync(metaFile, "utf8")).savedAt ?? null
     : null;
