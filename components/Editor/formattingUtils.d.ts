@@ -30,7 +30,7 @@ export declare const applyAlertVariant: (editorRef: React.RefObject<HTMLDivEleme
  * @param html - The HTML string to insert
  * @param syncFromEditor - Callback to sync content after insertion
  */
-export declare const insertHtmlAtSelection: (editorRef: React.RefObject<HTMLDivElement | null>, html: string, syncFromEditor: () => void) => void;
+export declare const insertHtmlAtSelection: (editorRef: React.RefObject<HTMLDivElement | null>, html: string, syncFromEditor: () => void, preferredRange?: Range | null) => void;
 /**
  * Maps highlight color names to CSS background colors
  * @param color - The highlight color name

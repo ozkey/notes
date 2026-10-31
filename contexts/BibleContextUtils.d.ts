@@ -20,5 +20,7 @@ export declare const closeTab: (setTabs: SetTabs, setCurrentTab: SetCurrentTab, 
 export declare const updateTab: (setTabs: SetTabs, setLastFileSyncDate: (d: Date | undefined) => void, lastFileSyncDate: Date | undefined, tabId: number, patch: Partial<TabState>) => void;
 export declare const moveTab: (setTabs: SetTabs, setCurrentTab: SetCurrentTab, fromIndex: number, toIndex: number) => void;
 export declare const openTabForBookChapter: (setTabs: SetTabs, setCurrentTab: SetCurrentTab, book: string, chapterNumber: number, verseNumber?: number | null, maxLimit?: number) => void;
+export declare const openTabForArticle: (setTabs: SetTabs, setCurrentTab: SetCurrentTab, articleId: string, maxLimit?: number) => void;
+export declare const openTabForSearch: (setTabs: SetTabs, setCurrentTab: SetCurrentTab, searchQuery: string, maxLimit?: number) => void;
 export {};
 //# sourceMappingURL=BibleContextUtils.d.ts.map
