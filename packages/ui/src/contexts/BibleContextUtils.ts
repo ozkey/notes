@@ -106,14 +106,29 @@ export const articleIdsMatch = (left: string, right: string) =>
 type SetTabs = Dispatch<SetStateAction<TabState[]>>;
 type SetCurrentTab = Dispatch<SetStateAction<number>>;
 
+const ensureHomeTabAtStart = (tabs: TabState[]): TabState[] => {
+  if (tabs.length === 0) return [createHomeTab()];
+  if (tabs[0].mode === "home") return tabs;
+
+  const existingHomeIndex = tabs.findIndex((tab) => tab.mode === "home");
+  if (existingHomeIndex >= 0) {
+    const next = [...tabs];
+    const [homeTab] = next.splice(existingHomeIndex, 1);
+    return [homeTab, ...next];
+  }
+
+  return [createHomeTab(), ...tabs];
+};
+
 export const addTab = (
   setTabs: SetTabs,
   setCurrentTab: SetCurrentTab,
   maxLimit = MAX_TAB_LIMIT,
 ) => {
   setTabs((prev) => {
-    if (prev.length >= maxLimit) return prev;
-    const next: TabState[] = [...prev, createHomeTab()];
+    const normalizedPrev = ensureHomeTabAtStart(prev);
+    if (normalizedPrev.length >= maxLimit) return normalizedPrev;
+    const next: TabState[] = [...normalizedPrev, createHomeTab()];
     setCurrentTab(next.length - 1);
     return next;
   });
@@ -125,11 +140,16 @@ export const closeTab = (
   i: number,
 ) => {
   setTabs((prev) => {
-    if (prev.length <= 1) {
+    const normalizedPrev = ensureHomeTabAtStart(prev);
+    if (i <= 0) {
+      setCurrentTab(0);
+      return normalizedPrev;
+    }
+    if (normalizedPrev.length <= 1) {
       setCurrentTab(0);
       return [createHomeTab()];
     }
-    const next = prev.filter((_, idx) => idx !== i);
+    const next = normalizedPrev.filter((_, idx) => idx !== i);
     setCurrentTab((cur) => {
       if (i < cur) return cur - 1;
       if (i === cur) return Math.max(0, cur - 1);
@@ -159,17 +179,20 @@ export const moveTab = (
   toIndex: number,
 ) => {
   setTabs((prev) => {
+    const normalizedPrev = ensureHomeTabAtStart(prev);
     if (
       fromIndex === toIndex ||
+      fromIndex === 0 ||
+      toIndex === 0 ||
       fromIndex < 0 ||
       toIndex < 0 ||
-      fromIndex >= prev.length ||
-      toIndex >= prev.length
+      fromIndex >= normalizedPrev.length ||
+      toIndex >= normalizedPrev.length
     ) {
-      return prev;
+      return normalizedPrev;
     }
 
-    const next = [...prev];
+    const next = [...normalizedPrev];
     const [movedTab] = next.splice(fromIndex, 1);
     next.splice(toIndex, 0, movedTab);
 
@@ -193,7 +216,8 @@ export const openTabForBookChapter = (
   maxLimit = MAX_TAB_LIMIT,
 ) => {
   setTabs((prev) => {
-    const existingIndex = prev.findIndex(
+    const normalizedPrev = ensureHomeTabAtStart(prev);
+    const existingIndex = normalizedPrev.findIndex(
       (t) =>
         t.mode === "bible" &&
         t.selectedBook === book &&
@@ -201,12 +225,78 @@ export const openTabForBookChapter = (
     );
     if (existingIndex >= 0) {
       setCurrentTab(existingIndex);
-      return prev.map((tab, index) =>
+      return normalizedPrev.map((tab, index) =>
         index === existingIndex ? { ...tab, verseNumber } : tab,
       );
     }
-    if (prev.length >= maxLimit) return prev;
-    const next: TabState[] = [...prev, createBibleTab(book, chapterNumber, verseNumber)];
+    if (normalizedPrev.length >= maxLimit) return normalizedPrev;
+    const next: TabState[] = [
+      ...normalizedPrev,
+      createBibleTab(book, chapterNumber, verseNumber),
+    ];
+    setCurrentTab(next.length - 1);
+    return next;
+  });
+};
+
+export const openTabForArticle = (
+  setTabs: SetTabs,
+  setCurrentTab: SetCurrentTab,
+  articleId: string,
+  maxLimit = MAX_TAB_LIMIT,
+) => {
+  const normalizedId = normalizeArticleId(articleId);
+  if (!normalizedId) return;
+
+  setTabs((prev) => {
+    const normalizedPrev = ensureHomeTabAtStart(prev);
+    const existingIndex = normalizedPrev.findIndex(
+      (tab) =>
+        tab.mode === "article" &&
+        articleIdsMatch(tab.articleId ?? "", normalizedId),
+    );
+    if (existingIndex >= 0) {
+      setCurrentTab(existingIndex);
+      return normalizedPrev;
+    }
+    if (normalizedPrev.length >= maxLimit) return normalizedPrev;
+
+    const next: TabState[] = [
+      ...normalizedPrev,
+      createArticleTab(normalizedId),
+    ];
+    setCurrentTab(next.length - 1);
+    return next;
+  });
+};
+
+export const openTabForSearch = (
+  setTabs: SetTabs,
+  setCurrentTab: SetCurrentTab,
+  searchQuery: string,
+  maxLimit = MAX_TAB_LIMIT,
+) => {
+  const normalizedQuery = searchQuery.trim();
+  if (!normalizedQuery) return;
+
+  setTabs((prev) => {
+    const normalizedPrev = ensureHomeTabAtStart(prev);
+    const existingIndex = normalizedPrev.findIndex(
+      (tab) =>
+        tab.mode === "search" &&
+        (tab.searchQuery ?? "").trim().toLowerCase() ===
+          normalizedQuery.toLowerCase(),
+    );
+    if (existingIndex >= 0) {
+      setCurrentTab(existingIndex);
+      return normalizedPrev;
+    }
+    if (normalizedPrev.length >= maxLimit) return normalizedPrev;
+
+    const next: TabState[] = [
+      ...normalizedPrev,
+      createSearchTab(normalizedQuery),
+    ];
     setCurrentTab(next.length - 1);
     return next;
   });

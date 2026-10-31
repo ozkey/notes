@@ -6,9 +6,9 @@ import { SaveOpen } from '../../components/ActionBar/SaveOpen';
 import { renderWithContext } from './testUtils';
 
 describe('SaveOpen', () => {
-  it('always renders a Load button', () => {
+  it('always renders an Open button', () => {
     renderWithContext(<SaveOpen />);
-    expect(screen.getByRole('button', { name: /load/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open/i })).toBeInTheDocument();
   });
 
   it('renders "New File" when lastFileSyncDate is undefined', () => {
@@ -23,15 +23,65 @@ describe('SaveOpen', () => {
     expect(screen.queryByText('New File')).not.toBeInTheDocument();
   });
 
-  it('calls loadNotesFromFile when Load is clicked', async () => {
-    const loadNotesFromFile = jest.fn().mockResolvedValue(undefined);
+  it('calls loadNotesFromFile when Open is clicked and there are no unsaved changes', async () => {
+    const loadNotesFromFile = jest.fn().mockResolvedValue(true);
+    const confirmSpy = jest.spyOn(window, 'confirm');
     renderWithContext(<SaveOpen />, { loadNotesFromFile });
-    await userEvent.click(screen.getByRole('button', { name: /load/i }));
+    await userEvent.click(screen.getByRole('button', { name: /open/i }));
     expect(loadNotesFromFile).toHaveBeenCalledTimes(1);
+    expect(confirmSpy).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it('asks to save before opening when there are unsaved changes and saves if confirmed', async () => {
+    const saveNotesToFile = jest.fn().mockResolvedValue(true);
+    const loadNotesFromFile = jest.fn().mockResolvedValue(true);
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    renderWithContext(<SaveOpen />, {
+      hasUnsavedChanges: true,
+      saveNotesToFile,
+      loadNotesFromFile,
+    });
+    await userEvent.click(screen.getByRole('button', { name: /open/i }));
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(saveNotesToFile).toHaveBeenCalledTimes(1);
+    expect(loadNotesFromFile).toHaveBeenCalledTimes(1);
+    confirmSpy.mockRestore();
+  });
+
+  it('opens without saving when unsaved changes prompt is declined', async () => {
+    const saveNotesToFile = jest.fn().mockResolvedValue(true);
+    const loadNotesFromFile = jest.fn().mockResolvedValue(true);
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
+    renderWithContext(<SaveOpen />, {
+      hasUnsavedChanges: true,
+      saveNotesToFile,
+      loadNotesFromFile,
+    });
+    await userEvent.click(screen.getByRole('button', { name: /open/i }));
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(saveNotesToFile).not.toHaveBeenCalled();
+    expect(loadNotesFromFile).toHaveBeenCalledTimes(1);
+    confirmSpy.mockRestore();
+  });
+
+  it('still opens even if save is cancelled', async () => {
+    const saveNotesToFile = jest.fn().mockResolvedValue(false);
+    const loadNotesFromFile = jest.fn().mockResolvedValue(true);
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    renderWithContext(<SaveOpen />, {
+      hasUnsavedChanges: true,
+      saveNotesToFile,
+      loadNotesFromFile,
+    });
+    await userEvent.click(screen.getByRole('button', { name: /open/i }));
+    expect(saveNotesToFile).toHaveBeenCalledTimes(1);
+    expect(loadNotesFromFile).toHaveBeenCalledTimes(1);
+    confirmSpy.mockRestore();
   });
 
   it('calls saveNotesToFile when the save/new-file button is clicked', async () => {
-    const saveNotesToFile = jest.fn().mockResolvedValue(undefined);
+    const saveNotesToFile = jest.fn().mockResolvedValue(true);
     renderWithContext(<SaveOpen />, { saveNotesToFile, lastFileSyncDate: new Date() });
     await userEvent.click(screen.getByText('Save'));
     expect(saveNotesToFile).toHaveBeenCalledTimes(1);

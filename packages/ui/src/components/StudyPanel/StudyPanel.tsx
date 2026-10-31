@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@mui/material";
+import { Stack } from "@mui/material";
 
 import { NotesAndEditorPanel } from "../StudyPanel/NotesPanel/NotesAndEditorPanel";
 import React from "react";
@@ -10,11 +10,10 @@ interface StudyPanelProps {
 
 export const StudyPanel = React.memo(({ mode }: StudyPanelProps) => {
   return (
-    <div>
+    <Stack spacing={1.25}>
       <NotesAndEditorPanel />
-      <br />
       {mode === "bible" && <RefPanel />}
-    </div>
+    </Stack>
   );
 });
 

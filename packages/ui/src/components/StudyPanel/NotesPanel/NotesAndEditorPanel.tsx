@@ -1,4 +1,12 @@
-import { Button, Card, CardActions, CardContent } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Divider,
+  Typography,
+} from "@mui/material";
 import React, { useContext, useEffect } from "react";
 import BibleContext from "../../../contexts/BibleContext";
 import { articleIdsMatch } from "../../../contexts/BibleContextUtils";
@@ -28,15 +36,23 @@ export const NotesAndEditorPanel: React.FC = () => {
   if (!notes) return <></>;
   if (currentTabState.mode === "home") {
     return (
-      <Card>
-        <CardContent>Select an option from Home to get started.</CardContent>
+      <Card sx={{ p: 0, m: 0 }}>
+        <CardContent>
+          <Typography variant="body1" color="text.secondary">
+            Select an option from Home to get started.
+          </Typography>
+        </CardContent>
       </Card>
     );
   }
   if (currentTabState.mode === "bible" && !currentTabState.selectedBook) {
     return (
-      <Card>
-        <CardContent>No book selected</CardContent>
+      <Card sx={{ p: 0, m: 0 }}>
+        <CardContent>
+          <Typography variant="body1" color="text.secondary">
+            No book selected
+          </Typography>
+        </CardContent>
       </Card>
     );
   }
@@ -58,6 +74,13 @@ export const NotesAndEditorPanel: React.FC = () => {
     );
   })();
 
+  const lastSavedLabel = lastFileSyncDate
+    ? lastFileSyncDate.toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : "";
+
   // editorOpen state moved to context
 
   useEffect(() => {
@@ -72,40 +95,66 @@ export const NotesAndEditorPanel: React.FC = () => {
   }, [lastFileSyncDate]);
 
   return (
-    <Card>
-      <CardActions>
+    <Card sx={{ p: 0, m: 0 }}>
+      <CardActions
+        disableSpacing
+        sx={{
+          px: 1.25,
+          py: 1,
+          borderBottom: "1px solid rgba(45, 90, 72, 0.16)",
+          backgroundColor: "#FFFCF8",
+          gap: 1,
+        }}
+      >
         {lastFileSyncDate && !editorOpen && (
-          <Button variant="contained" onClick={() => setEditorOpen(true)}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setEditorOpen(true)}
+          >
             Open Editor
           </Button>
         )}
         {lastFileSyncDate && editorOpen && (
-          <Button variant="contained" onClick={() => setEditorOpen(false)}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setEditorOpen(false)}
+          >
             Close Editor
           </Button>
         )}
-        <div style={{ marginLeft: "auto" }}>
+        <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 1 }}>
+          {lastFileSyncDate && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontFamily: "inherit" }}
+            >
+              Last saved {lastSavedLabel}
+            </Typography>
+          )}
           <SaveOpen />
-        </div>
+        </Box>
       </CardActions>
-      <hr />
-      <CardContent>
+      <Divider />
+      <CardContent sx={{ pt: 1.5 }}>
         {!lastFileSyncDate && (
-          <div>
-            <h2>Personal notes</h2>
-            <br />
-
-            <p>
+          <Box>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Personal notes
+            </Typography>
+            <Typography variant="body1">
               To get started, click the "New File" button to create a new file
               for your notes.
-            </p>
+            </Typography>
 
             {/*<img*/}
             {/*  src={editorImage}*/}
             {/*  alt="Instructions"*/}
             {/*  style={{ width: "100%" }}*/}
             {/*/>*/}
-          </div>
+          </Box>
         )}
         {lastFileSyncDate && editorOpen && (
           <>
@@ -129,9 +178,16 @@ export const NotesAndEditorPanel: React.FC = () => {
           </>
         )}
         {!editorOpen && (
-          <div
+          <Box
             className="database-html-container"
             dangerouslySetInnerHTML={{ __html: currentNoteText }}
+            sx={{
+              border: "1px solid rgba(45, 90, 72, 0.18)",
+              borderRadius: 1,
+              backgroundColor: "#FFFDF8",
+              p: 1.5,
+              minHeight: 240,
+            }}
           />
         )}
       </CardContent>

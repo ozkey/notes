@@ -23,7 +23,12 @@ export const BookActions: React.FC = () => {
   useEffect(() => {
     setChapterInput(String(current.chapterNumber ?? 1));
     setVerseInput(current.verseNumber ? String(current.verseNumber) : "");
-  }, [currentTab, current.chapterNumber, current.selectedBook, current.verseNumber]);
+  }, [
+    currentTab,
+    current.chapterNumber,
+    current.selectedBook,
+    current.verseNumber,
+  ]);
 
   const commitSelection = () => {
     const parsed = parseInt(chapterInput, 10);
@@ -52,7 +57,14 @@ export const BookActions: React.FC = () => {
     <Stack
       direction={{ xs: "column", sm: "row" }}
       spacing={1}
-      sx={{ p: 0.25, width: "100%", alignItems: { xs: "stretch", sm: "center" } }}
+      sx={{
+        p: 0.75,
+        width: "100%",
+        alignItems: { xs: "stretch", sm: "center" },
+        backgroundColor: "#F8F3E8",
+        borderRadius: 1,
+        border: "1px solid rgba(45, 90, 72, 0.14)",
+      }}
     >
       <Autocomplete
         freeSolo={false}
@@ -63,14 +75,9 @@ export const BookActions: React.FC = () => {
         }
         fullWidth
         renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Select Bible Book"
-            variant="outlined"
-            size="small"
-          />
+          <TextField {...params} label="Book" variant="outlined" size="small" />
         )}
-        sx={{ width: { xs: "100%", sm: 180 } }}
+        sx={{ width: { xs: "100%", sm: 220 } }}
       />
 
       <TextField
@@ -109,7 +116,11 @@ export const BookActions: React.FC = () => {
         sx={{ width: { xs: "100%", sm: 90 } }}
       />
 
-      <Button variant="contained" onClick={commitSelection} sx={{ width: { xs: "100%", sm: "auto" } }}>
+      <Button
+        variant="contained"
+        onClick={commitSelection}
+        sx={{ width: { xs: "100%", sm: "auto" }, px: 2.5, py: 0.85 }}
+      >
         Open
       </Button>
     </Stack>

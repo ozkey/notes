@@ -5,11 +5,7 @@ import {
   Button,
   Card,
   CardContent,
-  Divider,
   FormControl,
-  List,
-  ListItemButton,
-  ListItemText,
   InputLabel,
   MenuItem,
   Select,
@@ -19,7 +15,7 @@ import {
 } from "@mui/material";
 import BibleContext from "../../contexts/BibleContext";
 import { SaveOpen } from "../ActionBar/SaveOpen";
-import { normalizeArticleId as normalizeArticleIdUtil } from "../../contexts/BibleContextUtils";
+import { HomeNotesAndArticles } from "./HomeNotesAndArticles";
 import {
   BOOK_GROUPS,
   formatBookLabel,
@@ -67,21 +63,18 @@ export const HomeTab: React.FC = () => {
     tabs,
     currentTab,
     books,
-    notes,
-    articles,
     lastFileSyncDate,
     bibleTranslations,
     selectedBibleTranslation,
     setSelectedBibleTranslation,
     loadBibleText,
-    openBibleInCurrentTab,
-    openArticleInCurrentTab,
-    openSearchInCurrentTab,
+    openBibleInNewTab,
   } = useContext(BibleContext as React.Context<any>);
 
   const current = tabs[currentTab] ?? {
     selectedBook: null,
     chapterNumber: 1,
+    verseNumber: null,
     articleId: null,
   };
 
@@ -91,51 +84,22 @@ export const HomeTab: React.FC = () => {
   const [chapterInput, setChapterInput] = useState<string>(
     String(current.chapterNumber ?? 1),
   );
-  const [articleIdInput, setArticleIdInput] = useState<string>("#");
-  const [articleIdError, setArticleIdError] = useState<string>("");
-  const [searchInput, setSearchInput] = useState<string>("");
+  const [verseInput, setVerseInput] = useState<string>(
+    current.verseNumber ? String(current.verseNumber) : "",
+  );
 
   useEffect(() => {
     setSelectedBook(current.selectedBook ?? books[0] ?? null);
     setChapterInput(String(current.chapterNumber ?? 1));
-  }, [currentTab, current.selectedBook, current.chapterNumber, books]);
+    setVerseInput(current.verseNumber ? String(current.verseNumber) : "");
+  }, [
+    currentTab,
+    current.selectedBook,
+    current.chapterNumber,
+    current.verseNumber,
+    books,
+  ]);
 
-  const existingArticleIds = useMemo(
-    () => articles.map((article: any) => article.id),
-    [articles],
-  );
-  const openArticleIds = useMemo(
-    () =>
-      new Set(
-        tabs
-          .filter((tab: any) => tab.mode === "article" && tab.articleId)
-          .map((tab: any) => String(tab.articleId).toLowerCase()),
-      ),
-    [tabs],
-  );
-  const existingNoteRefs = useMemo(() => {
-    const seen = new Set<string>();
-    const refs: Array<{ id: string; book: string; chapterNumber: number }> = [];
-    for (const entry of notes) {
-      if (!entry?.book || !entry?.chapterNumber) continue;
-      const id = `${entry.book}|${entry.chapterNumber}`;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      refs.push({ id, book: entry.book, chapterNumber: entry.chapterNumber });
-    }
-    return refs;
-  }, [notes]);
-  const openBibleRefs = useMemo(
-    () =>
-      new Set(
-        tabs
-          .filter((tab: any) => tab.mode === "bible" && tab.selectedBook)
-          .map((tab: any) =>
-            `${tab.selectedBook}|${String(tab.chapterNumber ?? 1)}`.toLowerCase(),
-          ),
-      ),
-    [tabs],
-  );
   const groupedBooks = useMemo(() => {
     const booksByKey = new Map(
       books.map((book: string) => [normalizeBookKey(book), book]),
@@ -170,41 +134,19 @@ export const HomeTab: React.FC = () => {
     return groups;
   }, [books]);
 
-  const normalizeArticleId = (raw: string) => {
-    const normalized = normalizeArticleIdUtil(raw);
-    if (!normalized) return "";
-    return `#${normalized}`;
-  };
-
   const openBible = () => {
     const parsedChapter = parseInt(chapterInput, 10);
-    if (!selectedBook || Number.isNaN(parsedChapter) || parsedChapter < 1)
+    const trimmedVerse = verseInput.trim();
+    const parsedVerse = trimmedVerse ? parseInt(trimmedVerse, 10) : null;
+
+    if (
+      !selectedBook ||
+      Number.isNaN(parsedChapter) ||
+      parsedChapter < 1 ||
+      (parsedVerse !== null && (Number.isNaN(parsedVerse) || parsedVerse < 1))
+    )
       return;
-    openBibleInCurrentTab(selectedBook, parsedChapter);
-  };
-
-  const createArticle = () => {
-    const normalizedId = normalizeArticleId(articleIdInput);
-    const idText = normalizedId.replace(/^#/, "");
-    if (idText.length < 2) {
-      setArticleIdError("Article ID must be at least 2 characters.");
-      return;
-    }
-    setArticleIdError("");
-    openArticleInCurrentTab(normalizedId);
-  };
-
-  const handleSearch = () => {
-    const query = searchInput;
-    if (query.length > 0) {
-      openSearchInCurrentTab(query);
-    }
-  };
-
-  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
+    openBibleInNewTab(selectedBook, parsedChapter, parsedVerse);
   };
 
   const handleBibleTranslationChange = (nextTranslation: string) => {
@@ -221,24 +163,71 @@ export const HomeTab: React.FC = () => {
         <Card sx={{ padding: "1rem", marginBottom: "1rem" }}>
           <CardContent>
             <Stack spacing={1.25}>
-              <Typography variant="subtitle1">Bookshelf</Typography>
-              <FormControl size="small" sx={{ maxWidth: 360 }}>
-                <InputLabel id="home-tab-bible-select-label">Bible</InputLabel>
-                <Select
-                  labelId="home-tab-bible-select-label"
-                  label="Bible"
-                  value={selectedBibleTranslation}
-                  onChange={(event) =>
-                    handleBibleTranslationChange(String(event.target.value))
-                  }
-                >
-                  {bibleTranslations.map((translation: any) => (
-                    <MenuItem key={translation.id} value={translation.id}>
-                      {translation.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Stack direction={{ xs: "column", lg: "row" }} spacing={1.5}>
+                <Stack spacing={1} sx={{ minWidth: 220, maxWidth: 360 }}>
+                  <Typography variant="subtitle1">Bookshelf</Typography>
+                  <FormControl size="small" sx={{ width: "100%" }}>
+                    <InputLabel id="home-tab-bible-select-label">
+                      Bible
+                    </InputLabel>
+                    <Select
+                      labelId="home-tab-bible-select-label"
+                      label="Bible"
+                      value={selectedBibleTranslation}
+                      onChange={(event) =>
+                        handleBibleTranslationChange(String(event.target.value))
+                      }
+                    >
+                      {bibleTranslations.map((translation: any) => (
+                        <MenuItem key={translation.id} value={translation.id}>
+                          {translation.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
+                <Stack spacing={1} sx={{ flex: 1 }}>
+                  <Typography variant="subtitle1">
+                    Open a bible book and chapter
+                  </Typography>
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                    <Autocomplete
+                      disablePortal
+                      options={books}
+                      value={selectedBook}
+                      onChange={(_, value) => setSelectedBook(value)}
+                      getOptionLabel={(option) => formatBookLabel(option)}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Bible Book"
+                          size="small"
+                        />
+                      )}
+                      sx={{ minWidth: 200 }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Chapter"
+                      type="number"
+                      value={chapterInput}
+                      onChange={(e) => setChapterInput(e.target.value)}
+                      sx={{ width: 100 }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Verse"
+                      type="number"
+                      value={verseInput}
+                      onChange={(e) => setVerseInput(e.target.value)}
+                      sx={{ width: 100 }}
+                    />
+                    <Button variant="contained" onClick={openBible}>
+                      Open
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Stack>
               <Box sx={{ overflowX: "auto" }}>
                 <Stack
                   direction="row"
@@ -278,7 +267,8 @@ export const HomeTab: React.FC = () => {
                               onClick={() => {
                                 setSelectedBook(book);
                                 setChapterInput("1");
-                                openBibleInCurrentTab(book, 1);
+                                setVerseInput("");
+                                openBibleInNewTab(book, 1);
                               }}
                               variant={
                                 selectedBook === book ? "contained" : "outlined"
@@ -330,173 +320,7 @@ export const HomeTab: React.FC = () => {
         </Box>
       )}
 
-      <Stack spacing={2}>
-        <Card>
-          <CardContent>
-            <Stack spacing={2}>
-              <Typography variant="subtitle1">Search the Bible</Typography>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                <TextField
-                  size="small"
-                  label="Search"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyPress={handleSearchKeyPress}
-                  placeholder="love"
-                  sx={{ minWidth: 260 }}
-                />
-                <Button variant="contained" onClick={handleSearch}>
-                  Search
-                </Button>
-              </Stack>
-              <Typography variant="caption" color="text.secondary">
-                Search will open in a new tab showing matching verses
-              </Typography>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-          <Card sx={{ flex: 1 }}>
-            <CardContent>
-              <Stack spacing={2}>
-                <Typography variant="subtitle1">
-                  Open a bible book and chapter
-                </Typography>
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                  <Autocomplete
-                    disablePortal
-                    options={books}
-                    value={selectedBook}
-                    onChange={(_, value) => setSelectedBook(value)}
-                    getOptionLabel={(option) => formatBookLabel(option)}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Bible Book" size="small" />
-                    )}
-                    sx={{ minWidth: 220 }}
-                  />
-                  <TextField
-                    size="small"
-                    label="Chapter"
-                    type="number"
-                    value={chapterInput}
-                    onChange={(e) => setChapterInput(e.target.value)}
-                    sx={{ width: 120 }}
-                  />
-                  <Button variant="contained" onClick={openBible}>
-                    Open
-                  </Button>
-                </Stack>
-
-                {lastFileSyncDate !== undefined && (
-                  <>
-                    <Divider />
-
-                    <Typography variant="subtitle1">Open a note</Typography>
-                    {existingNoteRefs.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        No saved notes yet.
-                      </Typography>
-                    ) : (
-                      <List
-                        dense
-                        sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}
-                      >
-                        {existingNoteRefs.map((note) => {
-                          const isOpen = openBibleRefs.has(
-                            note.id.toLowerCase(),
-                          );
-                          return (
-                            <ListItemButton
-                              key={note.id}
-                              onClick={() =>
-                                openBibleInCurrentTab(
-                                  note.book,
-                                  note.chapterNumber,
-                                )
-                              }
-                              disabled={isOpen}
-                            >
-                              <ListItemText
-                                primary={`${formatBookLabel(note.book)} ${note.chapterNumber}${
-                                  isOpen ? " - open" : ""
-                                }`}
-                              />
-                            </ListItemButton>
-                          );
-                        })}
-                      </List>
-                    )}
-                  </>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-
-          {lastFileSyncDate !== undefined && (
-            <Card sx={{ flex: 1 }}>
-              <CardContent>
-                <Stack spacing={2}>
-                  <Typography variant="subtitle1">
-                    Create a new article
-                  </Typography>
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                    <TextField
-                      size="small"
-                      label="Article ID / Hashtag"
-                      value={articleIdInput}
-                      onChange={(e) => {
-                        const nextValue = e.target.value;
-                        setArticleIdInput(nextValue);
-                        const normalizedId = normalizeArticleId(nextValue);
-                        const idText = normalizedId.replace(/^#/, "");
-                        if (idText.length >= 2) setArticleIdError("");
-                      }}
-                      error={Boolean(articleIdError)}
-                      helperText={articleIdError}
-                      sx={{ minWidth: 260 }}
-                    />
-                    <Button variant="contained" onClick={createArticle}>
-                      Create article
-                    </Button>
-                  </Stack>
-
-                  <Divider />
-
-                  <Typography variant="subtitle1">Open an article</Typography>
-                  {existingArticleIds.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      No saved articles yet.
-                    </Typography>
-                  ) : (
-                    <List
-                      dense
-                      sx={{ border: "1px solid #e0e0e0", borderRadius: 1 }}
-                    >
-                      {existingArticleIds.map((id: string) => (
-                        <ListItemButton
-                          key={id}
-                          onClick={() => openArticleInCurrentTab(id)}
-                          disabled={openArticleIds.has(id.toLowerCase())}
-                        >
-                          <ListItemText
-                            primary={
-                              id +
-                              (openArticleIds.has(id.toLowerCase())
-                                ? " - open"
-                                : "")
-                            }
-                          />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  )}
-                </Stack>
-              </CardContent>
-            </Card>
-          )}
-        </Stack>
-      </Stack>
+      <HomeNotesAndArticles />
     </>
   );
 };

@@ -1,4 +1,6 @@
 import { submitLink, removeLink, openLink, submitBibleBookmark } from "../components/Editor/linkUtils";
+import { insertHtmlAtSelection } from "../components/Editor/formattingUtils";
+import { replaceElementUndoably } from "../components/Editor/selectionUtils";
 
 function makeEditorRef(el: HTMLDivElement | null): React.RefObject<HTMLDivElement | null> {
   return { current: el } as React.RefObject<HTMLDivElement | null>;
@@ -115,6 +117,135 @@ describe("submitLink", () => {
     expect(draft.getAttribute("target")).toBe("_blank");
     expect(draft.textContent).toBe("New");
   });
+
+  test("inserts link at saved cursor when live selection is outside editor", () => {
+    const editor = document.createElement("div");
+    editor.innerHTML = "<p>alpha beta</p>";
+    document.body.appendChild(editor);
+    const editorRef = makeEditorRef(editor);
+    const savedRangeRef = makeSavedRangeRef();
+    const syncFromEditor = jest.fn();
+
+    const paragraphText = editor.querySelector("p")!.firstChild as Text;
+    const savedRange = document.createRange();
+    savedRange.setStart(paragraphText, 6);
+    savedRange.collapse(true);
+    savedRangeRef.current = savedRange;
+
+    const outsideNode = document.createTextNode("outside");
+    document.body.appendChild(outsideNode);
+    const outsideRange = document.createRange();
+    outsideRange.setStart(outsideNode, 0);
+    outsideRange.collapse(true);
+
+    const mockSelection = {
+      rangeCount: 1,
+      getRangeAt: jest.fn().mockReturnValue(outsideRange),
+      removeAllRanges: jest.fn(),
+      addRange: jest.fn(),
+    };
+    jest.spyOn(window, "getSelection").mockReturnValue(mockSelection as any);
+    (document as any).execCommand = jest.fn().mockReturnValue(false);
+
+    const insertHtml = (html: string) =>
+      insertHtmlAtSelection(editorRef, html, syncFromEditor, savedRangeRef.current);
+
+    submitLink(
+      "https://example.com",
+      "Example",
+      false,
+      null,
+      editorRef,
+      savedRangeRef,
+      insertHtml,
+      jest.fn(),
+      syncFromEditor,
+    );
+
+    expect(editor.innerHTML).toContain(
+      '<p>alpha <a href="https://example.com">Example</a>beta</p>',
+    );
+    expect(syncFromEditor).toHaveBeenCalled();
+    jest.restoreAllMocks();
+  });
+
+  test("uses insertHTML command for undo history when inserting a new link", () => {
+    const editor = document.createElement("div");
+    editor.innerHTML = "<p>alpha beta</p>";
+    document.body.appendChild(editor);
+    const editorRef = makeEditorRef(editor);
+    const savedRangeRef = makeSavedRangeRef();
+    const syncFromEditor = jest.fn();
+
+    const paragraphText = editor.querySelector("p")!.firstChild as Text;
+    const savedRange = document.createRange();
+    savedRange.setStart(paragraphText, 6);
+    savedRange.collapse(true);
+    savedRangeRef.current = savedRange;
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(savedRange);
+
+    const insertHtml = (html: string) =>
+      insertHtmlAtSelection(editorRef, html, syncFromEditor, savedRangeRef.current);
+
+    submitLink(
+      "https://example.com",
+      "Example",
+      false,
+      null,
+      editorRef,
+      savedRangeRef,
+      insertHtml,
+      jest.fn(),
+      syncFromEditor,
+    );
+
+    expect(document.execCommand).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      '<a href="https://example.com">Example</a>',
+    );
+  });
+
+  test("uses insertHTML command for undo history when editing an existing link", () => {
+    const editor = document.createElement("div");
+    const anchor = document.createElement("a");
+    anchor.setAttribute("href", "https://old.com");
+    anchor.textContent = "Old";
+    editor.appendChild(anchor);
+    document.body.appendChild(editor);
+
+    const editorRef = makeEditorRef(editor);
+    const savedRangeRef = makeSavedRangeRef();
+    const syncFromEditor = jest.fn();
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    const range = document.createRange();
+    range.selectNode(anchor);
+    selection?.addRange(range);
+
+    submitLink(
+      "https://new.com",
+      "New",
+      true,
+      anchor,
+      editorRef,
+      savedRangeRef,
+      jest.fn(),
+      (element, mutate) =>
+        replaceElementUndoably(element, editorRef, savedRangeRef, mutate),
+      syncFromEditor,
+    );
+
+    expect(document.execCommand).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      expect.stringContaining('href="https://new.com"'),
+    );
+  });
 });
 
 // ─── removeLink ───────────────────────────────────────────────────────────────
@@ -208,5 +339,82 @@ describe("submitBibleBookmark", () => {
     expect(replaceElement).toHaveBeenCalled();
     expect(syncFromEditor).toHaveBeenCalled();
     expect(insertHtml).not.toHaveBeenCalled();
+  });
+
+  test("uses insertHTML command for undo history when inserting a Bible link", () => {
+    const editor = document.createElement("div");
+    editor.innerHTML = "<p>alpha beta</p>";
+    document.body.appendChild(editor);
+    const editorRef = makeEditorRef(editor);
+    const savedRangeRef = makeSavedRangeRef();
+    const syncFromEditor = jest.fn();
+
+    const paragraphText = editor.querySelector("p")!.firstChild as Text;
+    const savedRange = document.createRange();
+    savedRange.setStart(paragraphText, 6);
+    savedRange.collapse(true);
+    savedRangeRef.current = savedRange;
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(savedRange);
+
+    const insertHtml = (html: string) =>
+      insertHtmlAtSelection(editorRef, html, syncFromEditor, savedRangeRef.current);
+
+    submitBibleBookmark(
+      "Genesis",
+      1,
+      null,
+      null,
+      editorRef,
+      savedRangeRef,
+      insertHtml,
+      jest.fn(),
+      syncFromEditor,
+    );
+
+    expect(document.execCommand).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      '<a href="#Genesis:1">Genesis 1</a>',
+    );
+  });
+
+  test("uses insertHTML command for undo history when editing a Bible link", () => {
+    const editor = document.createElement("div");
+    const anchor = document.createElement("a");
+    anchor.setAttribute("href", "#Genesis:1");
+    anchor.textContent = "Genesis 1";
+    editor.appendChild(anchor);
+    document.body.appendChild(editor);
+
+    const editorRef = makeEditorRef(editor);
+    const savedRangeRef = makeSavedRangeRef();
+    const syncFromEditor = jest.fn();
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    const range = document.createRange();
+    range.selectNode(anchor);
+    selection?.addRange(range);
+
+    submitBibleBookmark(
+      "Exodus",
+      2,
+      null,
+      anchor,
+      editorRef,
+      savedRangeRef,
+      jest.fn(),
+      (element, mutate) =>
+        replaceElementUndoably(element, editorRef, savedRangeRef, mutate),
+      syncFromEditor,
+    );
+
+    expect(document.execCommand).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      expect.stringContaining('href="#Exodus:2"'),
+    );
   });
 });

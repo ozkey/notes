@@ -15,11 +15,12 @@ import {
   parseHash as parseHashUtil,
   addTab as addTabUtil,
   closeTab as closeTabUtil,
-  createArticleTab,
   createHomeTab,
   moveTab as moveTabUtil,
+  openTabForArticle as openTabForArticleUtil,
   updateTab as updateTabUtil,
   openTabForBookChapter as openTabForBookChapterUtil,
+  openTabForSearch as openTabForSearchUtil,
   articleIdsMatch,
   normalizeArticleId,
   MAX_TAB_LIMIT,
@@ -72,8 +73,15 @@ export interface BibleContextType {
     chapterNumber: number,
     verseNumber?: number | null,
   ) => void;
+  openBibleInNewTab: (
+    book: string,
+    chapterNumber: number,
+    verseNumber?: number | null,
+  ) => void;
   openArticleInCurrentTab: (articleId: string) => void;
+  openArticleInNewTab: (articleId: string) => void;
   openSearchInCurrentTab: (searchQuery: string) => void;
+  openSearchInNewTab: (searchQuery: string) => void;
   // parsed bible text loaded from public/Douay-Rheims.json
   bibleText: any | null;
   loadingBibleText: boolean;
@@ -81,8 +89,8 @@ export interface BibleContextType {
   bibleTranslations: BibleTranslationOption[];
   selectedBibleTranslation: BibleTranslationId;
   setSelectedBibleTranslation: (translationId: BibleTranslationId) => void;
-  saveNotesToFile: () => Promise<void>;
-  loadNotesFromFile: () => Promise<void>;
+  saveNotesToFile: () => Promise<boolean>;
+  loadNotesFromFile: () => Promise<boolean>;
   // editor UI state (moved from component-local state into context)
   editorOpen: boolean;
   setEditorOpen: (open: boolean) => void;
@@ -174,13 +182,19 @@ export const BibleContext = createContext<BibleContextType>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   openBibleInCurrentTab: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
+  openBibleInNewTab: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   openArticleInCurrentTab: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  openArticleInNewTab: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   openSearchInCurrentTab: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  saveNotesToFile: async () => {},
+  openSearchInNewTab: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  loadNotesFromFile: async () => {},
+  saveNotesToFile: async () => false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  loadNotesFromFile: async () => false,
   // editor default
   editorOpen: false,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -196,9 +210,7 @@ export const BibleContext = createContext<BibleContextType>({
 export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [tabs, setTabs] = useState<TabState[]>([
-    createHomeTab(),
-  ]);
+  const [tabs, setTabs] = useState<TabState[]>([createHomeTab()]);
   const [notes, setNotes] = useState<NoteEntry[]>([
     { book: "Matthew", chapterNumber: 1, text: "" },
   ]);
@@ -299,15 +311,12 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
         );
 
         if (matchedArticle) {
-          setTabs((previousTabs) => {
-            if (previousTabs.length >= MAX_TAB_LIMIT) return previousTabs;
-            const nextTabs: TabState[] = [
-              ...previousTabs,
-              createArticleTab(matchedArticle.id),
-            ];
-            setCurrentTab(nextTabs.length - 1);
-            return nextTabs;
-          });
+          openTabForArticleUtil(
+            setTabs,
+            setCurrentTab,
+            matchedArticle.id,
+            MAX_TAB_LIMIT,
+          );
           setEditorOpen(true);
           clearLocationHash();
           return;
@@ -408,6 +417,34 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
     setEditorOpen(true);
   };
 
+  const openBibleInNewTab = (
+    book: string,
+    chapterNumber: number,
+    verseNumber: number | null = null,
+  ) =>
+    openTabForBookChapterUtil(
+      setTabs,
+      setCurrentTab,
+      book,
+      chapterNumber,
+      verseNumber,
+      MAX_TAB_LIMIT,
+    );
+
+  const openArticleInNewTab = (articleId: string) => {
+    const normalizedId = normalizeArticleId(articleId);
+    if (!normalizedId) return;
+    setArticles((previous) => {
+      const exists = previous.some((entry) =>
+        articleIdsMatch(entry.id, normalizedId),
+      );
+      if (exists) return previous;
+      return [...previous, { id: normalizedId, text: "" }];
+    });
+    openTabForArticleUtil(setTabs, setCurrentTab, normalizedId, MAX_TAB_LIMIT);
+    setEditorOpen(true);
+  };
+
   const openSearchInCurrentTab = (searchQuery: string) =>
     updateTab(currentTab, {
       mode: "search",
@@ -417,6 +454,9 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       articleId: null,
       searchQuery,
     });
+
+  const openSearchInNewTab = (searchQuery: string) =>
+    openTabForSearchUtil(setTabs, setCurrentTab, searchQuery, MAX_TAB_LIMIT);
 
   const setHighlight = (
     book: string | null,
@@ -442,19 +482,23 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Use the extracted functions from notesFileIO. Provide small local wrappers
   // so the context value can pass functions with the expected signatures.
-  const saveNotesToFile = async () => {
-    await saveNotesToFileImpl(notes, articles, fileHandleRef);
-    setLastFileSyncDate(new Date());
-    setHasUnsavedChanges(false);
+  const saveNotesToFile = async (): Promise<boolean> => {
+    const didSave = await saveNotesToFileImpl(notes, articles, fileHandleRef);
+    if (didSave) {
+      setLastFileSyncDate(new Date());
+      setHasUnsavedChanges(false);
+    }
+    return didSave;
   };
 
-  const loadNotesFromFile = async () => {
-    await loadNotesFromFileImpl(
+  const loadNotesFromFile = async (): Promise<boolean> => {
+    const didLoad = await loadNotesFromFileImpl(
       fileHandleRef,
       replaceAllNotes,
       replaceAllArticles,
     );
-    setHasUnsavedChanges(false);
+    if (didLoad) setHasUnsavedChanges(false);
+    return didLoad;
   };
 
   const bibleContextValue = React.useMemo(
@@ -477,8 +521,11 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       replaceAllArticles,
       openHomeInCurrentTab,
       openBibleInCurrentTab,
+      openBibleInNewTab,
       openArticleInCurrentTab,
+      openArticleInNewTab,
       openSearchInCurrentTab,
+      openSearchInNewTab,
       moveTab,
       // editor UI state exposed in context
       editorOpen,
@@ -510,9 +557,12 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
       loadingBibleText,
       notes,
       openArticleInCurrentTab,
+      openArticleInNewTab,
       openBibleInCurrentTab,
+      openBibleInNewTab,
       openHomeInCurrentTab,
       openSearchInCurrentTab,
+      openSearchInNewTab,
       lastFileSyncDate,
       moveTab,
       removeHighlight,

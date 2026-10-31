@@ -7,6 +7,9 @@
     "start": "webpack serve --mode development",
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
+    "notes:split": "node scripts/split-ai-notes.js",
+    "notes:combine": "node scripts/combine-ai-notes.js",
+    "books:extract": "node scripts/extract-book-names.js",
     "prettier": "npx prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
     "test": "jest",
     "test:coverage": "jest --coverage"

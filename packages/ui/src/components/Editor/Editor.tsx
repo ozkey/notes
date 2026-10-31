@@ -348,7 +348,7 @@ export default function Editor({
    * Wrapper for insertHtmlAtSelection that includes all required refs
    */
   const insertHtml = (html: string) => {
-    insertHtmlAtSelection(editorRef, html, syncFromEditor);
+    insertHtmlAtSelection(editorRef, html, syncFromEditor, savedRangeRef.current);
   };
 
   /**
@@ -818,7 +818,10 @@ export default function Editor({
             title="Add highlighted verse"
             aria-label="Add highlighted verse"
             onMouseDown={(event) => event.preventDefault()}
-            onClick={() => setShowHighlightDialog(true)}
+            onClick={() => {
+              saveSelection();
+              setShowHighlightDialog(true);
+            }}
           >
             <EditLocationIcon fontSize="small" />
           </button>

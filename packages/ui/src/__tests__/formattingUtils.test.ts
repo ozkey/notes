@@ -196,8 +196,117 @@ describe("insertHtmlAtSelection", () => {
 
     insertHtmlAtSelection(editorRef, "<span>inserted</span>", syncFromEditor);
 
+    expect(document.execCommand).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      "<span>inserted</span>"
+    );
     expect(syncFromEditor).toHaveBeenCalled();
     jest.restoreAllMocks();
+  });
+
+  test("uses preferred range when current selection is outside editor", () => {
+    const div = document.createElement("div");
+    div.innerHTML = "<p>hello world</p>";
+    document.body.appendChild(div);
+    const editorRef = makeEditorRef(div);
+    const syncFromEditor = jest.fn();
+
+    const paragraphText = div.querySelector("p")!.firstChild as Text;
+    const preferredRange = document.createRange();
+    preferredRange.setStart(paragraphText, 6);
+    preferredRange.collapse(true);
+
+    const outsideNode = document.createTextNode("outside");
+    document.body.appendChild(outsideNode);
+    const outsideRange = document.createRange();
+    outsideRange.setStart(outsideNode, 0);
+    outsideRange.collapse(true);
+
+    const mockSelection = {
+      rangeCount: 1,
+      getRangeAt: jest.fn().mockReturnValue(outsideRange),
+      removeAllRanges: jest.fn(),
+      addRange: jest.fn(),
+    };
+    jest.spyOn(window, "getSelection").mockReturnValue(mockSelection as any);
+    (document as any).execCommand = jest.fn().mockReturnValue(false);
+
+    insertHtmlAtSelection(
+      editorRef,
+      '<a href="#Genesis:1">Genesis 1</a>',
+      syncFromEditor,
+      preferredRange,
+    );
+
+    expect(div.innerHTML).toContain("<p>hello <a href=\"#Genesis:1\">Genesis 1</a>world</p>");
+    expect(mockSelection.addRange).toHaveBeenCalled();
+    expect(syncFromEditor).toHaveBeenCalled();
+    jest.restoreAllMocks();
+  });
+
+  test("prefers preferred range over current in-editor selection", () => {
+    const div = document.createElement("div");
+    div.innerHTML = "<p>hello world</p>";
+    document.body.appendChild(div);
+    const editorRef = makeEditorRef(div);
+    const syncFromEditor = jest.fn();
+
+    const paragraphText = div.querySelector("p")!.firstChild as Text;
+    const preferredRange = document.createRange();
+    preferredRange.setStart(paragraphText, 6);
+    preferredRange.collapse(true);
+
+    const currentRange = document.createRange();
+    currentRange.setStart(paragraphText, 0);
+    currentRange.collapse(true);
+
+    const mockSelection = {
+      rangeCount: 1,
+      getRangeAt: jest.fn().mockReturnValue(currentRange),
+      removeAllRanges: jest.fn(),
+      addRange: jest.fn(),
+    };
+    jest.spyOn(window, "getSelection").mockReturnValue(mockSelection as any);
+    (document as any).execCommand = jest.fn().mockReturnValue(false);
+
+    insertHtmlAtSelection(
+      editorRef,
+      "<span>X</span>",
+      syncFromEditor,
+      preferredRange,
+    );
+
+    expect(div.innerHTML).toContain("<p>hello <span>X</span>world</p>");
+    expect(syncFromEditor).toHaveBeenCalled();
+    jest.restoreAllMocks();
+  });
+
+  test("uses insertHTML command for highlighted verse insertion", () => {
+    const div = document.createElement("div");
+    div.innerHTML = "<p>alpha beta</p>";
+    document.body.appendChild(div);
+    const editorRef = makeEditorRef(div);
+    const syncFromEditor = jest.fn();
+
+    const paragraphText = div.querySelector("p")!.firstChild as Text;
+    const preferredRange = document.createRange();
+    preferredRange.setStart(paragraphText, 6);
+    preferredRange.collapse(true);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(preferredRange);
+
+    const badgeHtml = createHighlightBadgeHtml(7, "green");
+    insertHtmlAtSelection(editorRef, badgeHtml, syncFromEditor, preferredRange);
+
+    expect(document.execCommand).toHaveBeenCalledWith(
+      "insertHTML",
+      false,
+      badgeHtml,
+    );
+    expect(syncFromEditor).toHaveBeenCalled();
   });
 });
 

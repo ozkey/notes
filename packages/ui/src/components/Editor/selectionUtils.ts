@@ -48,14 +48,15 @@ export const replaceElementUndoably = <T extends HTMLElement>(
   const tokenAttr = "data-editor-replace-token";
   const token = `t-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   draft.setAttribute(tokenAttr, token);
-  
+  const html = draft.outerHTML;
+
   const didReplace = withSelectedNode(element, editorRef, (selection) => {
     try {
+      const didExecReplace = document.execCommand("insertHTML", false, html);
+      if (didExecReplace) return true;
+
       const range = selection.getRangeAt(0);
       range.deleteContents();
-      
-      // Insert the new element
-      draft.removeAttribute(tokenAttr);
       range.insertNode(draft);
       return true;
     } catch (e) {
@@ -70,7 +71,26 @@ export const replaceElementUndoably = <T extends HTMLElement>(
     return draft;
   }
 
-  return draft;
+  const inserted = editorRef.current.querySelector(
+    `[${tokenAttr}="${token}"]`,
+  ) as T | null;
+  if (inserted) {
+    inserted.removeAttribute(tokenAttr);
+    return inserted;
+  }
+
+  if (draft.isConnected) {
+    draft.removeAttribute(tokenAttr);
+    return draft;
+  }
+
+  if (element.isConnected) {
+    draft.removeAttribute(tokenAttr);
+    element.replaceWith(draft);
+    return draft;
+  }
+
+  return null;
 };
 
 /**

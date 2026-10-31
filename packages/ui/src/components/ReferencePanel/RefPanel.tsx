@@ -7,6 +7,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  Typography,
 } from "@mui/material";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { BibleReferenceContext } from "../../contexts/BibleContext";
@@ -43,7 +44,9 @@ export const getAverageVoteThreshold = (
 
   if (validScores.length === 0) return 0;
 
-  return validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
+  return (
+    validScores.reduce((sum, score) => sum + score, 0) / validScores.length
+  );
 };
 
 const REFERENCE_BOOK_NAME_BY_TOKEN = (() => {
@@ -261,12 +264,19 @@ export const RefPanel = React.memo(() => {
   const chapterKey = chapterToken ? `${chapterToken}.${chapterNumber}` : null;
 
   const linkedFromChapter = useMemo(
-    () => buildChapterEntries(crossReferencesFrom, chapterToken, chapterNumber, "from"),
+    () =>
+      buildChapterEntries(
+        crossReferencesFrom,
+        chapterToken,
+        chapterNumber,
+        "from",
+      ),
     [crossReferencesFrom, chapterToken, chapterNumber],
   );
 
   const linkedToChapter = useMemo(
-    () => buildChapterEntries(crossReferencesTo, chapterToken, chapterNumber, "to"),
+    () =>
+      buildChapterEntries(crossReferencesTo, chapterToken, chapterNumber, "to"),
     [crossReferencesTo, chapterToken, chapterNumber],
   );
 
@@ -276,12 +286,22 @@ export const RefPanel = React.memo(() => {
   );
 
   const filteredLinkedFromChapter = useMemo(
-    () => filterByVoteThreshold(linkedFromChapter, ignoreVoteThreshold, voteThreshold),
+    () =>
+      filterByVoteThreshold(
+        linkedFromChapter,
+        ignoreVoteThreshold,
+        voteThreshold,
+      ),
     [linkedFromChapter, ignoreVoteThreshold, voteThreshold],
   );
 
   const filteredLinkedToChapter = useMemo(
-    () => filterByVoteThreshold(linkedToChapter, ignoreVoteThreshold, voteThreshold),
+    () =>
+      filterByVoteThreshold(
+        linkedToChapter,
+        ignoreVoteThreshold,
+        voteThreshold,
+      ),
     [linkedToChapter, ignoreVoteThreshold, voteThreshold],
   );
 
@@ -299,40 +319,66 @@ export const RefPanel = React.memo(() => {
     : "show all";
 
   return (
-    <Card>
+    <Card sx={{ p: 0, m: 0 }}>
       <CardContent>
-        <h2>Cross References</h2>
-        {loadingReferences && <p>Loading cross references...</p>}
-        {loadError && <p>{loadError}</p>}
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Cross References
+        </Typography>
+        {loadingReferences && (
+          <Typography variant="body2" color="text.secondary">
+            Loading cross references...
+          </Typography>
+        )}
+        {loadError && (
+          <Typography variant="body2" color="error.main">
+            {loadError}
+          </Typography>
+        )}
         {!loadingReferences && !loadError && !chapterKey && (
-          <p>No references found</p>
+          <Typography variant="body2" color="text.secondary">
+            No references found
+          </Typography>
         )}
 
         {chapterKey && !loadingReferences && !loadError && (
           <>
-             <Box
-               sx={{
-                 display: "grid",
-                 gridTemplateColumns: {
-                   xs: "minmax(0, 1fr)",
-                   sm: "repeat(2, minmax(0, 1fr))",
-                 },
-                 gap: 2,
-                 alignItems: "stretch",
-               }}
-             >
-              <Card variant="outlined">
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "minmax(0, 1fr)",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                },
+                gap: 2,
+                alignItems: "stretch",
+              }}
+            >
+              <Card variant="outlined" sx={{ bgcolor: "#FFFFFA" }}>
                 <CardContent>
-                  <h4>
+                  <Typography variant="subtitle1" sx={{ mb: 0.8 }}>
                     Linked from {selectedBook} {chapterNumber}
-                  </h4>
+                  </Typography>
                   {filteredLinkedFromChapter.length === 0 && (
-                    <p>No references found.</p>
+                    <Typography variant="body2" color="text.secondary">
+                      No references found.
+                    </Typography>
                   )}
                   {filteredLinkedFromChapter.length > 0 && (
-                    <List dense>
+                    <List
+                      dense
+                      sx={{
+                        border: "1px solid rgba(45, 90, 72, 0.14)",
+                        borderRadius: 1,
+                        bgcolor: "#FFFFFF",
+                        px: 0.75,
+                        py: 0.5,
+                      }}
+                    >
                       {filteredLinkedFromChapter.map((entry, index) => (
-                        <ListItem key={`${entry.from}-${entry.to}-${index}`}>
+                        <ListItem
+                          key={`${entry.from}-${entry.to}-${index}`}
+                          divider={index < filteredLinkedFromChapter.length - 1}
+                        >
                           <ListItemText
                             primary={
                               <>
@@ -352,20 +398,32 @@ export const RefPanel = React.memo(() => {
                 </CardContent>
               </Card>
 
-              <Card variant="outlined">
+              <Card variant="outlined" sx={{ bgcolor: "#FFFFFA" }}>
                 <CardContent>
-                  <h4>
+                  <Typography variant="subtitle1" sx={{ mb: 0.8 }}>
                     Linking to {selectedBook} {chapterNumber}
-                  </h4>
+                  </Typography>
                   {filteredLinkedToChapter.length === 0 && (
-                    <p>No references found.</p>
+                    <Typography variant="body2" color="text.secondary">
+                      No references found.
+                    </Typography>
                   )}
                   {filteredLinkedToChapter.length > 0 && (
-                    <List dense>
+                    <List
+                      dense
+                      sx={{
+                        border: "1px solid rgba(45, 90, 72, 0.14)",
+                        borderRadius: 1,
+                        bgcolor: "#FFFFFF",
+                        px: 0.75,
+                        py: 0.5,
+                      }}
+                    >
                       {filteredLinkedToChapter.map((entry, index) => (
                         <ListItem
                           key={`${entry.from}-${entry.to}-${index}`}
                           disableGutters
+                          divider={index < filteredLinkedToChapter.length - 1}
                         >
                           <ListItemText
                             primary={

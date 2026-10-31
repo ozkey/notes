@@ -105,9 +105,21 @@ describe("saveNotesToFile", () => {
       throw new Error("mock error");
     });
 
-    await saveNotesToFile([], [], makeFileHandleRef());
+    const didSave = await saveNotesToFile([], [], makeFileHandleRef());
 
+    expect(didSave).toBe(false);
     expect(window.alert).toHaveBeenCalledWith("Saving notes was cancelled or failed.");
+  });
+
+  test("does not alert when save dialog is cancelled", async () => {
+    (window as any).showSaveFilePicker = jest
+      .fn()
+      .mockRejectedValue(new DOMException("cancelled", "AbortError"));
+
+    const didSave = await saveNotesToFile([], [], makeFileHandleRef());
+
+    expect(didSave).toBe(false);
+    expect(window.alert).not.toHaveBeenCalled();
   });
 });
 
@@ -212,15 +224,22 @@ describe("loadNotesFromFile", () => {
     expect(replaceAllNotes).not.toHaveBeenCalled();
   });
 
-  test("calls alert when showOpenFilePicker throws (user cancelled)", async () => {
-    (window as any).showOpenFilePicker = jest.fn().mockRejectedValue(new Error("User cancelled"));
+  test("does not alert when showOpenFilePicker is cancelled", async () => {
+    (window as any).showOpenFilePicker = jest
+      .fn()
+      .mockRejectedValue(new DOMException("cancelled", "AbortError"));
 
     const replaceAllNotes = jest.fn();
     const replaceAllArticles = jest.fn();
 
-    await loadNotesFromFile(makeFileHandleRef(), replaceAllNotes, replaceAllArticles);
+    const didLoad = await loadNotesFromFile(
+      makeFileHandleRef(),
+      replaceAllNotes,
+      replaceAllArticles,
+    );
 
-    expect(window.alert).toHaveBeenCalledWith("Loading notes was cancelled or failed.");
+    expect(didLoad).toBe(false);
+    expect(window.alert).not.toHaveBeenCalled();
   });
 
   test("does nothing when file is null (fallback path)", async () => {
