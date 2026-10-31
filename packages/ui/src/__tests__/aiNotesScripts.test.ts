@@ -36,6 +36,7 @@ describe("ai notes split/combine scripts", () => {
   let notesDir: string;
   let articlesDir: string;
   let metaFile: string;
+  let booksFile: string;
 
   beforeEach(() => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ai-notes-scripts-"));
@@ -43,6 +44,8 @@ describe("ai notes split/combine scripts", () => {
     notesDir = path.join(tempDir, "notes");
     articlesDir = path.join(tempDir, "articles");
     metaFile = path.join(tempDir, "data-meta.json");
+    booksFile = path.join(tempDir, "books.json");
+    fs.writeFileSync(booksFile, JSON.stringify(["Genesis", "Exodus", "Matthew", "I Samuel"], null, 2), "utf8");
   });
 
   afterEach(() => {
@@ -89,7 +92,7 @@ describe("ai notes split/combine scripts", () => {
     fs.writeFileSync(sourceFile, makeHtmlWithData(sourceData), "utf8");
 
     splitAiNotes({ sourceFile, notesDir, articlesDir, metaFile });
-    combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile });
+    combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile, booksFile });
 
     const rebuilt = extractDataFromHtml(fs.readFileSync(sourceFile, "utf8"));
     expect(rebuilt.savedAt).toBe(sourceData.savedAt);
@@ -97,5 +100,75 @@ describe("ai notes split/combine scripts", () => {
     expect(rebuilt.articles).toEqual(expect.arrayContaining(sourceData.articles));
     expect(rebuilt.notes).toHaveLength(sourceData.notes.length);
     expect(rebuilt.articles).toHaveLength(sourceData.articles.length);
+  });
+
+  test("combine throws when note filename book is not in books list", () => {
+    fs.writeFileSync(sourceFile, makeHtmlWithData({ notes: [], articles: [], savedAt: null }), "utf8");
+    fs.mkdirSync(notesDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(notesDir, "unknown-book-1.json"),
+      JSON.stringify({ book: "Genesis", chapterNumber: 1, text: "<p>ok</p>" }, null, 2),
+      "utf8"
+    );
+
+    expect(() => combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile, booksFile })).toThrow(
+      /book in filename "unknown-book" is not in books\.json/
+    );
+  });
+
+  test("combine throws when note book field is not in books list", () => {
+    fs.writeFileSync(sourceFile, makeHtmlWithData({ notes: [], articles: [], savedAt: null }), "utf8");
+    fs.mkdirSync(notesDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(notesDir, "genesis-1.json"),
+      JSON.stringify({ book: "Unknown Book", chapterNumber: 1, text: "<p>ok</p>" }, null, 2),
+      "utf8"
+    );
+
+    expect(() => combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile, booksFile })).toThrow(
+      /note\.book "Unknown Book" is not in books\.json/
+    );
+  });
+
+  test("combine throws when bible links use a book not in books list", () => {
+    fs.writeFileSync(sourceFile, makeHtmlWithData({ notes: [], articles: [], savedAt: null }), "utf8");
+    fs.mkdirSync(notesDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(notesDir, "genesis-1.json"),
+      JSON.stringify(
+        {
+          book: "Genesis",
+          chapterNumber: 1,
+          text: '<p><a href="#Unknown Book:1:1">bad</a><a href="#Exodus:1:1">good</a></p>',
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+
+    expect(() => combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile, booksFile })).toThrow(
+      /bible link "#Unknown Book:1:1" has unknown book "Unknown Book"/
+    );
+  });
+
+  test("combine accepts Roman numeral filename variants when books use numeric prefixes", () => {
+    fs.writeFileSync(sourceFile, makeHtmlWithData({ notes: [], articles: [], savedAt: null }), "utf8");
+    fs.mkdirSync(notesDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(notesDir, "i-samuel-1.json"),
+      JSON.stringify(
+        {
+          book: "I Samuel",
+          chapterNumber: 1,
+          text: '<p><a href="#1 Samuel:1:1">ok</a></p>',
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+
+    expect(() => combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile, booksFile })).not.toThrow();
   });
 });
