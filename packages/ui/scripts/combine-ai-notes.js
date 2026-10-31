@@ -118,6 +118,9 @@ function validateNotesAgainstBooks(noteEntries, books) {
       }
 
       const fragment = decodeURIComponent(href.slice(1));
+      if (!fragment.includes(":")) {
+        continue;
+      }
       const bookInLink = fragment.split(":")[0];
       if (!canonicalBookFor(bookInLink, aliasToCanonical)) {
         errors.push(`notes/${fileName}: bible link "${href}" has unknown book "${bookInLink}"`);

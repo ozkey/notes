@@ -152,6 +152,26 @@ describe("ai notes split/combine scripts", () => {
     );
   });
 
+  test("combine allows note hash links to article ids", () => {
+    fs.writeFileSync(sourceFile, makeHtmlWithData({ notes: [], articles: [], savedAt: null }), "utf8");
+    fs.mkdirSync(notesDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(notesDir, "genesis-1.json"),
+      JSON.stringify(
+        {
+          book: "Genesis",
+          chapterNumber: 1,
+          text: '<p><a href="#mary">article</a><a href="#Exodus:1:1">bible</a></p>',
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+
+    expect(() => combineAiNotes({ sourceFile, notesDir, articlesDir, metaFile, booksFile })).not.toThrow();
+  });
+
   test("combine accepts Roman numeral filename variants when books use numeric prefixes", () => {
     fs.writeFileSync(sourceFile, makeHtmlWithData({ notes: [], articles: [], savedAt: null }), "utf8");
     fs.mkdirSync(notesDir, { recursive: true });

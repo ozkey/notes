@@ -1,10 +1,15 @@
-# AI Notes/Articles Authoring Contract (STRICT)
+# AI Notes/Articles Authoring Contract
 
 This folder is written by an external AI and then merged by:
 
 - `packages/ui/scripts/combine-ai-notes.js`
 
-If you follow this file exactly, output will be compatible with the app/editor and combine script.
+If you follow this file, output will be compatible with the app/editor and combine script.
+
+Important distinction:
+
+- Some rules below are hard-validated by `combine-ai-notes.js`.
+- Others are compatibility requirements for the app/editor (not enforced by combine).
 
 ## 1) Where to write files
 
@@ -14,7 +19,7 @@ If you follow this file exactly, output will be compatible with the app/editor a
 
 Only write `.json` files in `notes` and `articles`.
 
-## 2) Required JSON shapes
+## 2) Required JSON shapes (app/editor compatibility)
 
 ### Note file shape
 
@@ -29,7 +34,7 @@ Only write `.json` files in `notes` and `articles`.
 }
 ```
 
-- `book` (required): must match a book from `books.json` (case-insensitive match).
+- `book` (required): must resolve to a book from `books.json` (case-insensitive; spaces, `_` and `-` normalized; leading Roman/Arabic number style is interchangeable, e.g. `i samuel` / `1 samuel`).
 - `chapterNumber` (required): positive integer.
 - `text` (required): HTML string.
 - `highlights` (optional): array of `{ verse: number, color: "green"|"blue"|"pink"|"red"|"orange"|"purple" }`.
@@ -65,7 +70,7 @@ Important:
 - Do **not** add suffixes like `-2` to note filenames (`genesis-1-2.json` is invalid for combine validation).
 - `book` in file content must match the same canonical book as filename token.
 
-## 4) Bible link rules inside `text` (required for combine)
+## 4) Bible link rules inside note `text` (combine-sensitive)
 
 When using Bible links in HTML, use:
 
@@ -82,6 +87,8 @@ Rules:
 - Book in `href` must exist in `books.json`.
 - Use double quotes in attributes (`href="..."`).
 - Book separators in hash can be spaces or `-`/`_` (editor/parser handles these).
+- Combine validates Bible-style hash links in note files (hash fragments containing `:`), and treats the first segment as a book token.
+- Non-Bible hash links like `href="#mary"` are not treated as Bible links by combine but as articles.
 
 ## 5) Article links inside `text`
 
@@ -94,6 +101,7 @@ Example:
 - `<a href="#mary">#mary</a>`
 
 Keep `article-id` normalized (lowercase, hyphenated, no spaces) for best compatibility.
+You can use this in article content and in note content.
 
 ## 6) Allowed HTML (editor-compatible)
 
