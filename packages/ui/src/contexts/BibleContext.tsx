@@ -89,8 +89,8 @@ export interface BibleContextType {
   bibleTranslations: BibleTranslationOption[];
   selectedBibleTranslation: BibleTranslationId;
   setSelectedBibleTranslation: (translationId: BibleTranslationId) => void;
-  saveNotesToFile: () => Promise<void>;
-  loadNotesFromFile: () => Promise<void>;
+  saveNotesToFile: () => Promise<boolean>;
+  loadNotesFromFile: () => Promise<boolean>;
   // editor UI state (moved from component-local state into context)
   editorOpen: boolean;
   setEditorOpen: (open: boolean) => void;
@@ -192,9 +192,9 @@ export const BibleContext = createContext<BibleContextType>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   openSearchInNewTab: () => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  saveNotesToFile: async () => {},
+  saveNotesToFile: async () => false,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  loadNotesFromFile: async () => {},
+  loadNotesFromFile: async () => false,
   // editor default
   editorOpen: false,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -482,19 +482,23 @@ export const BibleProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Use the extracted functions from notesFileIO. Provide small local wrappers
   // so the context value can pass functions with the expected signatures.
-  const saveNotesToFile = async () => {
-    await saveNotesToFileImpl(notes, articles, fileHandleRef);
-    setLastFileSyncDate(new Date());
-    setHasUnsavedChanges(false);
+  const saveNotesToFile = async (): Promise<boolean> => {
+    const didSave = await saveNotesToFileImpl(notes, articles, fileHandleRef);
+    if (didSave) {
+      setLastFileSyncDate(new Date());
+      setHasUnsavedChanges(false);
+    }
+    return didSave;
   };
 
-  const loadNotesFromFile = async () => {
-    await loadNotesFromFileImpl(
+  const loadNotesFromFile = async (): Promise<boolean> => {
+    const didLoad = await loadNotesFromFileImpl(
       fileHandleRef,
       replaceAllNotes,
       replaceAllArticles,
     );
-    setHasUnsavedChanges(false);
+    if (didLoad) setHasUnsavedChanges(false);
+    return didLoad;
   };
 
   const bibleContextValue = React.useMemo(

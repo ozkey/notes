@@ -361,11 +361,19 @@ const TEMPLATE_HTML = `<!doctype html>
 
 // Save notes to an HTML file with data embedded between DATA START and DATA END comments.
 // The notes and metadata are embedded as a JavaScript object in the HTML template.
+const isAbortError = (err: unknown): boolean =>
+  err instanceof DOMException
+    ? err.name === "AbortError"
+    : typeof err === "object" &&
+      err !== null &&
+      "name" in err &&
+      (err as { name?: unknown }).name === "AbortError";
+
 export async function saveNotesToFile(
   notes: any[],
   articles: any[],
   fileHandleRef: React.MutableRefObject<any | null>,
-): Promise<void> {
+): Promise<boolean> {
   const payload = {
     notes: notes,
     articles: articles,
@@ -383,7 +391,7 @@ export async function saveNotesToFile(
   if (startIndex === -1 || endIndex === -1) {
     console.error("Could not find DATA START or DATA END markers in template");
     alert("Failed to save notes: template markers not found.");
-    return;
+    return false;
   }
 
   const beforeData = TEMPLATE_HTML.substring(
@@ -443,9 +451,12 @@ export async function saveNotesToFile(
       a.remove();
       URL.revokeObjectURL(url);
     }
+    return true;
   } catch (err) {
+    if (isAbortError(err)) return false;
     console.error("Failed to save notes:", err);
     alert("Saving notes was cancelled or failed.");
+    return false;
   }
 }
 
@@ -455,7 +466,7 @@ export async function loadNotesFromFile(
   fileHandleRef: React.MutableRefObject<any | null>,
   replaceAllNotes: (entries: any[]) => void,
   replaceAllArticles: (entries: any[]) => void,
-): Promise<void> {
+): Promise<boolean> {
   try {
     let file: File | null;
 
@@ -485,7 +496,7 @@ export async function loadNotesFromFile(
       });
     }
 
-    if (!file) return;
+    if (!file) return false;
 
     const text = await file.text();
 
@@ -534,8 +545,11 @@ export async function loadNotesFromFile(
 
     replaceAllNotes(loadedNotes as any[]);
     replaceAllArticles(loadedArticles as any[]);
+    return true;
   } catch (err) {
+    if (isAbortError(err)) return false;
     console.error("Failed to load notes:", err);
     alert("Loading notes was cancelled or failed.");
+    return false;
   }
 }
